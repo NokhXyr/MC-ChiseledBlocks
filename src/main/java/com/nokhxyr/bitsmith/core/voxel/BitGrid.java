@@ -105,6 +105,43 @@ public final class BitGrid {
         return new BitGrid(palette, bits, data, filled);
     }
 
+    /**
+     * Unpacks raw serialized data into voxels, mapping each stored palette index through
+     * {@code palette}. Indices that point outside the palette become {@link #AIR}, so corrupt or
+     * hostile data can never throw.
+     */
+    public static int[] decode(int[] palette, int bitsPerEntry, long[] data) {
+        int[] voxels = new int[VOLUME];
+        if (palette.length == 0) {
+            return voxels;
+        }
+        if (bitsPerEntry <= 0 || bitsPerEntry > 32) {
+            Arrays.fill(voxels, palette[0]);
+            return voxels;
+        }
+        int perLong = 64 / bitsPerEntry;
+        long mask = (1L << bitsPerEntry) - 1;
+        for (int i = 0; i < VOLUME; i++) {
+            int word = i / perLong;
+            if (word >= data.length) {
+                break;
+            }
+            int paletteIndex = (int) ((data[word] >>> ((i % perLong) * bitsPerEntry)) & mask);
+            voxels[i] = paletteIndex < palette.length ? palette[paletteIndex] : AIR;
+        }
+        return voxels;
+    }
+
+    /** Copy of the sorted palette. */
+    public int[] palette() {
+        return palette.clone();
+    }
+
+    /** Copy of the packed palette indices; empty when {@link #bitsPerEntry()} is 0. */
+    public long[] packedData() {
+        return data.clone();
+    }
+
     public int get(int x, int y, int z) {
         return get(index(x, y, z));
     }
@@ -134,6 +171,28 @@ public final class BitGrid {
 
     public BitGridBuilder toBuilder() {
         return new BitGridBuilder(toArray(new int[VOLUME]));
+    }
+
+    /** True when every voxel of the boundary layer on {@code face} matches {@code covering}. */
+    public boolean isFaceCovered(Face face, java.util.function.IntPredicate covering) {
+        if (bitsPerEntry == 0) {
+            return covering.test(palette[0]);
+        }
+        int depth = face.positive ? SIZE - 1 : 0;
+        int[] pos = new int[3];
+        int u = (face.axis + 1) % 3;
+        int v = (face.axis + 2) % 3;
+        pos[face.axis] = depth;
+        for (int a = 0; a < SIZE; a++) {
+            for (int b = 0; b < SIZE; b++) {
+                pos[u] = a;
+                pos[v] = b;
+                if (!covering.test(get(pos[0], pos[1], pos[2]))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public int paletteSize() {

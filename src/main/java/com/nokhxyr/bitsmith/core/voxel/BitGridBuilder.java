@@ -5,14 +5,16 @@
 package com.nokhxyr.bitsmith.core.voxel;
 
 import java.util.Arrays;
+import java.util.BitSet;
 
 /**
  * Mutable working copy used while editing. Edits are cheap array writes; {@link #build()} packs
- * the result into an immutable {@link BitGrid} once per batch.
+ * the result into an immutable {@link BitGrid} once per batch. The builder remembers which
+ * voxels changed, so a batch can be sent over the network as a delta.
  */
 public final class BitGridBuilder {
     private final int[] voxels;
-    private int changes;
+    private final BitSet changed = new BitSet(BitGrid.VOLUME);
 
     public BitGridBuilder() {
         this(new int[BitGrid.VOLUME]);
@@ -26,11 +28,18 @@ public final class BitGridBuilder {
         return voxels[BitGrid.index(x, y, z)];
     }
 
+    public int get(int index) {
+        return voxels[index];
+    }
+
     public BitGridBuilder set(int x, int y, int z, int material) {
-        int i = BitGrid.index(x, y, z);
-        if (voxels[i] != material) {
-            voxels[i] = material;
-            changes++;
+        return set(BitGrid.index(x, y, z), material);
+    }
+
+    public BitGridBuilder set(int index, int material) {
+        if (voxels[index] != material) {
+            voxels[index] = material;
+            changed.set(index);
         }
         return this;
     }
@@ -48,17 +57,23 @@ public final class BitGridBuilder {
     }
 
     public BitGridBuilder fillAll(int material) {
-        Arrays.fill(voxels, material);
-        changes++;
+        for (int i = 0; i < BitGrid.VOLUME; i++) {
+            set(i, material);
+        }
         return this;
     }
 
-    /** Number of voxel writes that changed a value since this builder was created. */
+    /** Number of voxels whose value changed since this builder was created. */
     public int changes() {
-        return changes;
+        return changed.cardinality();
+    }
+
+    /** Indices of the voxels changed since this builder was created, in ascending order. */
+    public int[] changedIndices() {
+        return changed.stream().toArray();
     }
 
     public BitGrid build() {
-        return BitGrid.of(voxels.clone());
+        return BitGrid.of(Arrays.copyOf(voxels, voxels.length));
     }
 }

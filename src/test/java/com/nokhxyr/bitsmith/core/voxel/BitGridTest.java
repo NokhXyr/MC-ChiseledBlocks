@@ -52,6 +52,33 @@ class BitGridTest {
     }
 
     @Test
+    void decodeRestoresSerializedGridWithRemappedPalette() {
+        BitGrid grid = new BitGridBuilder().fill(0, 0, 0, 16, 4, 16, 5).set(3, 9, 3, 8).build();
+        int[] remapped = new int[grid.paletteSize()];
+        for (int i = 0; i < remapped.length; i++) {
+            remapped[i] = grid.paletteEntry(i) == BitGrid.AIR ? BitGrid.AIR : grid.paletteEntry(i) + 100;
+        }
+        BitGrid restored = BitGrid.of(BitGrid.decode(remapped, grid.bitsPerEntry(), grid.packedData()));
+        assertEquals(105, restored.get(0, 0, 0));
+        assertEquals(108, restored.get(3, 9, 3));
+        assertEquals(BitGrid.AIR, restored.get(3, 10, 3));
+    }
+
+    @Test
+    void decodeNeverThrowsOnCorruptData() {
+        int[] voxels = BitGrid.decode(new int[]{0, 4}, 3, new long[]{-1L});
+        assertEquals(BitGrid.AIR, voxels[0], "palette index out of range becomes air");
+        assertEquals(BitGrid.AIR, voxels[BitGrid.VOLUME - 1], "missing words become air");
+    }
+
+    @Test
+    void builderTracksChangedIndices() {
+        BitGridBuilder builder = BitGrid.filled(2).toBuilder();
+        builder.set(0, 0, 0, 2).set(1, 0, 0, BitGrid.AIR).set(0, 1, 0, BitGrid.AIR);
+        assertArrayEquals(new int[]{1, BitGrid.index(0, 1, 0)}, builder.changedIndices());
+    }
+
+    @Test
     void internerSharesIdenticalGrids() {
         BitGridInterner interner = new BitGridInterner();
         BitGrid a = new BitGridBuilder().fill(0, 0, 0, 4, 4, 4, 3).build();

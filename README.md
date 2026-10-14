@@ -7,7 +7,7 @@ for performance and stability.
 Inspired by [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith is an
 independent implementation: it contains no code or assets from Chisels & Bits.
 
-> Status: early development (milestone M0). The mod is not playable yet.
+> Status: early development (milestone M1). Bits can be carved with the iron chisel; tools, bits as items and patterns are not there yet.
 
 ## Features
 
@@ -35,6 +35,7 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 ./gradlew build        # mod jar in build/libs
 ./gradlew test         # unit tests
 ./gradlew benchmark    # voxel core micro-benchmarks
+./gradlew runGameTestServer  # in game tests, headless
 ./gradlew runClient    # development client
 ```
 
@@ -65,7 +66,7 @@ Minecraft 1.21.1, conçu dès le départ pour la performance et la stabilité.
 Inspiré de [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith est une
 implémentation indépendante : il ne contient aucun code ni aucune ressource de Chisels & Bits.
 
-> État : début de développement (jalon M0). Le mod n'est pas encore jouable.
+> État : début de développement (jalon M1). On peut ciseler des bits avec le ciseau en fer ; les outils, les bits en items et les patterns ne sont pas encore là.
 
 ## Caractéristiques
 
@@ -94,6 +95,7 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 ./gradlew build        # jar du mod dans build/libs
 ./gradlew test         # tests unitaires
 ./gradlew benchmark    # micro-benchmarks du noyau voxel
+./gradlew runGameTestServer  # tests en jeu, sans fenêtre
 ./gradlew runClient    # client de développement
 ```
 
