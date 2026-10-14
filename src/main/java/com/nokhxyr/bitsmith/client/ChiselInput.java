@@ -8,6 +8,7 @@ import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
+import com.nokhxyr.bitsmith.core.voxel.BitRaycast;
 import com.nokhxyr.bitsmith.core.voxel.Face;
 import com.nokhxyr.bitsmith.edit.ChiselOperation;
 import com.nokhxyr.bitsmith.item.ChiselItem;
@@ -42,6 +43,8 @@ public final class ChiselInput {
     private static final int REPEAT_TICKS = 3;
     /** How far inside the hit face the targeted point is moved, in blocks. */
     private static final double INSET = 1.0 / 64.0;
+    /** Longest view ray traced through a grid, in voxels (eight blocks). */
+    private static final double REACH_IN_VOXELS = 8 * BitGrid.SIZE;
     private static final Face[] FACES = Face.values();
 
     private static int cooldown;
@@ -96,7 +99,7 @@ public final class ChiselInput {
         }
         cooldown = REPEAT_TICKS;
 
-        int voxel = voxelAt(hit);
+        int voxel = voxelAt(player, hit);
         Face face = FACES[hit.getDirection().ordinal()];
         predict(player, chisel, player.getMainHandItem(), hit.getBlockPos(), voxel, face);
         PacketDistributor.sendToServer(new ChiselPayload(hit.getBlockPos(), voxel, face));
@@ -120,9 +123,23 @@ public final class ChiselInput {
         }
     }
 
-    /** The voxel just behind the hit point, in the targeted block. */
-    static int voxelAt(BlockHitResult hit) {
+    /**
+     * The voxel the player is looking at. In a carved block the view ray is traced through the
+     * grid, so the answer stays right on the edges and corners of holes, where the hit point is
+     * shared by a voxel that is gone and one that is not. Otherwise every voxel is solid and the
+     * point just behind the hit face is enough.
+     */
+    static int voxelAt(Player player, BlockHitResult hit) {
         BlockPos pos = hit.getBlockPos();
+        if (player.level().getBlockEntity(pos) instanceof CarvedBlockEntity carved) {
+            Vec3 eye = player.getEyePosition().subtract(pos.getX(), pos.getY(), pos.getZ()).scale(BitGrid.SIZE);
+            Vec3 view = player.getViewVector(1.0F);
+            BitRaycast.Hit voxelHit = BitRaycast.cast(carved.getGrid(), eye.x, eye.y, eye.z, view.x, view.y, view.z,
+                    REACH_IN_VOXELS, material -> material != BitGrid.AIR);
+            if (voxelHit != null) {
+                return BitGrid.index(voxelHit.x(), voxelHit.y(), voxelHit.z());
+            }
+        }
         Vec3 normal = Vec3.atLowerCornerOf(hit.getDirection().getNormal());
         Vec3 local = hit.getLocation().subtract(normal.scale(INSET)).subtract(pos.getX(), pos.getY(), pos.getZ());
         int x = Mth.clamp(Mth.floor(local.x * BitGrid.SIZE), 0, BitGrid.SIZE - 1);

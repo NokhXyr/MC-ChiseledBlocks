@@ -31,3 +31,19 @@
 **Root cause:** `localRuntime` puts a mod in every run. Pehkui then ran in the game test server and sent its packets to the mock players, which have no Pehkui channel. The game test server also shared `run/` with the client, so a jar in `run/mods` reached it too.
 **Fix:** Pehkui moved to a `devClientMods` configuration copied into the mods folder of the client runs only, and the game test server got its own directory `run-gametest/`.
 **Prevention:** Third party mods for manual testing go in client run mods folders, never on the shared runtime classpath. Each automated run keeps its own game directory.
+
+## [2026-10-14 21:10] — Radial menu ignored an option chosen within the same frame
+
+**Context:** Client playtest: move the cursor onto an option and release the menu key right away.
+**Error:** The previous option stayed selected.
+**Root cause:** The hovered option was only computed while drawing; a move and a release between two frames used the stale hover.
+**Fix:** `RadialMenuScreen` recomputes the hovered option from the real cursor position on release and on click.
+**Prevention:** Input handlers never rely on state computed during rendering.
+
+## [2026-10-14 21:15] — Repeated chisel clicks at a hole's edge did nothing
+
+**Context:** Client playtest: click the same spot several times, aiming at the exact centre of a face.
+**Error:** Only the first click removed a bit.
+**Root cause:** The targeted voxel was derived from the hit point stepped behind the face. On an edge shared with a voxel already removed, rounding picked that empty voxel every time.
+**Fix:** In a carved block the target is found by tracing the view ray through the grid with `BitRaycast`; the hit point method is kept only for plain blocks, where every voxel is solid.
+**Prevention:** Never derive a voxel from a hit point lying on voxel boundaries when the exact grid is available.

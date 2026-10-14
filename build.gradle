@@ -174,3 +174,27 @@ idea {
         dependsOn install
     }
 }
+
+// Options for the playtest client: muted, never paused when unfocused, no first launch screens.
+def writePlaytestOptions = tasks.register('writePlaytestOptions') {
+    def options = file('run-clienttest/options.txt')
+    outputs.file(options)
+    onlyIf { !options.exists() }
+    doLast {
+        options.parentFile.mkdirs()
+        options.text = [
+                'onboardAccessibility:false',
+                'pauseOnLostFocus:false',
+                'narrator:0',
+                'soundCategory_master:0.0',
+                'renderDistance:6',
+                'guiScale:2',
+                'tutorialStep:none',
+                'skipMultiplayerWarning:true',
+                'joinedFirstServer:true',
+        ].join('\n') + '\n'
+    }
+}
+tasks.matching { it.name == 'runClientTest' }.configureEach {
+    dependsOn writePlaytestOptions
+}

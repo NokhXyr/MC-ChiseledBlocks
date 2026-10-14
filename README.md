@@ -58,6 +58,7 @@ the selected material is highlighted.
 ./gradlew test         # unit tests
 ./gradlew benchmark    # voxel core micro-benchmarks
 ./gradlew runGameTestServer  # in game tests, headless
+./gradlew runClientTest      # plays the mod like a player, screenshots and report
 ./gradlew runClient    # development client
 ```
 
@@ -142,6 +143,7 @@ contenu, le matériau sélectionné est en surbrillance.
 ./gradlew test         # tests unitaires
 ./gradlew benchmark    # micro-benchmarks du noyau voxel
 ./gradlew runGameTestServer  # tests en jeu, sans fenêtre
+./gradlew runClientTest      # joue le mod comme un joueur, captures et rapport
 ./gradlew runClient    # client de développement
 ```
 

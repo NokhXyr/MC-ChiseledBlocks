@@ -7,6 +7,7 @@ package com.nokhxyr.bitsmith.client;
 import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
+import com.nokhxyr.bitsmith.client.playtest.ClientPlaytest;
 import com.nokhxyr.bitsmith.client.render.CarvedBakedModel;
 import com.nokhxyr.bitsmith.client.render.CarvedColors;
 import com.nokhxyr.bitsmith.client.render.GridItemOverrides;
@@ -25,9 +26,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +42,13 @@ public final class BitsmithClient {
     private static final Map<BlockState, BitGrid> BIT_SHAPES = new ConcurrentHashMap<>();
 
     private BitsmithClient() {
+    }
+
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        if (Boolean.getBoolean("bitsmith.clientTest")) {
+            NeoForge.EVENT_BUS.register(new ClientPlaytest());
+        }
     }
 
     @SubscribeEvent

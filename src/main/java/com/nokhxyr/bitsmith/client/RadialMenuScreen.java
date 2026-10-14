@@ -124,11 +124,7 @@ public final class RadialMenuScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         float cx = width / 2.0F;
         float cy = height / 2.0F;
-        float dx = mouseX - cx;
-        float dy = mouseY - cy;
-        float distance = Mth.sqrt(dx * dx + dy * dy);
-        float angle = angleOf(dx, dy);
-        updateHover(distance, angle, dx);
+        hoverAt(mouseX, mouseY);
 
         Matrix4f matrix = graphics.pose().last().pose();
         VertexConsumer buffer = graphics.bufferSource().getBuffer(RenderType.gui());
@@ -173,6 +169,27 @@ public final class RadialMenuScreen extends Screen {
         if (caption != null) {
             graphics.drawCenteredString(font, caption, (int) cx, (int) (cy + outerRadius() + 8), TEXT);
         }
+    }
+
+    /**
+     * Works out the option under a point in GUI units. Called when drawing and again when the
+     * choice is made, so a mouse move and a release within the same frame still pick the option
+     * actually under the cursor.
+     */
+    private void hoverAt(double mouseX, double mouseY) {
+        float dx = (float) (mouseX - width / 2.0);
+        float dy = (float) (mouseY - height / 2.0);
+        updateHover(Mth.sqrt(dx * dx + dy * dy), angleOf(dx, dy), dx);
+    }
+
+    /** The cursor position right now, in GUI units. */
+    private void hoverAtCursor() {
+        if (minecraft == null) {
+            return;
+        }
+        double x = minecraft.mouseHandler.xpos() * width / minecraft.getWindow().getScreenWidth();
+        double y = minecraft.mouseHandler.ypos() * height / minecraft.getWindow().getScreenHeight();
+        hoverAt(x, y);
     }
 
     private float outerRadius() {
@@ -247,6 +264,7 @@ public final class RadialMenuScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        hoverAt(mouseX, mouseY);
         if (button == 0 && activate()) {
             if (hoveredCenter == 0) {
                 onClose();
@@ -259,6 +277,7 @@ public final class RadialMenuScreen extends Screen {
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if (BitsmithKeys.RADIAL.matches(keyCode, scanCode)) {
+            hoverAtCursor();
             if (hoveredCenter == 0) {
                 activate();
             }

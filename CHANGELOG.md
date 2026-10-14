@@ -24,9 +24,12 @@ All notable changes to Bitsmith are documented here.
 - **Radial menu** — Hold Left Alt with the chisel or the bag in hand: the chisel shows its modes (outer ring) and sizes (inner ring), the bag its materials. Point and release, or click. The centre holds undo (left) and redo (right).
 - **Undo and redo** — Ctrl+Z and Ctrl+Y undo and redo the last 64 carving actions of each player (strokes and bit placements). In survival the bits follow: undoing a stroke takes its bits back, undoing a placement returns the bit. A step whose block changed since is dropped instead of overwriting the newer work.
 - **Patterns** — A blank pattern (3 paper and an iron nugget) records a carved block on right click. In print mode the pattern fills the empty space next to the clicked face (or in the clicked block when sneaking); in carve mode it cuts its shape out of the clicked block. The outline previews the shape and where it goes, V or the tool menu switches the mode, sneak and right click in the air wipes it. In survival printing takes the bits from the inventory and bags, and lists what is missing; carving gives the bits. Every use can be undone.
+- **Client playtest** — `./gradlew runClientTest` plays the mod like a player in a fresh flat world (key presses, menus, clicks), checks each step, takes screenshots and writes `run-clienttest/playtest-report.txt`, then quits. It uses its own game directory.
 
 ### Fixed
 
+- **Radial menu choice** — An option picked by moving and releasing within the same frame is now taken into account.
+- **Carving at the edge of a hole** — Repeated clicks on the edge of a hole kept targeting the bit already removed. The targeted bit is now found by tracing the view ray through the carving.
 - **Dark inner faces** — Faces inside a carved block no longer render almost black with smooth lighting: they now use the light of the block itself instead of ambient occlusion sampled from the solid blocks around.
 
 ### Changed
@@ -51,9 +54,12 @@ All notable changes to Bitsmith are documented here.
 - **Menu radial** — Alt gauche maintenu avec le ciseau ou le sac en main : le ciseau affiche ses modes (anneau extérieur) et ses tailles (anneau intérieur), le sac ses matériaux. On pointe et on relâche, ou on clique. Le centre contient annuler (gauche) et rétablir (droite).
 - **Annuler et rétablir** — Ctrl+Z et Ctrl+Y annulent et rétablissent les 64 dernières actions de ciselage de chaque joueur (coups et poses de bits). En survie les bits suivent : annuler un coup reprend ses bits, annuler une pose rend le bit. Une étape dont le bloc a changé depuis est abandonnée au lieu d'écraser le travail plus récent.
 - **Patterns** — Un pattern vierge (3 papiers et une pépite de fer) enregistre un bloc ciselé d'un clic droit. En mode imprimer, le pattern remplit l'espace vide à côté de la face visée (ou dans le bloc visé en étant accroupi) ; en mode creuser, il découpe sa forme dans le bloc visé. Le contour montre la forme et où elle va, V ou le menu de l'outil change le mode, accroupi + clic droit dans le vide l'efface. En survie, imprimer prend les bits dans l'inventaire et les sacs et liste ce qui manque ; creuser rend les bits. Chaque utilisation peut être annulée.
+- **Partie de test client** — `./gradlew runClientTest` joue le mod comme un joueur dans un monde plat neuf (touches, menus, clics), vérifie chaque étape, prend des captures et écrit `run-clienttest/playtest-report.txt`, puis quitte. Il utilise son propre dossier de jeu.
 
 ### Correctifs
 
+- **Choix dans le menu radial** — Une option choisie en bougeant puis en relâchant dans la même image est maintenant prise en compte.
+- **Ciseler au bord d'un trou** — Des clics répétés au bord d'un trou visaient toujours le bit déjà retiré. Le bit visé est désormais trouvé en suivant le rayon du regard à travers la sculpture.
 - **Faces intérieures sombres** — Les faces à l'intérieur d'un bloc ciselé ne sont plus presque noires avec l'éclairage lissé : elles utilisent la lumière du bloc lui-même au lieu de l'occlusion ambiante calculée sur les blocs pleins autour.
 
 ### Modifications

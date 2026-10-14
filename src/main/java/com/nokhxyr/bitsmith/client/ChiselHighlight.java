@@ -105,7 +105,7 @@ public final class ChiselHighlight {
         }
 
         ChiselSettings settings = ChiselItem.settings(player.getMainHandItem());
-        int voxel = ChiselInput.voxelAt(hit);
+        int voxel = ChiselInput.voxelAt(player, hit);
         int[] box = ChiselShape.bounds(settings.mode(), settings.size(),
                 voxel & 15, voxel >> 8, (voxel >> 4) & 15, FACES[hit.getDirection().ordinal()]);
 
