@@ -1,0 +1,34 @@
+# Local only
+.claude/
+CLAUDE.md
+test-procedures/
+TEST_PROCEDURE_*.html
+
+# Gradle
+.gradle/
+build/
+out/
+repo/
+
+# Runs
+run/
+run-data/
+runs/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+bin/
+
+# Generated
+src/generated/**/.cache
+
+# OS
+Thumbs.db
+.DS_Store
