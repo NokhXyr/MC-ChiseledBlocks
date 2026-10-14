@@ -51,6 +51,8 @@ Requires Java 21.
 
 All Rights Reserved. See [LICENSE](LICENSE).
 
+**Modpacks are allowed**: you may include the unmodified released mod file in any modpack, public or private, free or paid, without asking.
+
 ## Credits
 
 Author: NokhXyr
@@ -110,6 +112,8 @@ Nécessite Java 21.
 ## Licence
 
 Tous droits réservés (All Rights Reserved). Voir [LICENSE](LICENSE).
+
+**Les modpacks sont autorisés** : vous pouvez inclure le fichier du mod publié, non modifié, dans n'importe quel modpack, public ou privé, gratuit ou payant, sans demander.
 
 ## Credits
 

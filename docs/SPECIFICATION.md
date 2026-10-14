@@ -183,7 +183,7 @@ scenes (static view, continuous carving, chunk loading, fly over).
 | Smooth lighting looks wrong on inner faces | Compare with flat lighting at M1; disable AO on inner quads if needed |
 | Chisels & Bits save format is compressed and undocumented | Time boxed format study before M5; import stays optional |
 | Worst case carvings (checkerboard) produce many quads | Measured in the core benchmark; acceptable because rare and cached |
-| All Rights Reserved blocks pack makers from including the mod | Grant modpack permission explicitly in the README |
+| All Rights Reserved blocks pack makers from including the mod | Resolved: modpack exception in LICENSE and README |
 
 ---
 
@@ -370,4 +370,4 @@ scènes (vue statique, ciselage continu, chargement de chunks, survol).
 | L'éclairage lissé rend mal sur les faces intérieures | Comparaison avec l'éclairage plat à M1 ; AO désactivée sur les quads intérieurs si besoin |
 | Le format de sauvegarde de Chisels & Bits est compressé et non documenté | Étude du format limitée dans le temps avant M5 ; l'import reste optionnel |
 | Les sculptures pire cas (damier) produisent beaucoup de quads | Mesuré dans le benchmark du noyau ; acceptable car rare et mis en cache |
-| All Rights Reserved empêche les créateurs de modpacks d'inclure le mod | Autorisation explicite pour les modpacks dans le README |
+| All Rights Reserved empêche les créateurs de modpacks d'inclure le mod | Résolu : exception modpacks dans la LICENSE et le README |
