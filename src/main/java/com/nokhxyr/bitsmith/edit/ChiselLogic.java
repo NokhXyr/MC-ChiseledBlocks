@@ -54,8 +54,11 @@ public final class ChiselLogic {
         Int2IntOpenHashMap removed = new Int2IntOpenHashMap();
         BlockState state = level.getBlockState(pos);
         int soundMaterial;
+        BlockSnapshot before;
+        BlockSnapshot after;
 
         if (level.getBlockEntity(pos) instanceof CarvedBlockEntity carved) {
+            before = BlockSnapshot.current(level, pos);
             int[] count = {0};
             carved.edit(builder -> count[0] = ChiselOperation.apply(settings, voxel, face, builder::get, chisel::canCut,
                     (index, material) -> {
@@ -66,6 +69,7 @@ public final class ChiselLogic {
                 return;
             }
             soundMaterial = removed.keySet().iterator().nextInt();
+            after = BlockSnapshot.current(level, pos);
         } else {
             int material = Materials.id(state);
             if (!Materials.isCarvable(state, level, pos) || !chisel.canCut(material)) {
@@ -78,14 +82,20 @@ public final class ChiselLogic {
                 builder.set(index, BitGrid.AIR);
                 removed.addTo(m, 1);
             });
+            BitGrid carvedGrid = builder.build();
             level.setBlock(pos, BitsmithRegistries.CARVED_BLOCK.get().defaultBlockState(), Block.UPDATE_ALL);
             if (level.getBlockEntity(pos) instanceof CarvedBlockEntity carved) {
-                carved.setGrid(builder.build());
+                carved.setGrid(carvedGrid);
             }
             soundMaterial = material;
+            before = BlockSnapshot.of(state);
+            after = BlockSnapshot.of(carvedGrid);
         }
 
-        if (!player.getAbilities().instabuild) {
+        // Creative strokes cost nothing, so undoing them must not move bits either.
+        boolean survival = !player.getAbilities().instabuild;
+        EditHistory.record(player, pos, before, after, survival ? removed : new Int2IntOpenHashMap());
+        if (survival) {
             BitInventory.give(player, removed);
             tool.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
         }

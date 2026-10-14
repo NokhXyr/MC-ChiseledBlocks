@@ -9,8 +9,11 @@ import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
@@ -67,6 +70,8 @@ public final class BitPlacement {
 
         int id = Materials.id(material);
         BlockState state = level.getBlockState(pos);
+        ServerLevel serverLevel = (ServerLevel) level;
+        BlockSnapshot before = BlockSnapshot.current(serverLevel, pos);
         if (level.getBlockEntity(pos) instanceof CarvedBlockEntity carved) {
             if (carved.peek(voxel) != BitGrid.AIR) {
                 return InteractionResult.FAIL;
@@ -82,8 +87,16 @@ public final class BitPlacement {
             return InteractionResult.FAIL;
         }
 
-        if (player == null || !player.getAbilities().instabuild) {
+        boolean survival = player == null || !player.getAbilities().instabuild;
+        if (survival) {
             consume.run();
+        }
+        if (player instanceof ServerPlayer serverPlayer) {
+            Int2IntOpenHashMap spent = new Int2IntOpenHashMap();
+            if (survival) {
+                spent.put(id, -1);
+            }
+            EditHistory.record(serverPlayer, pos, before, BlockSnapshot.current(serverLevel, pos), spent);
         }
         SoundType sound = material.getSoundType();
         level.playSound(null, pos, sound.getPlaceSound(), SoundSource.BLOCKS, 0.4F, sound.getPitch() * 1.4F);

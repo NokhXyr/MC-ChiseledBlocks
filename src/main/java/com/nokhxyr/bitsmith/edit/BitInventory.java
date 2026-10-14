@@ -39,6 +39,47 @@ public final class BitInventory {
         }
     }
 
+    /** Bits of a material the player holds, loose and in bags. */
+    public static int count(Player player, BlockState material) {
+        Inventory inventory = player.getInventory();
+        int total = 0;
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (stack.getItem() instanceof BitItem && BitItem.material(stack) == material) {
+                total += stack.getCount();
+            } else if (stack.getItem() instanceof BitBagItem) {
+                total += BitBagItem.contents(stack).count(material);
+            }
+        }
+        return total;
+    }
+
+    /** Removes up to {@code count} bits, loose stacks first, then bags. Returns how many were taken. */
+    public static int take(Player player, BlockState material, int count) {
+        Inventory inventory = player.getInventory();
+        int left = count;
+        for (int slot = 0; slot < inventory.getContainerSize() && left > 0; slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (stack.getItem() instanceof BitItem && BitItem.material(stack) == material) {
+                int taken = Math.min(left, stack.getCount());
+                stack.shrink(taken);
+                left -= taken;
+            }
+        }
+        for (int slot = 0; slot < inventory.getContainerSize() && left > 0; slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (stack.getItem() instanceof BitBagItem) {
+                BagContents contents = BitBagItem.contents(stack);
+                int taken = Math.min(left, contents.count(material));
+                if (taken > 0) {
+                    BitBagItem.setContents(stack, contents.remove(material, taken));
+                    left -= taken;
+                }
+            }
+        }
+        return count - left;
+    }
+
     private static int intoBags(Inventory inventory, BlockState material, int count) {
         int left = count;
         for (int slot = 0; slot < inventory.getContainerSize() && left > 0; slot++) {

@@ -21,6 +21,8 @@ All notable changes to Bitsmith are documented here.
 - **Survival rules** — The iron chisel cuts what an iron pickaxe can harvest and loses one durability per stroke. Recipes for the chisel and the bag.
 - **Carved block item** — Breaking a carved block drops it with its carving; placing it restores the carving. Pick block keeps the carving too. Carved blocks and bits render in hand and in slots from the same cached meshes.
 - **Client prediction** — Strokes on a carved block show at once on the client; a refused stroke is undone by the server, and a lasting mismatch triggers a resync.
+- **Radial menu** — Hold Left Alt with the chisel or the bag in hand: the chisel shows its modes (outer ring) and sizes (inner ring), the bag its materials. Point and release, or click. The centre holds undo (left) and redo (right).
+- **Undo and redo** — Ctrl+Z and Ctrl+Y undo and redo the last 64 carving actions of each player (strokes and bit placements). In survival the bits follow: undoing a stroke takes its bits back, undoing a placement returns the bit. A step whose block changed since is dropped instead of overwriting the newer work.
 
 ### Fixed
 
@@ -45,6 +47,8 @@ All notable changes to Bitsmith are documented here.
 - **Règles de survie** — Le ciseau en fer coupe ce qu'une pioche en fer peut récolter et perd une durabilité par coup. Recettes pour le ciseau et le sac.
 - **Item de bloc ciselé** — Un bloc ciselé cassé se ramasse avec sa sculpture ; le reposer la restaure. Le pick block garde aussi la sculpture. Blocs ciselés et bits s'affichent en main et dans les slots à partir des mêmes maillages en cache.
 - **Prédiction côté client** — Les coups sur un bloc ciselé s'affichent immédiatement côté client ; un coup refusé est annulé par le serveur, et un décalage durable déclenche une resynchronisation.
+- **Menu radial** — Alt gauche maintenu avec le ciseau ou le sac en main : le ciseau affiche ses modes (anneau extérieur) et ses tailles (anneau intérieur), le sac ses matériaux. On pointe et on relâche, ou on clique. Le centre contient annuler (gauche) et rétablir (droite).
+- **Annuler et rétablir** — Ctrl+Z et Ctrl+Y annulent et rétablissent les 64 dernières actions de ciselage de chaque joueur (coups et poses de bits). En survie les bits suivent : annuler un coup reprend ses bits, annuler une pose rend le bit. Une étape dont le bloc a changé depuis est abandonnée au lieu d'écraser le travail plus récent.
 
 ### Correctifs
 

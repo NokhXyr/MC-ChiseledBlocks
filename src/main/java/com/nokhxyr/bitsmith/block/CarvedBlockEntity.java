@@ -80,6 +80,11 @@ public final class CarvedBlockEntity extends BlockEntity {
         return taken;
     }
 
+    /** The grid as it will be once this tick's pending edits are applied. */
+    public BitGrid effectiveGrid() {
+        return pending != null ? pending.build() : grid;
+    }
+
     /** Current state including edits not applied yet, for reading during the same tick. */
     public int peek(int index) {
         return pending != null ? pending.get(index) : grid.get(index);

@@ -29,11 +29,13 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 | Action | How |
 |---|---|
 | Carve | Hold the iron chisel and left click a block (hold the button to keep carving) |
-| Change chisel mode | `V` (single bit, cube, line, plane, sphere) |
-| Change chisel size | `B` (1, 2, 4, 8 bits) |
+| Tool menu | Hold `Left Alt` with the chisel or the bag: point at an option and release (or click) |
+| Change chisel mode | Tool menu, or `V` (single bit, cube, line, plane, sphere) |
+| Change chisel size | Tool menu, or `B` (1, 2, 4, 8 bits) |
+| Undo / redo | `Ctrl+Z` / `Ctrl+Y`, or the centre of the tool menu (last 64 actions) |
 | Place a bit | Hold bits and right click a face |
 | Fill the bit bag | Keep the bag anywhere in the inventory while carving: bits go into it first |
-| Place from the bag | Hold the bag and right click a face; `V` picks the material |
+| Place from the bag | Hold the bag and right click a face; the tool menu or `V` picks the material |
 | Take bits out of the bag | Hold the bag, sneak and right click in the air: one stack of the selected material |
 | Keep a carving | Break the carved block: it drops with its carving, place it back anywhere |
 
@@ -107,11 +109,13 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 | Action | Comment |
 |---|---|
 | Ciseler | Ciseau en fer en main, clic gauche sur un bloc (maintenir pour continuer) |
-| Changer le mode du ciseau | `V` (bit seul, cube, ligne, plan, sphère) |
-| Changer la taille du ciseau | `B` (1, 2, 4, 8 bits) |
+| Menu de l'outil | `Alt gauche` maintenu avec le ciseau ou le sac : pointer une option et relâcher (ou cliquer) |
+| Changer le mode du ciseau | Menu de l'outil, ou `V` (bit seul, cube, ligne, plan, sphère) |
+| Changer la taille du ciseau | Menu de l'outil, ou `B` (1, 2, 4, 8 bits) |
+| Annuler / rétablir | `Ctrl+Z` / `Ctrl+Y`, ou le centre du menu de l'outil (64 dernières actions) |
 | Poser un bit | Bits en main, clic droit sur une face |
 | Remplir le sac à bits | Garder le sac n'importe où dans l'inventaire en ciselant : les bits y vont en premier |
-| Poser depuis le sac | Sac en main, clic droit sur une face ; `V` choisit le matériau |
+| Poser depuis le sac | Sac en main, clic droit sur une face ; le menu de l'outil ou `V` choisit le matériau |
 | Sortir des bits du sac | Sac en main, accroupi + clic droit dans le vide : une pile du matériau sélectionné |
 | Garder une sculpture | Casser le bloc ciselé : il tombe avec sa sculpture, à reposer où l'on veut |
 

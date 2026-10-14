@@ -84,5 +84,8 @@ public final class BitsmithClient {
     public static void onKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(BitsmithKeys.MODE);
         event.register(BitsmithKeys.SIZE);
+        event.register(BitsmithKeys.RADIAL);
+        event.register(BitsmithKeys.UNDO);
+        event.register(BitsmithKeys.REDO);
     }
 }

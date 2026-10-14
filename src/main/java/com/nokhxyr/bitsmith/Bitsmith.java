@@ -7,6 +7,7 @@ package com.nokhxyr.bitsmith;
 import com.mojang.logging.LogUtils;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.edit.EditBatcher;
+import com.nokhxyr.bitsmith.edit.EditHistory;
 import com.nokhxyr.bitsmith.network.BitsmithNetwork;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
@@ -29,6 +30,7 @@ public final class Bitsmith {
         modEventBus.addListener((FMLCommonSetupEvent event) -> Materials.checkAirIsZero());
         NeoForge.EVENT_BUS.addListener(EditBatcher::onServerTickPost);
         NeoForge.EVENT_BUS.addListener(EditBatcher::onServerStopped);
+        NeoForge.EVENT_BUS.addListener(EditHistory::onServerStopped);
     }
 
     public static ResourceLocation id(String path) {

@@ -15,3 +15,11 @@
 **Root cause:** Vanilla smooth lighting computes ambient occlusion from the blocks around the block position. For a face inside the block, those are the solid blocks around the carving, so every inner face was shaded as if it sat in a closed corner.
 **Fix:** Inner quads are baked with ambient occlusion disabled (`BakedQuad` AO flag false); NeoForge then lights them flat with the light of the block's own position. Boundary quads keep vanilla AO.
 **Prevention:** Any quad that does not lie on the block boundary must not use vanilla AO. Check carvings visually with smooth lighting on, inside a pit and against a wall.
+
+## [2026-10-14 20:50] — Stopping the dev client also closed the user's own game
+
+**Context:** Checking that the development client starts, then stopping it.
+**Error:** Two Minecraft processes were stopped; the client log could not be rotated because another client was already using `run/logs`.
+**Root cause:** The client was stopped by matching every `java.exe` whose command line looked like a NeoForge dev client, which also matched a client the user had started from the same project.
+**Fix:** None possible after the fact; the user was told.
+**Prevention:** Only stop a process started in the same step, identified by its own PID. Before launching, check whether a dev client is already running for this project; if one is, do not start a second one and do not stop it.

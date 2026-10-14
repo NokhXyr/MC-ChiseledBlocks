@@ -14,6 +14,7 @@ import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.network.ChiselPayload;
 import com.nokhxyr.bitsmith.network.CyclePayload;
 import com.nokhxyr.bitsmith.network.PredictionTracker;
+import com.nokhxyr.bitsmith.network.UndoPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -58,6 +59,19 @@ public final class ChiselInput {
         }
         while (BitsmithKeys.SIZE.consumeClick()) {
             PacketDistributor.sendToServer(new CyclePayload(true));
+        }
+        while (BitsmithKeys.UNDO.consumeClick()) {
+            PacketDistributor.sendToServer(new UndoPayload(false));
+        }
+        while (BitsmithKeys.REDO.consumeClick()) {
+            PacketDistributor.sendToServer(new UndoPayload(true));
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen == null && minecraft.player != null && BitsmithKeys.RADIAL.isDown()) {
+            RadialMenuScreen menu = RadialMenuScreen.forItem(minecraft.player.getMainHandItem());
+            if (menu != null) {
+                minecraft.setScreen(menu);
+            }
         }
     }
 

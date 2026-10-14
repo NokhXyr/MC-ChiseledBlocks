@@ -12,7 +12,9 @@ import com.nokhxyr.bitsmith.core.edit.ChiselMode;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.voxel.Face;
+import com.nokhxyr.bitsmith.edit.BitInventory;
 import com.nokhxyr.bitsmith.edit.ChiselLogic;
+import com.nokhxyr.bitsmith.edit.EditHistory;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
@@ -210,6 +212,83 @@ public final class CarvingGameTests {
                 "the bit sits on the clicked face");
         helper.assertTrue(carved.getGrid().filledCount() == 1, "exactly one bit placed");
         helper.assertTrue(player.getMainHandItem().getCount() == 2, "one bit consumed");
+        helper.succeed();
+    }
+
+    // Undo and redo
+
+    @GameTest(template = TEMPLATE)
+    public static void undoAndRedoAChiselStroke(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = creative(helper, 1.5);
+        ChiselLogic.chisel(player, helper.absolutePos(TARGET), BitGrid.index(1, 15, 1), Face.UP);
+        helper.assertBlockPresent(BitsmithRegistries.CARVED_BLOCK.get(), TARGET);
+
+        EditHistory.undo(player);
+        helper.assertBlockPresent(Blocks.STONE, TARGET);
+
+        EditHistory.redo(player);
+        helper.assertBlockPresent(BitsmithRegistries.CARVED_BLOCK.get(), TARGET);
+        CarvedBlockEntity carved = helper.getBlockEntity(TARGET);
+        helper.assertTrue(carved.getGrid().filledCount() == BitGrid.VOLUME - 1, "redo removes the same bit again");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void survivalUndoTakesTheBitsBack(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = survival(helper);
+        setMode(player, ChiselMode.CUBE, 2);
+        ChiselLogic.chisel(player, helper.absolutePos(TARGET), BitGrid.index(0, 15, 0), Face.UP);
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        helper.assertTrue(bitsInInventory(player, stone) == 8, "8 bits gained");
+
+        EditHistory.undo(player);
+        helper.assertBlockPresent(Blocks.STONE, TARGET);
+        helper.assertTrue(bitsInInventory(player, stone) == 0, "the 8 bits went back into the block");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void survivalUndoNeedsTheBits(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = survival(helper);
+        setMode(player, ChiselMode.CUBE, 2);
+        ChiselLogic.chisel(player, helper.absolutePos(TARGET), BitGrid.index(0, 15, 0), Face.UP);
+        BitInventory.take(player, Blocks.STONE.defaultBlockState(), 8);
+
+        EditHistory.undo(player);
+        helper.assertBlockPresent(BitsmithRegistries.CARVED_BLOCK.get(), TARGET);
+        helper.assertTrue(EditHistory.of(player).undoSize() == 1, "the step stays available");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void undoNeverOverwritesALaterChange(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = creative(helper, 1.5);
+        ChiselLogic.chisel(player, helper.absolutePos(TARGET), 0, Face.UP);
+        helper.setBlock(TARGET, Blocks.DIRT);
+
+        EditHistory.undo(player);
+        helper.assertBlockPresent(Blocks.DIRT, TARGET);
+        helper.assertTrue(EditHistory.of(player).undoSize() == 0, "the outdated step is dropped");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void undoingAPlacementGivesTheBitBack(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = survival(helper);
+        player.setItemInHand(InteractionHand.MAIN_HAND, BitItem.of(Blocks.OAK_PLANKS.defaultBlockState(), 3));
+        BlockPos target = helper.absolutePos(TARGET);
+        Vec3 click = new Vec3(target.getX() + 0.5, target.getY() + 1.0, target.getZ() + 0.5);
+        player.getMainHandItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND,
+                new BlockHitResult(click, Direction.UP, target, false)));
+
+        EditHistory.undo(player);
+        helper.assertBlockPresent(Blocks.AIR, TARGET.above());
+        helper.assertTrue(bitsInInventory(player, Blocks.OAK_PLANKS.defaultBlockState()) == 3, "the bit is back");
         helper.succeed();
     }
 

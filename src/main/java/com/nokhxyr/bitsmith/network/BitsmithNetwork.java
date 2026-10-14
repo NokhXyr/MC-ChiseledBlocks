@@ -8,7 +8,9 @@ import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
+import com.nokhxyr.bitsmith.core.edit.ChiselMode;
 import com.nokhxyr.bitsmith.edit.ChiselLogic;
+import com.nokhxyr.bitsmith.edit.EditHistory;
 import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
@@ -27,7 +29,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 public final class BitsmithNetwork {
-    private static final String VERSION = "2";
+    private static final String VERSION = "3";
     /** Furthest a player may ask for a grid, in blocks, squared. */
     private static final double RESYNC_RANGE_SQUARED = 64 * 64;
     private static final int RESYNCS_PER_TICK = 8;
@@ -41,6 +43,8 @@ public final class BitsmithNetwork {
         registrar.playToServer(ChiselPayload.TYPE, ChiselPayload.CODEC, BitsmithNetwork::onChisel);
         registrar.playToServer(CyclePayload.TYPE, CyclePayload.CODEC, BitsmithNetwork::onCycle);
         registrar.playToServer(ResyncPayload.TYPE, ResyncPayload.CODEC, BitsmithNetwork::onResync);
+        registrar.playToServer(UndoPayload.TYPE, UndoPayload.CODEC, BitsmithNetwork::onUndo);
+        registrar.playToServer(ToolOptionPayload.TYPE, ToolOptionPayload.CODEC, BitsmithNetwork::onToolOption);
         registrar.playToClient(GridDeltaPayload.TYPE, GridDeltaPayload.CODEC, BitsmithNetwork::onDelta);
         registrar.playToClient(GridFullPayload.TYPE, GridFullPayload.CODEC, BitsmithNetwork::onFull);
     }
@@ -68,6 +72,47 @@ public final class BitsmithNetwork {
             if (entry != null) {
                 player.displayClientMessage(Component.translatable("bitsmith.bag.selected",
                         entry.material().getBlock().getName(), entry.count()), true);
+            }
+        }
+    }
+
+    private static void onUndo(UndoPayload payload, IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer player) {
+            if (payload.redo()) {
+                EditHistory.redo(player);
+            } else {
+                EditHistory.undo(player);
+            }
+        }
+    }
+
+    private static void onToolOption(ToolOptionPayload payload, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
+        ItemStack held = player.getMainHandItem();
+        switch (payload.option()) {
+            case CHISEL_MODE, CHISEL_SIZE -> {
+                if (held.getItem() instanceof ChiselItem) {
+                    ChiselSettings current = ChiselItem.settings(held);
+                    ChiselSettings next = payload.option() == ToolOptionPayload.Option.CHISEL_MODE
+                            ? new ChiselSettings(ChiselMode.byOrdinal(payload.value()), current.size())
+                            : new ChiselSettings(current.mode(), payload.value());
+                    held.set(BitsmithComponents.CHISEL_SETTINGS.get(), next);
+                    player.displayClientMessage(next.describe(), true);
+                }
+            }
+            case BAG_MATERIAL -> {
+                if (held.getItem() instanceof BitBagItem) {
+                    BagContents contents = BitBagItem.contents(held);
+                    BagContents next = new BagContents(contents.entries(), payload.value());
+                    BitBagItem.setContents(held, next);
+                    BagContents.Entry entry = next.selectedEntry();
+                    if (entry != null) {
+                        player.displayClientMessage(Component.translatable("bitsmith.bag.selected",
+                                entry.material().getBlock().getName(), entry.count()), true);
+                    }
+                }
             }
         }
     }
