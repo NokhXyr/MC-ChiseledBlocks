@@ -15,6 +15,8 @@ import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
+import com.nokhxyr.bitsmith.item.PatternItem;
+import com.nokhxyr.bitsmith.item.PatternMode;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,7 +31,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 public final class BitsmithNetwork {
-    private static final String VERSION = "3";
+    private static final String VERSION = "4";
     /** Furthest a player may ask for a grid, in blocks, squared. */
     private static final double RESYNC_RANGE_SQUARED = 64 * 64;
     private static final int RESYNCS_PER_TICK = 8;
@@ -65,6 +67,10 @@ public final class BitsmithNetwork {
             ChiselSettings next = payload.size() ? current.withNextSize() : current.withNextMode();
             held.set(BitsmithComponents.CHISEL_SETTINGS.get(), next);
             player.displayClientMessage(next.describe(), true);
+        } else if (held.getItem() instanceof PatternItem && !payload.size()) {
+            PatternMode mode = PatternItem.mode(held).next();
+            held.set(BitsmithComponents.PATTERN_MODE.get(), mode);
+            player.displayClientMessage(Component.translatable("bitsmith.pattern.mode", mode.displayName()), true);
         } else if (held.getItem() instanceof BitBagItem && !payload.size()) {
             BagContents next = BitBagItem.contents(held).selectNext();
             BitBagItem.setContents(held, next);
@@ -100,6 +106,13 @@ public final class BitsmithNetwork {
                             : new ChiselSettings(current.mode(), payload.value());
                     held.set(BitsmithComponents.CHISEL_SETTINGS.get(), next);
                     player.displayClientMessage(next.describe(), true);
+                }
+            }
+            case PATTERN_MODE -> {
+                if (held.getItem() instanceof PatternItem) {
+                    PatternMode mode = PatternMode.byOrdinal(payload.value());
+                    held.set(BitsmithComponents.PATTERN_MODE.get(), mode);
+                    player.displayClientMessage(Component.translatable("bitsmith.pattern.mode", mode.displayName()), true);
                 }
             }
             case BAG_MATERIAL -> {

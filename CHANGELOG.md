@@ -23,6 +23,7 @@ All notable changes to Bitsmith are documented here.
 - **Client prediction** — Strokes on a carved block show at once on the client; a refused stroke is undone by the server, and a lasting mismatch triggers a resync.
 - **Radial menu** — Hold Left Alt with the chisel or the bag in hand: the chisel shows its modes (outer ring) and sizes (inner ring), the bag its materials. Point and release, or click. The centre holds undo (left) and redo (right).
 - **Undo and redo** — Ctrl+Z and Ctrl+Y undo and redo the last 64 carving actions of each player (strokes and bit placements). In survival the bits follow: undoing a stroke takes its bits back, undoing a placement returns the bit. A step whose block changed since is dropped instead of overwriting the newer work.
+- **Patterns** — A blank pattern (3 paper and an iron nugget) records a carved block on right click. In print mode the pattern fills the empty space next to the clicked face (or in the clicked block when sneaking); in carve mode it cuts its shape out of the clicked block. The outline previews the shape and where it goes, V or the tool menu switches the mode, sneak and right click in the air wipes it. In survival printing takes the bits from the inventory and bags, and lists what is missing; carving gives the bits. Every use can be undone.
 
 ### Fixed
 
@@ -49,6 +50,7 @@ All notable changes to Bitsmith are documented here.
 - **Prédiction côté client** — Les coups sur un bloc ciselé s'affichent immédiatement côté client ; un coup refusé est annulé par le serveur, et un décalage durable déclenche une resynchronisation.
 - **Menu radial** — Alt gauche maintenu avec le ciseau ou le sac en main : le ciseau affiche ses modes (anneau extérieur) et ses tailles (anneau intérieur), le sac ses matériaux. On pointe et on relâche, ou on clique. Le centre contient annuler (gauche) et rétablir (droite).
 - **Annuler et rétablir** — Ctrl+Z et Ctrl+Y annulent et rétablissent les 64 dernières actions de ciselage de chaque joueur (coups et poses de bits). En survie les bits suivent : annuler un coup reprend ses bits, annuler une pose rend le bit. Une étape dont le bloc a changé depuis est abandonnée au lieu d'écraser le travail plus récent.
+- **Patterns** — Un pattern vierge (3 papiers et une pépite de fer) enregistre un bloc ciselé d'un clic droit. En mode imprimer, le pattern remplit l'espace vide à côté de la face visée (ou dans le bloc visé en étant accroupi) ; en mode creuser, il découpe sa forme dans le bloc visé. Le contour montre la forme et où elle va, V ou le menu de l'outil change le mode, accroupi + clic droit dans le vide l'efface. En survie, imprimer prend les bits dans l'inventaire et les sacs et liste ce qui manque ; creuser rend les bits. Chaque utilisation peut être annulée.
 
 ### Correctifs
 

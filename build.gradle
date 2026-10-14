@@ -69,6 +69,8 @@ neoForge {
 
         gameTestServer {
             type = "gameTestServer"
+            // Own directory: no development client mods, no clash with a running client.
+            gameDirectory = project.file("run-gametest")
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
@@ -92,11 +94,17 @@ neoForge {
 
 configurations {
     runtimeClasspath.extendsFrom localRuntime
+    // Mods dropped into the mods folder of the client runs only (not the game test server).
+    devClientMods {
+        canBeConsumed = false
+        canBeResolved = true
+        transitive = false
+    }
 }
 
 dependencies {
-    // Development runtime only: never part of the mod jar or its published dependencies.
-    localRuntime "maven.modrinth:pehkui:${pehkui_version}"
+    // Development client mods only: never part of the mod jar or its published dependencies.
+    devClientMods "maven.modrinth:pehkui:${pehkui_version}"
 
     testImplementation platform("org.junit:junit-bom:${junit_version}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -152,5 +160,17 @@ idea {
     module {
         downloadSources = true
         downloadJavadoc = true
+    }
+}
+
+// Copies the development client mods into the mods folder of each client run. Copy, not Sync:
+// other mods placed there by hand are left alone.
+[client: 'run', clientTest: 'run-clienttest'].each { runName, gameDir ->
+    def install = tasks.register("installDevMods${runName.capitalize()}", Copy) {
+        from configurations.devClientMods
+        into file("${gameDir}/mods")
+    }
+    tasks.matching { it.name == "run${runName.capitalize()}" }.configureEach {
+        dependsOn install
     }
 }

@@ -15,6 +15,7 @@ run/
 run-data/
 runs/
 run-clienttest/
+run-gametest/
 
 # IDE
 .idea/

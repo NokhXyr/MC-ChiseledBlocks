@@ -9,6 +9,7 @@ import com.nokhxyr.bitsmith.block.GridCodecs;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
+import com.nokhxyr.bitsmith.item.PatternMode;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -39,6 +40,11 @@ public final class BitsmithComponents {
             COMPONENTS.registerComponentType("chisel_settings", builder -> builder
                     .persistent(ChiselSettings.CODEC)
                     .networkSynchronized(ChiselSettings.STREAM_CODEC));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<PatternMode>> PATTERN_MODE =
+            COMPONENTS.registerComponentType("pattern_mode", builder -> builder
+                    .persistent(PatternMode.CODEC)
+                    .networkSynchronized(PatternMode.STREAM_CODEC));
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<BagContents>> BAG_CONTENTS =
             COMPONENTS.registerComponentType("bag_contents", builder -> builder

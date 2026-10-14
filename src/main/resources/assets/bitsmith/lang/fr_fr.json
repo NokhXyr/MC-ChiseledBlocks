@@ -35,5 +35,17 @@
   "bitsmith.undo.changed": "Le bloc a changé depuis, cette étape est abandonnée",
   "bitsmith.redo.changed": "Le bloc a changé depuis, cette étape est abandonnée",
   "bitsmith.undo.missing_bits": "Annuler demande de rendre %s bits de %s",
-  "bitsmith.redo.missing_bits": "Rétablir demande %s bits de %s"
+  "bitsmith.redo.missing_bits": "Rétablir demande %s bits de %s",
+  "item.bitsmith.blank_pattern": "Pattern vierge",
+  "item.bitsmith.pattern": "Pattern",
+  "bitsmith.blank_pattern.help": "Clic droit sur un bloc ciselé pour copier sa sculpture",
+  "bitsmith.pattern.mode": "Mode : %s",
+  "bitsmith.pattern.mode.positive": "Imprimer",
+  "bitsmith.pattern.mode.negative": "Creuser",
+  "bitsmith.pattern.bits": "%s bits",
+  "bitsmith.pattern.keys": "Clic droit : utiliser (accroupi : dans le bloc visé), V ou Alt gauche : mode, accroupi + clic droit dans le vide : effacer",
+  "bitsmith.pattern.cannot_print": "Impossible d'imprimer ici",
+  "bitsmith.pattern.nothing_to_print": "Rien à imprimer : l'espace est déjà plein",
+  "bitsmith.pattern.missing_bits": "Bits manquants : %s",
+  "bitsmith.bits.amount": "%s %s"
 }

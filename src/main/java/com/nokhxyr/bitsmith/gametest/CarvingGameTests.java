@@ -15,9 +15,12 @@ import com.nokhxyr.bitsmith.core.voxel.Face;
 import com.nokhxyr.bitsmith.edit.BitInventory;
 import com.nokhxyr.bitsmith.edit.ChiselLogic;
 import com.nokhxyr.bitsmith.edit.EditHistory;
+import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
+import com.nokhxyr.bitsmith.item.PatternItem;
+import com.nokhxyr.bitsmith.item.PatternMode;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
 import net.minecraft.core.BlockPos;
@@ -289,6 +292,81 @@ public final class CarvingGameTests {
         EditHistory.undo(player);
         helper.assertBlockPresent(Blocks.AIR, TARGET.above());
         helper.assertTrue(bitsInInventory(player, Blocks.OAK_PLANKS.defaultBlockState()) == 3, "the bit is back");
+        helper.succeed();
+    }
+
+    // Patterns
+
+    private static final BitGrid STONE_SLAB = new BitGridBuilder().fill(0, 0, 0, 16, 8, 16, STONE).build();
+
+    private static void useOnTop(ServerPlayer player, GameTestHelper helper, BlockPos relative) {
+        BlockPos target = helper.absolutePos(relative);
+        Vec3 click = new Vec3(target.getX() + 0.5, target.getY() + 1.0, target.getZ() + 0.5);
+        player.getMainHandItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND,
+                new BlockHitResult(click, Direction.UP, target, false)));
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void blankPatternCopiesACarving(GameTestHelper helper) {
+        placeCarved(helper, STONE_SLAB);
+        ServerPlayer player = survival(helper);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(BitsmithRegistries.BLANK_PATTERN.get()));
+        useOnTop(player, helper, TARGET);
+
+        ItemStack held = player.getMainHandItem();
+        helper.assertTrue(held.getItem() instanceof PatternItem, "the blank pattern became a pattern");
+        helper.assertTrue(STONE_SLAB.equals(PatternItem.grid(held)), "the pattern holds the carving");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void positivePatternPrintsNextToTheClickedFace(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.DIRT);
+        ServerPlayer player = creative(helper, 1.5);
+        player.setItemInHand(InteractionHand.MAIN_HAND, PatternItem.of(STONE_SLAB, PatternMode.POSITIVE));
+        useOnTop(player, helper, TARGET);
+
+        CarvedBlockEntity printed = helper.getBlockEntity(TARGET.above());
+        helper.assertTrue(printed.getGrid().equals(STONE_SLAB), "the carving is printed above the clicked block");
+        helper.assertBlockPresent(Blocks.DIRT, TARGET);
+
+        EditHistory.undo(player);
+        helper.assertBlockPresent(Blocks.AIR, TARGET.above());
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void survivalPrintConsumesBitsOrRefuses(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.DIRT);
+        ServerPlayer player = survival(helper);
+        player.setItemInHand(InteractionHand.MAIN_HAND, PatternItem.of(STONE_SLAB, PatternMode.POSITIVE));
+
+        useOnTop(player, helper, TARGET);
+        helper.assertBlockPresent(Blocks.AIR, TARGET.above());
+
+        ItemStack bag = new ItemStack(BitsmithRegistries.BIT_BAG.get());
+        BitBagItem.setContents(bag, BagContents.EMPTY.add(Blocks.STONE.defaultBlockState(), 2048 + 10));
+        player.getInventory().setItem(5, bag);
+        useOnTop(player, helper, TARGET);
+
+        helper.assertBlockPresent(BitsmithRegistries.CARVED_BLOCK.get(), TARGET.above());
+        helper.assertTrue(BitBagItem.contents(bag).count(Blocks.STONE.defaultBlockState()) == 10, "2048 bits used");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void negativePatternCarvesItsShape(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = survival(helper);
+        player.setItemInHand(InteractionHand.MAIN_HAND, PatternItem.of(STONE_SLAB, PatternMode.NEGATIVE));
+        ItemStack bag = new ItemStack(BitsmithRegistries.BIT_BAG.get());
+        player.getInventory().setItem(5, bag);
+        useOnTop(player, helper, TARGET);
+
+        CarvedBlockEntity carved = helper.getBlockEntity(TARGET);
+        helper.assertTrue(carved.getGrid().get(0, 0, 0) == BitGrid.AIR, "the bottom half is carved out");
+        helper.assertTrue(carved.getGrid().get(0, 8, 0) == STONE, "the top half stays");
+        helper.assertTrue(BitBagItem.contents(bag).count(Blocks.STONE.defaultBlockState()) == 2048, "the carved bits are given");
         helper.succeed();
     }
 

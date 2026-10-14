@@ -9,8 +9,10 @@ import com.nokhxyr.bitsmith.block.CarvedBlock;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
+import com.nokhxyr.bitsmith.item.BlankPatternItem;
 import com.nokhxyr.bitsmith.item.CarvedBlockItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
+import com.nokhxyr.bitsmith.item.PatternItem;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -59,6 +61,12 @@ public final class BitsmithRegistries {
     public static final DeferredItem<BitBagItem> BIT_BAG = ITEMS.register("bit_bag",
             () -> new BitBagItem(new Item.Properties()));
 
+    public static final DeferredItem<BlankPatternItem> BLANK_PATTERN = ITEMS.register("blank_pattern",
+            () -> new BlankPatternItem(new Item.Properties()));
+
+    public static final DeferredItem<PatternItem> PATTERN = ITEMS.register("pattern",
+            () -> new PatternItem(new Item.Properties()));
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register("main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.bitsmith"))
@@ -66,6 +74,7 @@ public final class BitsmithRegistries {
                     .displayItems((params, output) -> {
                         output.accept(IRON_CHISEL.get());
                         output.accept(BIT_BAG.get());
+                        output.accept(BLANK_PATTERN.get());
                     })
                     .build());
 

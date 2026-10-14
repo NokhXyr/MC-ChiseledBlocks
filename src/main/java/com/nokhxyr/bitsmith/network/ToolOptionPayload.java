@@ -15,7 +15,8 @@ public record ToolOptionPayload(Option option, int value) implements CustomPacke
     public enum Option {
         CHISEL_MODE,
         CHISEL_SIZE,
-        BAG_MATERIAL;
+        BAG_MATERIAL,
+        PATTERN_MODE;
 
         private static final Option[] VALUES = values();
     }

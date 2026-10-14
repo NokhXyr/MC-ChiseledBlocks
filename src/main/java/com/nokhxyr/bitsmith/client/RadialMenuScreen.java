@@ -12,6 +12,8 @@ import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
+import com.nokhxyr.bitsmith.item.PatternItem;
+import com.nokhxyr.bitsmith.item.PatternMode;
 import com.nokhxyr.bitsmith.network.ToolOptionPayload;
 import com.nokhxyr.bitsmith.network.UndoPayload;
 import net.minecraft.client.gui.GuiGraphics;
@@ -74,6 +76,16 @@ public final class RadialMenuScreen extends Screen {
             }
             screen.rings.add(new Ring(30, 58, sizes));
             screen.rings.add(new Ring(62, 112, modes));
+            return screen;
+        }
+        if (held.getItem() instanceof PatternItem) {
+            PatternMode current = PatternItem.mode(held);
+            List<Slot> modes = new ArrayList<>();
+            for (PatternMode mode : PatternMode.values()) {
+                modes.add(new Slot(mode.displayName(), null, mode == current,
+                        () -> send(ToolOptionPayload.Option.PATTERN_MODE, mode.ordinal())));
+            }
+            screen.rings.add(new Ring(36, 96, modes));
             return screen;
         }
         if (held.getItem() instanceof BitBagItem) {

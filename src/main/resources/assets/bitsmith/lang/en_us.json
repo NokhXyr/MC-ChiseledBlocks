@@ -35,5 +35,17 @@
   "bitsmith.undo.changed": "The block changed since, this step was dropped",
   "bitsmith.redo.changed": "The block changed since, this step was dropped",
   "bitsmith.undo.missing_bits": "Undo needs %s %s bits back",
-  "bitsmith.redo.missing_bits": "Redo needs %s %s bits"
+  "bitsmith.redo.missing_bits": "Redo needs %s %s bits",
+  "item.bitsmith.blank_pattern": "Blank Pattern",
+  "item.bitsmith.pattern": "Pattern",
+  "bitsmith.blank_pattern.help": "Right click a carved block to copy its carving",
+  "bitsmith.pattern.mode": "Mode: %s",
+  "bitsmith.pattern.mode.positive": "Print",
+  "bitsmith.pattern.mode.negative": "Carve out",
+  "bitsmith.pattern.bits": "%s bits",
+  "bitsmith.pattern.keys": "Right click: use (sneak: into the clicked block), V or Left Alt: mode, sneak + right click in the air: wipe",
+  "bitsmith.pattern.cannot_print": "Cannot print here",
+  "bitsmith.pattern.nothing_to_print": "Nothing to print: the space is already full",
+  "bitsmith.pattern.missing_bits": "Missing bits: %s",
+  "bitsmith.bits.amount": "%s %s"
 }

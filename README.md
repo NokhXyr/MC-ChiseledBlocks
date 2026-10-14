@@ -7,7 +7,7 @@ for performance and stability.
 Inspired by [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith is an
 independent implementation: it contains no code or assets from Chisels & Bits.
 
-> Status: early development (milestone M2). Carving with modes and sizes, bits as items, bit bag and survival rules work; patterns and advanced tools are not there yet.
+> Status: early development (milestone M3). Carving with modes and sizes, bits as items, bit bag, survival rules, undo and patterns work; the advanced tools are not there yet.
 
 ## Features
 
@@ -37,6 +37,10 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 | Fill the bit bag | Keep the bag anywhere in the inventory while carving: bits go into it first |
 | Place from the bag | Hold the bag and right click a face; the tool menu or `V` picks the material |
 | Take bits out of the bag | Hold the bag, sneak and right click in the air: one stack of the selected material |
+| Copy a carving | Right click a carved block with a blank pattern |
+| Print a pattern | Right click a face: prints next to it (sneak: into the clicked block, empty space only) |
+| Carve with a pattern | Switch the pattern to carve mode (`V` or tool menu), right click the block |
+| Wipe a pattern | Sneak and right click in the air |
 | Keep a carving | Break the carved block: it drops with its carving, place it back anywhere |
 
 Keys can be changed in Options, Controls, under Bitsmith. The bag's tooltip lists its contents,
@@ -86,7 +90,7 @@ Minecraft 1.21.1, conçu dès le départ pour la performance et la stabilité.
 Inspiré de [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith est une
 implémentation indépendante : il ne contient aucun code ni aucune ressource de Chisels & Bits.
 
-> État : début de développement (jalon M2). Le ciselage avec modes et tailles, les bits en items, le sac à bits et les règles de survie fonctionnent ; les patterns et les outils avancés ne sont pas encore là.
+> État : début de développement (jalon M3). Le ciselage avec modes et tailles, les bits en items, le sac à bits, les règles de survie, l'annulation et les patterns fonctionnent ; les outils avancés ne sont pas encore là.
 
 ## Caractéristiques
 
@@ -117,6 +121,10 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 | Remplir le sac à bits | Garder le sac n'importe où dans l'inventaire en ciselant : les bits y vont en premier |
 | Poser depuis le sac | Sac en main, clic droit sur une face ; le menu de l'outil ou `V` choisit le matériau |
 | Sortir des bits du sac | Sac en main, accroupi + clic droit dans le vide : une pile du matériau sélectionné |
+| Copier une sculpture | Clic droit sur un bloc ciselé avec un pattern vierge |
+| Imprimer un pattern | Clic droit sur une face : imprime à côté (accroupi : dans le bloc visé, espace vide seulement) |
+| Creuser avec un pattern | Passer le pattern en mode creuser (`V` ou menu de l'outil), clic droit sur le bloc |
+| Effacer un pattern | Accroupi + clic droit dans le vide |
 | Garder une sculpture | Casser le bloc ciselé : il tombe avec sa sculpture, à reposer où l'on veut |
 
 Les touches se changent dans Options, Commandes, rubrique Bitsmith. L'infobulle du sac liste son
