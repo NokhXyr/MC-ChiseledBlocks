@@ -29,10 +29,14 @@ All notable changes to Bitsmith are documented here.
 - **Saw** — Right click cuts a 1, 2, 4 or 8 bit slice off the clicked side and hands it over as a carved block with its shape; the rest stays. Thickness with B or the tool menu, orange outline preview.
 - **Tape measure** — Right click two bits: a yellow box shows the measure, the size, distance and volume in bits show above the hotbar. Sneak and right click in the air clears it. Client side only.
 - **Tool menu sizing** — The radial menu shrinks to fit the screen at large GUI scales.
+- **Compatibility** — Checked in game with Sodium, Iris (with a shader pack), ModernFix (dynamic model loading on), FerriteCore, Lithium, ImmediatelyFast, Entity Culling, WorldEdit, Create and KubeJS through `./gradlew runClientCompat`. See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+- **Turning with other tools** — Carved blocks have a horizontal facing; WorldEdit `//rotate`, structure blocks and Create rotations now turn the carving with the block.
 - **Client playtest** — `./gradlew runClientTest` plays the mod like a player in a fresh flat world (key presses, menus, clicks), checks each step, takes screenshots and writes `run-clienttest/playtest-report.txt`, then quits. It uses its own game directory.
 
 ### Fixed
 
+- **Create could not move carved blocks** — Carved blocks were marked immovable, which only stopped Create. They now ride contraptions and keep their carving.
+- **Empty carved blocks** — A carved block left without a carving (WorldEdit `//set`, damaged data) is removed at the end of the tick instead of staying as an invisible shell.
 - **Radial menu choice** — An option picked by moving and releasing within the same frame is now taken into account.
 - **Carving at the edge of a hole** — Repeated clicks on the edge of a hole kept targeting the bit already removed. The targeted bit is now found by tracing the view ray through the carving.
 - **Dark inner faces** — Faces inside a carved block no longer render almost black with smooth lighting: they now use the light of the block itself instead of ambient occlusion sampled from the solid blocks around.
@@ -64,10 +68,14 @@ All notable changes to Bitsmith are documented here.
 - **Scie** — Clic droit : découpe une tranche de 1, 2, 4 ou 8 bits du côté visé et la donne comme bloc ciselé avec sa forme ; le reste reste en place. Épaisseur avec B ou le menu de l'outil, aperçu en orange.
 - **Mètre ruban** — Clic droit sur deux bits : une boîte jaune montre la mesure, la taille, la distance et le volume en bits s'affichent au-dessus de la barre. Accroupi + clic droit dans le vide l'efface. Uniquement côté client.
 - **Taille du menu de l'outil** — Le menu radial rétrécit pour tenir à l'écran aux grandes échelles d'interface.
+- **Compatibilité** — Vérifiée en jeu avec Sodium, Iris (avec un shader), ModernFix (chargement dynamique des modèles activé), FerriteCore, Lithium, ImmediatelyFast, Entity Culling, WorldEdit, Create et KubeJS via `./gradlew runClientCompat`. Voir [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+- **Rotation par d'autres outils** — Les blocs ciselés ont une orientation horizontale ; `//rotate` de WorldEdit, les blocs structure et les rotations de Create tournent maintenant la sculpture avec le bloc.
 - **Partie de test client** — `./gradlew runClientTest` joue le mod comme un joueur dans un monde plat neuf (touches, menus, clics), vérifie chaque étape, prend des captures et écrit `run-clienttest/playtest-report.txt`, puis quitte. Il utilise son propre dossier de jeu.
 
 ### Correctifs
 
+- **Create ne déplaçait pas les blocs ciselés** — Les blocs ciselés étaient marqués inamovibles, ce qui ne bloquait que Create. Ils voyagent maintenant sur les contraptions et gardent leur sculpture.
+- **Blocs ciselés vides** — Un bloc ciselé resté sans sculpture (`//set` de WorldEdit, données abîmées) est retiré à la fin du tick au lieu de rester une coque invisible.
 - **Choix dans le menu radial** — Une option choisie en bougeant puis en relâchant dans la même image est maintenant prise en compte.
 - **Ciseler au bord d'un trou** — Des clics répétés au bord d'un trou visaient toujours le bit déjà retiré. Le bit visé est désormais trouvé en suivant le rayon du regard à travers la sculpture.
 - **Faces intérieures sombres** — Les faces à l'intérieur d'un bloc ciselé ne sont plus presque noires avec l'éclairage lissé : elles utilisent la lumière du bloc lui-même au lieu de l'occlusion ambiante calculée sur les blocs pleins autour.

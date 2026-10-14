@@ -16,6 +16,7 @@ run-data/
 runs/
 run-clienttest/
 run-gametest/
+run-compat/
 
 # IDE
 .idea/

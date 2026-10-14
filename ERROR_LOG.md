@@ -55,3 +55,19 @@
 **Root cause:** In 1.21.1 the level renderer has already applied the camera rotation to the model view stack when `RenderLevelStageEvent` fires; multiplying the event's model view matrix again rotated the box a second time, off screen.
 **Fix:** Use the event's pose stack (or an identity one) and only translate by the camera position.
 **Prevention:** World space drawing in level render stages translates by the camera position only. Check it on a playtest screenshot.
+
+## [2026-10-14 21:57] — Compatibility client loaded the Fabric jar of Entity Culling
+
+**Context:** First `runClientCompat` with mods pinned by Modrinth version number.
+**Error:** Loading warning `entityculling-1.11.2.jar is a Fabric mod and cannot be loaded`; the playtest stayed stuck on that screen.
+**Root cause:** Entity Culling publishes its Fabric and NeoForge files as separate Modrinth versions with the same version number; the Modrinth maven resolved `1.11.2` to the Fabric one.
+**Fix:** All compatibility mods are pinned by Modrinth version id, and each jar was checked for `META-INF/neoforge.mods.toml`.
+**Prevention:** Pin Modrinth maven dependencies by version id, never by version number.
+
+## [2026-10-14 22:17] — Create refused to move carved blocks
+
+**Context:** Compatibility playtest: a Create mechanical piston pushing a carved block.
+**Error:** The piston never assembled; its data held `create.gui.assembly.exception.unmovableBlock` for the carved block.
+**Root cause:** The carved block was registered with `PushReaction.BLOCK`, meant to stop vanilla pistons. Vanilla pistons already refuse any block with a block entity, so the setting only blocked Create.
+**Fix:** Default push reaction. Carved blocks also gained a horizontal facing so that rotations done by WorldEdit, structure blocks and Create turn the carving too.
+**Prevention:** Do not restrict movement beyond what vanilla already does; check other mods' movers in the compatibility playtest.

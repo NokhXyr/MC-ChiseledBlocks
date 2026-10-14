@@ -29,6 +29,7 @@ import java.util.Set;
  */
 public final class EditBatcher {
     private static final Set<CarvedBlockEntity> DIRTY = new LinkedHashSet<>();
+    private static final Set<CarvedBlockEntity> EMPTY_CHECKS = new LinkedHashSet<>();
 
     private EditBatcher() {
     }
@@ -37,7 +38,22 @@ public final class EditBatcher {
         DIRTY.add(blockEntity);
     }
 
+    /** Asks for the block to be removed at the end of the tick if it is still empty by then. */
+    public static void checkEmpty(CarvedBlockEntity blockEntity) {
+        EMPTY_CHECKS.add(blockEntity);
+    }
+
     public static void onServerTickPost(ServerTickEvent.Post event) {
+        if (!EMPTY_CHECKS.isEmpty()) {
+            CarvedBlockEntity[] checks = EMPTY_CHECKS.toArray(CarvedBlockEntity[]::new);
+            EMPTY_CHECKS.clear();
+            for (CarvedBlockEntity blockEntity : checks) {
+                if (!blockEntity.isRemoved() && blockEntity.effectiveGrid().isEmpty()
+                        && blockEntity.getLevel() instanceof ServerLevel level) {
+                    level.removeBlock(blockEntity.getBlockPos(), false);
+                }
+            }
+        }
         if (DIRTY.isEmpty()) {
             return;
         }
@@ -50,6 +66,7 @@ public final class EditBatcher {
 
     public static void onServerStopped(ServerStoppedEvent event) {
         DIRTY.clear();
+        EMPTY_CHECKS.clear();
     }
 
     private static void flush(CarvedBlockEntity blockEntity) {

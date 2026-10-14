@@ -30,7 +30,10 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
@@ -67,7 +70,9 @@ import java.util.stream.Stream;
 public final class ClientPlaytest {
     private static final String WORLD = "bitsmith-playtest";
     private static final int WORLD_SETTLE_TICKS = 60;
-    private static final int TIMEOUT_TICKS = 20 * 240;
+    private static final int TIMEOUT_TICKS = 20 * 360;
+    /** Extra ticks a failing check is retried for, in case the game runs slow. */
+    private static final int GRACE_TICKS = 40;
 
     private static final BlockPos PLAYER = new BlockPos(0, -60, 0);
     private static final BlockPos A = new BlockPos(0, -60, 3);
@@ -88,6 +93,7 @@ public final class ClientPlaytest {
     private int index;
     private int waitLeft;
     private boolean actionDone;
+    private int graceLeft;
     private int ticks;
     private int failures;
     private boolean finished;
@@ -95,6 +101,7 @@ public final class ClientPlaytest {
     private String observed;
     private BitGrid beforeWrench;
     private int sawBefore;
+    private BitGrid movedGrid;
 
     public ClientPlaytest() {
         script();
@@ -204,6 +211,13 @@ public final class ClientPlaytest {
         return actual >= min && actual <= max;
     }
 
+    /** Whether the server has moved the player to the given position yet. */
+    private boolean at(double x, double y, double z) {
+        Vec3 position = mc.player.position();
+        observed = "player at " + position + ", expected " + x + " " + y + " " + z;
+        return position.distanceToSqr(x, y, z) < 0.01;
+    }
+
     private boolean that(String what, boolean condition) {
         observed = what;
         return condition;
@@ -273,7 +287,7 @@ public final class ClientPlaytest {
             key(BitsmithKeys.RADIAL.getKey().getValue(), false);
         }, 6, () -> that("mode " + ChiselItem.settings(held()).mode(), ChiselItem.settings(held()).mode() == ChiselMode.CUBE));
 
-        step("walk to the grass", () -> command("tp @s 5.5 -60 1.5 0 30"), 10, () -> true);
+        step("walk to the grass", () -> command("tp @s 5.5 -60 1.5 0 30"), 10, () -> at(5.5, -60, 1.5));
         double[][] pitPoints = {{0.3, 0.3}, {0.7, 0.3}, {0.3, 0.7}, {0.7, 0.7}};
         for (double[] p : pitPoints) {
             step("dig into the grass", () -> {
@@ -291,7 +305,7 @@ public final class ClientPlaytest {
         step("survival, back to the row", () -> {
             command("gamemode survival");
             command("tp @s 0.5 -60 0.5 0 0");
-        }, 15, () -> true);
+        }, 15, () -> at(0.5, -60, 0.5));
         step("survival cube stroke gives 64 bits", () -> {
             hotbar(0);
             lookAtFace(B, Direction.NORTH);
@@ -391,6 +405,10 @@ public final class ClientPlaytest {
         shot("right click sets the second point", this::use, 6,
                 () -> that("second point", TapeMeasureClient.second() != null), "12_tape_measure");
 
+        if (Boolean.getBoolean("bitsmith.compatTest")) {
+            compatScript();
+        }
+
         step("large GUI scale", () -> {
             hotbar(0);
             mc.options.guiScale().set(4);
@@ -409,6 +427,118 @@ public final class ClientPlaytest {
             command("tp @s 0.5 -58.6 -1.5 0 20");
         }, 15, () -> true, null);
         shot("overview of the row", () -> look(new Vec3(0.5, -59.5, 3.5)), 8, () -> true, "08_overview");
+    }
+
+    // Compatibility (runClientCompat): KubeJS, WorldEdit, Create, under Sodium, Iris and ModernFix
+
+    private static final BlockPos PISTON = new BlockPos(10, -60, -14);
+    private static final BlockPos MOVED = new BlockPos(11, -60, -14);
+
+    private void compatScript() {
+        step("KubeJS recipes use Bitsmith items", () -> { }, 1, () -> {
+            var recipes = mc.getConnection().getRecipeManager();
+            var chisel = recipes.byKey(ResourceLocation.fromNamespaceAndPath("bitsmith_compat", "chisel_from_dirt"));
+            var bits = recipes.byKey(ResourceLocation.fromNamespaceAndPath("bitsmith_compat", "stone_bits"));
+            ItemStack result = bits.map(r -> r.value().getResultItem(mc.level.registryAccess())).orElse(ItemStack.EMPTY);
+            return that("chisel recipe " + chisel.isPresent(), chisel.isPresent())
+                    && that("bit recipe result " + result, result.getCount() == 16
+                    && BitItem.material(result) == Blocks.STONE.defaultBlockState());
+        });
+
+        step("WorldEdit copies the carved row", () -> {
+            command("gamemode creative");
+            command("tp @s 0.5 -60 0.5 0 0");
+            command("/pos1 -2,-60,3");
+            command("/pos2 2,-60,3");
+            command("/copy");
+        }, 15, () -> true);
+        step("and pastes it ten blocks north", () -> {
+            command("tp @s 0.5 -60 -9.5 0 0");
+            command("/paste");
+        }, 30, () -> that("pasted A equals A", gridAt(A) != null && gridAt(A).equals(gridAt(A.offset(0, 0, -10))))
+                && that("pasted F equals F", gridAt(F) != null && gridAt(F).equals(gridAt(F.offset(0, 0, -10)))));
+        step("WorldEdit //rotate then paste", () -> {
+            command("/rotate 90");
+            command("tp @s 0.5 -60 -19.5 0 0");
+            command("/paste");
+        }, 30, () -> {
+            // After a quarter turn the row runs along Z; look for A's copy in that column.
+            BitGrid original = gridAt(A);
+            for (int dz = -4; dz <= 4; dz++) {
+                for (int dx = -4; dx <= 4; dx++) {
+                    BitGrid pasted = gridAt(new BlockPos(dx, -60, -20 + dz));
+                    if (pasted != null && pasted.filledCount() == original.filledCount()) {
+                        boolean turned = !pasted.equals(original);
+                        return that("rotated paste found at " + dx + "," + (-20 + dz) + ", carving turned " + turned, turned);
+                    }
+                }
+            }
+            return that("no rotated paste found", false);
+        });
+        step("WorldEdit //set of an empty carved block leaves no ghost", () -> {
+            command("/pos1 4,-60,-12");
+            command("/pos2 4,-60,-12");
+            command("/set bitsmith:carved_block");
+        }, 15, () -> that("block after //set " + mc.level.getBlockState(new BlockPos(4, -60, -12)),
+                mc.level.getBlockState(new BlockPos(4, -60, -12)).isAir()));
+        shot("look at the pasted row", () -> {
+            command("tp @s 0.5 -58.6 -11.5 0 20");
+        }, 15, () -> true, null);
+        shot("pasted row", () -> look(new Vec3(0.5, -59.5, -6.5)), 8, () -> true, "14_worldedit_paste");
+
+        step("carve the block Create will move", () -> {
+            command("setblock 11 -60 -14 minecraft:stone");
+            command("tp @s 11.5 -60 -16.5 0 0");
+            hotbar(0);
+        }, 10, () -> at(11.5, -60, -16.5));
+        step("one stroke", () -> lookAtFace(MOVED, Direction.NORTH), 4, () -> true);
+        step("the block is carved", () -> {
+            attack();
+        }, 8, () -> {
+            movedGrid = gridAt(MOVED);
+            return that("carved before moving", movedGrid != null);
+        });
+        step("build a powered Create piston behind it", () -> {
+            command("setblock 10 -60 -14 create:mechanical_piston[facing=east]");
+            command("setblock 9 -60 -14 create:piston_extension_pole[facing=east]");
+            command("setblock 8 -60 -14 create:piston_extension_pole[facing=east]");
+            // -16 rpm: with this layout a positive speed would retract the piston, which is already in.
+            command("setblock 10 -61 -14 create:creative_motor[facing=up]{ScrollValue:-16}");
+            command("setblock 10 -60 -15 create:creative_motor[facing=south]{ScrollValue:-16}");
+            command("tp @s 11.5 -58 -19.5 0 25");
+        }, 12, () -> true);
+        step("give the piston time to assemble", () -> look(new Vec3(12, -59.5, -14)), 30, () -> true);
+        step("read the piston state for the log", () -> command("data get block 10 -60 -14"), 2, () -> true);
+        shot("the carved block rides the contraption", () -> { }, 2,
+                () -> that("contraption entities " + contraptions(), contraptions() > 0), "15_create_contraption");
+        step("stop the motors", () -> {
+            command("setblock 10 -61 -14 minecraft:dirt");
+            command("setblock 10 -60 -15 minecraft:air");
+        }, 60, () -> true);
+        shot("the carving survives the trip", () -> { }, 10, () -> {
+            for (int x = 11; x <= 14; x++) {
+                BitGrid grid = gridAt(new BlockPos(x, -60, -14));
+                if (grid != null && grid.equals(movedGrid)) {
+                    return that("found at x " + x, true);
+                }
+            }
+            return that("carving not found at x 11 to 14, contraptions " + contraptions(), false);
+        }, "16_create_after");
+
+        shot("shaders view", () -> {
+            command("tp @s 0.5 -58.6 -1.5 0 20");
+        }, 20, () -> true, null);
+        shot("carved blocks under the shader pack", () -> look(new Vec3(0.5, -59.5, 3.5)), 10, () -> true, "17_shaders");
+    }
+
+    private long contraptions() {
+        long count = 0;
+        for (Entity entity : mc.level.entitiesForRendering()) {
+            if (BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getNamespace().equals("create")) {
+                count++;
+            }
+        }
+        return count;
     }
 
     // Driving
@@ -482,6 +612,7 @@ public final class ClientPlaytest {
             }
             actionDone = true;
             waitLeft = step.waitTicks();
+            graceLeft = GRACE_TICKS;
             return;
         }
 
@@ -492,6 +623,13 @@ public final class ClientPlaytest {
         } catch (RuntimeException e) {
             ok = false;
         }
+        if (!ok && graceLeft > 0) {
+            // The game or its integrated server may be running slow (shader compilation, chunk
+            // loading): give the result a little longer to show before calling it a failure.
+            graceLeft--;
+            return;
+        }
+        graceLeft = GRACE_TICKS;
         record(step, ok, ok ? null : observed);
         if (step.screenshot() != null) {
             Screenshot.grab(mc.gameDirectory, "playtest_" + step.screenshot() + ".png", mc.getMainRenderTarget(), message -> { });

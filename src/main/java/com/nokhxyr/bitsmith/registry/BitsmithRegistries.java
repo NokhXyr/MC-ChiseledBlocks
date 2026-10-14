@@ -24,7 +24,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.PushReaction;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -44,8 +43,7 @@ public final class BitsmithRegistries {
                     .strength(1.5F, 6.0F)
                     .sound(SoundType.STONE)
                     .noOcclusion()
-                    .dynamicShape()
-                    .pushReaction(PushReaction.BLOCK)));
+                    .dynamicShape()));
 
     @SuppressWarnings("DataFlowIssue")
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CarvedBlockEntity>> CARVED_BLOCK_ENTITY =

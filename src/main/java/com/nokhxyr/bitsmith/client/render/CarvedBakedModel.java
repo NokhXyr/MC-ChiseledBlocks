@@ -11,8 +11,10 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.ChunkRenderTypeSet;
 import net.neoforged.neoforge.client.model.IDynamicBakedModel;
@@ -42,6 +44,22 @@ public final class CarvedBakedModel implements IDynamicBakedModel {
                                     ModelData data, @Nullable RenderType renderType) {
         CarvedMesh mesh = mesh(data);
         return mesh == null ? List.of() : mesh.quads(renderType, side);
+    }
+
+    /**
+     * Normally the grid arrives through NeoForge's model data manager. Some mods draw blocks
+     * outside that pipeline (Create contraptions, schematic previews) but still keep the block
+     * entity in their own level: read the grid from it then.
+     */
+    @Override
+    public ModelData getModelData(BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData modelData) {
+        if (modelData.get(CarvedBlockEntity.GRID) != null) {
+            return modelData;
+        }
+        if (level.getBlockEntity(pos) instanceof CarvedBlockEntity carved) {
+            return carved.getModelData();
+        }
+        return modelData;
     }
 
     @Override

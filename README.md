@@ -63,6 +63,7 @@ the selected material is highlighted.
 ./gradlew benchmark    # voxel core micro-benchmarks
 ./gradlew runGameTestServer  # in game tests, headless
 ./gradlew runClientTest      # plays the mod like a player, screenshots and report
+./gradlew runClientCompat    # the same with Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
 ./gradlew runClient    # development client
 ```
 
@@ -72,6 +73,7 @@ Requires Java 21.
 
 - [Specification](docs/SPECIFICATION.md)
 - [Profiling protocol](docs/PROFILING.md)
+- [Compatibility](docs/COMPATIBILITY.md)
 - [Benchmarks](docs/benchmarks/)
 
 ## License
@@ -152,6 +154,7 @@ contenu, le matériau sélectionné est en surbrillance.
 ./gradlew benchmark    # micro-benchmarks du noyau voxel
 ./gradlew runGameTestServer  # tests en jeu, sans fenêtre
 ./gradlew runClientTest      # joue le mod comme un joueur, captures et rapport
+./gradlew runClientCompat    # pareil avec Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
 ./gradlew runClient    # client de développement
 ```
 
@@ -161,6 +164,7 @@ Nécessite Java 21.
 
 - [Cahier des charges](docs/SPECIFICATION.md)
 - [Protocole de profilage](docs/PROFILING.md)
+- [Compatibilité](docs/COMPATIBILITY.md)
 - [Benchmarks](docs/benchmarks/)
 
 ## Licence

@@ -6,6 +6,7 @@ package com.nokhxyr.bitsmith.gametest;
 
 import com.mojang.authlib.GameProfile;
 import com.nokhxyr.bitsmith.Bitsmith;
+import com.nokhxyr.bitsmith.block.CarvedBlock;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
@@ -460,6 +461,23 @@ public final class CarvingGameTests {
     }
 
     // Blocks and items
+
+    @GameTest(template = TEMPLATE)
+    public static void turnedBlockStateTurnsTheCarving(GameTestHelper helper) {
+        // What WorldEdit, structure blocks and Create do: a turned state with the original data.
+        BitGrid north = new BitGridBuilder().fill(0, 0, 0, 16, 1, 16, STONE).set(8, 3, 0, STONE).build();
+        CarvedBlockEntity original = placeCarved(helper, north);
+        CompoundTag tag = original.saveWithoutMetadata(helper.getLevel().registryAccess());
+
+        BlockState east = BitsmithRegistries.CARVED_BLOCK.get().defaultBlockState()
+                .setValue(CarvedBlock.FACING, Direction.EAST);
+        CarvedBlockEntity turned = new CarvedBlockEntity(helper.absolutePos(TARGET), east);
+        turned.loadWithComponents(tag, helper.getLevel().registryAccess());
+
+        helper.assertTrue(turned.getGrid().get(15, 3, 8) == STONE, "the carving turned with the block");
+        helper.assertTrue(turned.getGrid().get(8, 3, 0) == BitGrid.AIR, "nothing left at the old place");
+        helper.succeed();
+    }
 
     @GameTest(template = TEMPLATE)
     public static void emptiedBlockBecomesAir(GameTestHelper helper) {

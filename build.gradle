@@ -67,6 +67,15 @@ neoForge {
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
+        // The playtest again, with Sodium, Iris, ModernFix and the other compatibility mods loaded.
+        clientCompat {
+            client()
+            gameDirectory = project.file("run-compat")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.compatTest", "true"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
         gameTestServer {
             type = "gameTestServer"
             // Own directory: no development client mods, no clash with a running client.
@@ -100,11 +109,35 @@ configurations {
         canBeResolved = true
         transitive = false
     }
+    // Third party mods for the compatibility test client only.
+    compatClientMods {
+        canBeConsumed = false
+        canBeResolved = true
+        transitive = false
+    }
+    compatShaderpacks {
+        canBeConsumed = false
+        canBeResolved = true
+        transitive = false
+    }
 }
 
 dependencies {
     // Development client mods only: never part of the mod jar or its published dependencies.
     devClientMods "maven.modrinth:pehkui:${pehkui_version}"
+    compatClientMods "maven.modrinth:sodium:${sodium_version}"
+    compatClientMods "maven.modrinth:iris:${iris_version}"
+    compatClientMods "maven.modrinth:modernfix:${modernfix_version}"
+    compatClientMods "maven.modrinth:ferrite-core:${ferritecore_version}"
+    compatClientMods "maven.modrinth:lithium:${lithium_version}"
+    compatClientMods "maven.modrinth:immediatelyfast:${immediatelyfast_version}"
+    compatClientMods "maven.modrinth:entityculling:${entityculling_version}"
+    compatClientMods "maven.modrinth:worldedit:${worldedit_version}"
+    compatClientMods "maven.modrinth:create:${create_version}"
+    compatClientMods "maven.modrinth:kubejs:${kubejs_version}"
+    compatClientMods "maven.modrinth:rhino:${rhino_version}"
+    compatClientMods "maven.modrinth:better-advanced-tooltips:${better_advanced_tooltips_version}"
+    compatShaderpacks "maven.modrinth:complementary-reimagined:${complementary_version}@zip"
 
     testImplementation platform("org.junit:junit-bom:${junit_version}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -165,9 +198,12 @@ idea {
 
 // Copies the development client mods into the mods folder of each client run. Copy, not Sync:
 // other mods placed there by hand are left alone.
-[client: 'run', clientTest: 'run-clienttest'].each { runName, gameDir ->
+[client: 'run', clientTest: 'run-clienttest', clientCompat: 'run-compat'].each { runName, gameDir ->
     def install = tasks.register("installDevMods${runName.capitalize()}", Copy) {
         from configurations.devClientMods
+        if (runName == 'clientCompat') {
+            from configurations.compatClientMods
+        }
         into file("${gameDir}/mods")
     }
     tasks.matching { it.name == "run${runName.capitalize()}" }.configureEach {
@@ -177,24 +213,49 @@ idea {
 
 // Options for the playtest client: muted, never paused when unfocused, no first launch screens.
 def writePlaytestOptions = tasks.register('writePlaytestOptions') {
-    def options = file('run-clienttest/options.txt')
-    outputs.file(options)
-    onlyIf { !options.exists() }
+    def files = [file('run-clienttest/options.txt'), file('run-compat/options.txt')]
+    outputs.files(files)
     doLast {
-        options.parentFile.mkdirs()
-        options.text = [
-                'onboardAccessibility:false',
-                'pauseOnLostFocus:false',
-                'narrator:0',
-                'soundCategory_master:0.0',
-                'renderDistance:6',
-                'guiScale:2',
-                'tutorialStep:none',
-                'skipMultiplayerWarning:true',
-                'joinedFirstServer:true',
-        ].join('\n') + '\n'
+        files.findAll { !it.exists() }.each { options ->
+            options.parentFile.mkdirs()
+            options.text = [
+                    'onboardAccessibility:false',
+                    'pauseOnLostFocus:false',
+                    'narrator:0',
+                    'soundCategory_master:0.0',
+                    'renderDistance:6',
+                    'guiScale:2',
+                    'tutorialStep:none',
+                    'skipMultiplayerWarning:true',
+                    'joinedFirstServer:true',
+            ].join('\n') + '\n'
+        }
     }
 }
-tasks.matching { it.name == 'runClientTest' }.configureEach {
+tasks.matching { it.name == 'runClientTest' || it.name == 'runClientCompat' }.configureEach {
     dependsOn writePlaytestOptions
+}
+
+// ModernFix's dynamic model loading is the setting most likely to break custom models, so the
+// compatibility client always runs with it on.
+def writeCompatConfig = tasks.register('writeCompatConfig') {
+    def modernfix = file('run-compat/config/modernfix-mixins.properties')
+    def iris = file('run-compat/config/iris.properties')
+    outputs.files(modernfix, iris)
+    doLast {
+        modernfix.parentFile.mkdirs()
+        if (!modernfix.exists() || !modernfix.text.contains('mixin.perf.dynamic_resources=true')) {
+            modernfix.append('\nmixin.perf.dynamic_resources=true\n')
+        }
+        // Shaders on, with the test pack, so carved blocks are also checked through Iris.
+        iris.text = "enableShaders=true\nshaderPack=${configurations.compatShaderpacks.singleFile.name}\n"
+    }
+}
+def installCompatAssets = tasks.register('installCompatAssets', Copy) {
+    into 'run-compat'
+    from(configurations.compatShaderpacks) { into 'shaderpacks' }
+    from('compat-test/kubejs') { into 'kubejs' }
+}
+tasks.matching { it.name == 'runClientCompat' }.configureEach {
+    dependsOn writeCompatConfig, installCompatAssets
 }

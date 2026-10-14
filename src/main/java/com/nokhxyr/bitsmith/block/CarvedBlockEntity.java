@@ -7,17 +7,20 @@ package com.nokhxyr.bitsmith.block;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.voxel.BitGridInterner;
+import com.nokhxyr.bitsmith.core.voxel.GridTransforms;
 import com.nokhxyr.bitsmith.edit.EditBatcher;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
@@ -38,6 +41,8 @@ public final class CarvedBlockEntity extends BlockEntity {
     private static final BitGrid EMPTY = INTERNER.intern(BitGrid.filled(BitGrid.AIR));
 
     private BitGrid grid = EMPTY;
+    /** Orientation of the block state when the grid was last aligned. */
+    private Direction gridFacing = Direction.NORTH;
     private @Nullable BitGridBuilder pending;
 
     public CarvedBlockEntity(BlockPos pos, BlockState state) {
@@ -97,17 +102,62 @@ public final class CarvedBlockEntity extends BlockEntity {
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide && grid.isEmpty()) {
+            // Normally filled within the same tick (placement, paste, item). If not, the block would
+            // stay as an invisible empty shell: the batcher removes it at the end of the tick.
+            EditBatcher.checkEmpty(this);
+        }
+    }
+
+    @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.put("grid", GridNbt.write(grid));
+        tag.putString("facing", gridFacing.getSerializedName());
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         if (tag.contains("grid")) {
-            setGrid(GridNbt.read(tag.getCompound("grid"), registries));
+            Direction saved = Direction.byName(tag.getString("facing"));
+            gridFacing = saved != null && saved.getAxis().isHorizontal() ? saved : Direction.NORTH;
+            setGrid(alignToState(GridNbt.read(tag.getCompound("grid"), registries)));
         }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void setBlockState(BlockState state) {
+        super.setBlockState(state);
+        BitGrid aligned = alignToState(grid);
+        if (aligned != grid) {
+            setGrid(aligned);
+        }
+    }
+
+    /**
+     * Turns the grid by the quarter turns between the orientation it was saved in and the
+     * orientation of the block state, which another mod may have turned.
+     */
+    private BitGrid alignToState(BitGrid source) {
+        BlockState state = getBlockState();
+        if (!state.hasProperty(CarvedBlock.FACING)) {
+            return source;
+        }
+        Direction facing = state.getValue(CarvedBlock.FACING);
+        int turns = Math.floorMod(facing.get2DDataValue() - gridFacing.get2DDataValue(), 4);
+        gridFacing = facing;
+        BitGrid turned = source;
+        for (int i = 0; i < turns; i++) {
+            turned = GridTransforms.rotate(turned, 1, material -> {
+                BlockState rotated = Materials.state(material).rotate(Rotation.CLOCKWISE_90);
+                return Materials.isValidMaterial(rotated) ? Materials.id(rotated) : material;
+            });
+        }
+        return turned;
     }
 
     @Override
