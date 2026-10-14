@@ -6,7 +6,10 @@ package com.nokhxyr.bitsmith.block;
 
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.Face;
+import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.shape.ShapeCache;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -45,6 +48,16 @@ public final class CarvedBlock extends Block implements EntityBlock {
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new CarvedBlockEntity(pos, state);
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+        ItemStack stack = super.getCloneItemStack(level, pos, state);
+        BitGrid grid = gridAt(level, pos);
+        if (grid != null) {
+            stack.set(BitsmithComponents.GRID.get(), grid);
+        }
+        return stack;
     }
 
     @Override

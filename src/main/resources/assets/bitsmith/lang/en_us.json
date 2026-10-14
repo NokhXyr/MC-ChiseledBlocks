@@ -1,5 +1,23 @@
 {
   "itemGroup.bitsmith": "Bitsmith",
   "block.bitsmith.carved_block": "Carved Block",
-  "item.bitsmith.iron_chisel": "Iron Chisel"
+  "item.bitsmith.iron_chisel": "Iron Chisel",
+  "item.bitsmith.bit": "Bit",
+  "item.bitsmith.bit.named": "%s Bit",
+  "item.bitsmith.bit_bag": "Bit Bag",
+  "bitsmith.mode.bit": "Single bit",
+  "bitsmith.mode.cube": "Cube",
+  "bitsmith.mode.line": "Line",
+  "bitsmith.mode.plane": "Plane",
+  "bitsmith.mode.sphere": "Sphere",
+  "bitsmith.chisel.settings": "Mode: %s, size %s",
+  "bitsmith.chisel.settings.bit": "Mode: %s",
+  "bitsmith.chisel.keys": "V: change mode, B: change size",
+  "bitsmith.bag.empty": "Empty",
+  "bitsmith.bag.entry": "%s: %s bits",
+  "bitsmith.bag.selected": "Selected: %s (%s bits)",
+  "bitsmith.bag.keys": "V: select material, sneak + use: take out a stack",
+  "key.categories.bitsmith": "Bitsmith",
+  "key.bitsmith.mode": "Change mode / material",
+  "key.bitsmith.size": "Change chisel size"
 }

@@ -41,12 +41,17 @@ public final class Materials {
 
     /** Whether a plain block may be turned into a carved block made of it. */
     public static boolean isCarvable(BlockState state, BlockGetter level, BlockPos pos) {
+        return isValidMaterial(state)
+                && state.getDestroySpeed(level, pos) >= 0
+                && state.isCollisionShapeFullBlock(level, pos);
+    }
+
+    /** Whether a block state may exist as bits at all. */
+    public static boolean isValidMaterial(BlockState state) {
         return !state.isAir()
                 && !(state.getBlock() instanceof CarvedBlock)
                 && !state.hasBlockEntity()
                 && state.getRenderShape() == RenderShape.MODEL
-                && state.getFluidState().isEmpty()
-                && state.getDestroySpeed(level, pos) >= 0
-                && state.isCollisionShapeFullBlock(level, pos);
+                && state.getFluidState().isEmpty();
     }
 }

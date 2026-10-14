@@ -15,6 +15,12 @@ All notable changes to Bitsmith are documented here.
 - **Collision and outline** — Shapes are built from the grid in one linear pass and shared between identical carvings.
 - **Network** — The server is authoritative, applies all edits of a block once per tick and sends one update per block per tick, as a delta of the changed bits or as the whole grid when that is smaller. Chisel actions are checked for reach, build permission and rate.
 - **Game tests** — Headless in game tests for conversion, batching, rate limit, reach check, block reverting, save and load, and shapes (`./gradlew runGameTestServer`).
+- **Chisel modes and sizes** — Single bit, cube, line, plane and sphere modes at 1, 2, 4 or 8 bits, stored on the chisel and changed with V (mode) and B (size). The outline shows exactly the box the next stroke covers.
+- **Bits as items** — Chiseled bits go to the player in survival, as stackable bit items per material. Right click places a bit against the clicked face, in the same carved block or in the empty block next to it.
+- **Bit bag** — Collects chiseled bits automatically (16 materials, 8 blocks worth each). Held in hand it places the selected material (V cycles it); sneak and right click in the air takes a stack out.
+- **Survival rules** — The iron chisel cuts what an iron pickaxe can harvest and loses one durability per stroke. Recipes for the chisel and the bag.
+- **Carved block item** — Breaking a carved block drops it with its carving; placing it restores the carving. Pick block keeps the carving too. Carved blocks and bits render in hand and in slots from the same cached meshes.
+- **Client prediction** — Strokes on a carved block show at once on the client; a refused stroke is undone by the server, and a lasting mismatch triggers a resync.
 
 ### Changed
 
@@ -29,6 +35,12 @@ All notable changes to Bitsmith are documented here.
 - **Collision et contour** — Les formes sont construites depuis la grille en une seule passe linéaire et partagées entre sculptures identiques.
 - **Réseau** — Le serveur fait autorité, applique toutes les éditions d'un bloc une fois par tick et envoie une seule mise à jour par bloc et par tick, sous forme de delta des bits modifiés ou de grille entière si elle est plus petite. Les actions du ciseau sont vérifiées : portée, droit de construire, cadence.
 - **Game tests** — Tests en jeu headless pour la conversion, le regroupement par tick, la limite de cadence, la vérification de portée, le retour au bloc d'origine, la sauvegarde et le rechargement, et les formes (`./gradlew runGameTestServer`).
+- **Modes et tailles du ciseau** — Modes bit seul, cube, ligne, plan et sphère, en tailles de 1, 2, 4 ou 8 bits, enregistrés sur le ciseau et changés avec V (mode) et B (taille). Le contour montre exactement la zone que le prochain coup va toucher.
+- **Bits en items** — En survie, les bits ciselés vont au joueur sous forme d'items empilables par matériau. Le clic droit pose un bit contre la face visée, dans le même bloc ciselé ou dans le bloc vide voisin.
+- **Sac à bits** — Récupère automatiquement les bits ciselés (16 matériaux, l'équivalent de 8 blocs chacun). En main, il pose le matériau sélectionné (V pour changer) ; accroupi + clic droit dans le vide pour sortir une pile.
+- **Règles de survie** — Le ciseau en fer coupe ce qu'une pioche en fer peut récolter et perd une durabilité par coup. Recettes pour le ciseau et le sac.
+- **Item de bloc ciselé** — Un bloc ciselé cassé se ramasse avec sa sculpture ; le reposer la restaure. Le pick block garde aussi la sculpture. Blocs ciselés et bits s'affichent en main et dans les slots à partir des mêmes maillages en cache.
+- **Prédiction côté client** — Les coups sur un bloc ciselé s'affichent immédiatement côté client ; un coup refusé est annulé par le serveur, et un décalage durable déclenche une resynchronisation.
 
 ### Modifications
 

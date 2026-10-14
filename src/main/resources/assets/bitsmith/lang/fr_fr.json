@@ -1,5 +1,23 @@
 {
   "itemGroup.bitsmith": "Bitsmith",
   "block.bitsmith.carved_block": "Bloc ciselé",
-  "item.bitsmith.iron_chisel": "Ciseau en fer"
+  "item.bitsmith.iron_chisel": "Ciseau en fer",
+  "item.bitsmith.bit": "Bit",
+  "item.bitsmith.bit.named": "Bit de %s",
+  "item.bitsmith.bit_bag": "Sac à bits",
+  "bitsmith.mode.bit": "Bit seul",
+  "bitsmith.mode.cube": "Cube",
+  "bitsmith.mode.line": "Ligne",
+  "bitsmith.mode.plane": "Plan",
+  "bitsmith.mode.sphere": "Sphère",
+  "bitsmith.chisel.settings": "Mode : %s, taille %s",
+  "bitsmith.chisel.settings.bit": "Mode : %s",
+  "bitsmith.chisel.keys": "V : changer de mode, B : changer de taille",
+  "bitsmith.bag.empty": "Vide",
+  "bitsmith.bag.entry": "%s : %s bits",
+  "bitsmith.bag.selected": "Sélection : %s (%s bits)",
+  "bitsmith.bag.keys": "V : choisir le matériau, accroupi + utiliser : sortir une pile",
+  "key.categories.bitsmith": "Bitsmith",
+  "key.bitsmith.mode": "Changer de mode / matériau",
+  "key.bitsmith.size": "Changer la taille du ciseau"
 }

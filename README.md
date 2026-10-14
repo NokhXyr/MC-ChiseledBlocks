@@ -7,7 +7,7 @@ for performance and stability.
 Inspired by [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith is an
 independent implementation: it contains no code or assets from Chisels & Bits.
 
-> Status: early development (milestone M1). Bits can be carved with the iron chisel; tools, bits as items and patterns are not there yet.
+> Status: early development (milestone M2). Carving with modes and sizes, bits as items, bit bag and survival rules work; patterns and advanced tools are not there yet.
 
 ## Features
 
@@ -68,7 +68,7 @@ Minecraft 1.21.1, conçu dès le départ pour la performance et la stabilité.
 Inspiré de [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith est une
 implémentation indépendante : il ne contient aucun code ni aucune ressource de Chisels & Bits.
 
-> État : début de développement (jalon M1). On peut ciseler des bits avec le ciseau en fer ; les outils, les bits en items et les patterns ne sont pas encore là.
+> État : début de développement (jalon M2). Le ciselage avec modes et tailles, les bits en items, le sac à bits et les règles de survie fonctionnent ; les patterns et les outils avancés ne sont pas encore là.
 
 ## Caractéristiques
 

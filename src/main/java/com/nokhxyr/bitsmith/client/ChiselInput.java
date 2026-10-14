@@ -5,14 +5,21 @@
 package com.nokhxyr.bitsmith.client;
 
 import com.nokhxyr.bitsmith.Bitsmith;
+import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
+import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
+import com.nokhxyr.bitsmith.core.voxel.Face;
+import com.nokhxyr.bitsmith.edit.ChiselOperation;
 import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.network.ChiselPayload;
+import com.nokhxyr.bitsmith.network.CyclePayload;
+import com.nokhxyr.bitsmith.network.PredictionTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -24,15 +31,17 @@ import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
- * Turns the attack key into chisel actions while a chisel is held: one bit per click, and a
- * steady rate while the key is held down. Vanilla block breaking never starts.
+ * Turns the attack key into chisel strokes while a chisel is held: one stroke per click, and a
+ * steady rate while the key is held down. Strokes on an existing carved block are applied
+ * locally at once (prediction) and confirmed or corrected by the server.
  */
 @EventBusSubscriber(modid = Bitsmith.MOD_ID, value = Dist.CLIENT)
 public final class ChiselInput {
-    /** Ticks between two actions while the attack key is held. */
+    /** Ticks between two strokes while the attack key is held. */
     private static final int REPEAT_TICKS = 3;
     /** How far inside the hit face the targeted point is moved, in blocks. */
     private static final double INSET = 1.0 / 64.0;
+    private static final Face[] FACES = Face.values();
 
     private static int cooldown;
 
@@ -44,6 +53,12 @@ public final class ChiselInput {
         if (cooldown > 0) {
             cooldown--;
         }
+        while (BitsmithKeys.MODE.consumeClick()) {
+            PacketDistributor.sendToServer(new CyclePayload(false));
+        }
+        while (BitsmithKeys.SIZE.consumeClick()) {
+            PacketDistributor.sendToServer(new CyclePayload(true));
+        }
     }
 
     @SubscribeEvent
@@ -53,7 +68,7 @@ public final class ChiselInput {
         }
         Minecraft minecraft = Minecraft.getInstance();
         Player player = minecraft.player;
-        if (player == null || !(player.getMainHandItem().getItem() instanceof ChiselItem)) {
+        if (player == null || !(player.getMainHandItem().getItem() instanceof ChiselItem chisel)) {
             return;
         }
         if (!(minecraft.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) {
@@ -67,8 +82,28 @@ public final class ChiselInput {
         }
         cooldown = REPEAT_TICKS;
 
-        PacketDistributor.sendToServer(new ChiselPayload(hit.getBlockPos(), voxelAt(hit)));
+        int voxel = voxelAt(hit);
+        Face face = FACES[hit.getDirection().ordinal()];
+        predict(player, chisel, player.getMainHandItem(), hit.getBlockPos(), voxel, face);
+        PacketDistributor.sendToServer(new ChiselPayload(hit.getBlockPos(), voxel, face));
         player.swing(InteractionHand.MAIN_HAND);
+    }
+
+    /** Applies the stroke to the local copy of an already carved block, exactly as the server will. */
+    private static void predict(Player player, ChiselItem chisel, ItemStack tool, BlockPos pos, int voxel, Face face) {
+        if (!(player.level().getBlockEntity(pos) instanceof CarvedBlockEntity carved)) {
+            return;
+        }
+        BitGridBuilder builder = carved.getGrid().toBuilder();
+        int removed = ChiselOperation.apply(ChiselItem.settings(tool), voxel, face, builder::get, chisel::canCut,
+                (index, material) -> builder.set(index, BitGrid.AIR));
+        if (removed > 0 && builder.changes() < BitGrid.VOLUME) {
+            BitGrid predicted = builder.build();
+            if (!predicted.isEmpty()) {
+                PredictionTracker.record(pos, player.level().getGameTime());
+                carved.setGrid(predicted);
+            }
+        }
     }
 
     /** The voxel just behind the hit point, in the targeted block. */
