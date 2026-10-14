@@ -22,6 +22,10 @@ All notable changes to Bitsmith are documented here.
 - **Carved block item** — Breaking a carved block drops it with its carving; placing it restores the carving. Pick block keeps the carving too. Carved blocks and bits render in hand and in slots from the same cached meshes.
 - **Client prediction** — Strokes on a carved block show at once on the client; a refused stroke is undone by the server, and a lasting mismatch triggers a resync.
 
+### Fixed
+
+- **Dark inner faces** — Faces inside a carved block no longer render almost black with smooth lighting: they now use the light of the block itself instead of ambient occlusion sampled from the solid blocks around.
+
 ### Changed
 
 - **Modpack permission** — The license now explicitly allows including the unmodified released mod file in any modpack, without asking.
@@ -41,6 +45,10 @@ All notable changes to Bitsmith are documented here.
 - **Règles de survie** — Le ciseau en fer coupe ce qu'une pioche en fer peut récolter et perd une durabilité par coup. Recettes pour le ciseau et le sac.
 - **Item de bloc ciselé** — Un bloc ciselé cassé se ramasse avec sa sculpture ; le reposer la restaure. Le pick block garde aussi la sculpture. Blocs ciselés et bits s'affichent en main et dans les slots à partir des mêmes maillages en cache.
 - **Prédiction côté client** — Les coups sur un bloc ciselé s'affichent immédiatement côté client ; un coup refusé est annulé par le serveur, et un décalage durable déclenche une resynchronisation.
+
+### Correctifs
+
+- **Faces intérieures sombres** — Les faces à l'intérieur d'un bloc ciselé ne sont plus presque noires avec l'éclairage lissé : elles utilisent la lumière du bloc lui-même au lieu de l'occlusion ambiante calculée sur les blocs pleins autour.
 
 ### Modifications
 

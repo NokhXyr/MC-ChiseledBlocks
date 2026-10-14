@@ -24,6 +24,22 @@ Why it is faster: identical carvings share one mesh and one collision shape, an 
 render section once, network updates carry only what changed, and nothing is computed per frame.
 Details and targets are in [the specification](docs/SPECIFICATION.md).
 
+## Usage
+
+| Action | How |
+|---|---|
+| Carve | Hold the iron chisel and left click a block (hold the button to keep carving) |
+| Change chisel mode | `V` (single bit, cube, line, plane, sphere) |
+| Change chisel size | `B` (1, 2, 4, 8 bits) |
+| Place a bit | Hold bits and right click a face |
+| Fill the bit bag | Keep the bag anywhere in the inventory while carving: bits go into it first |
+| Place from the bag | Hold the bag and right click a face; `V` picks the material |
+| Take bits out of the bag | Hold the bag, sneak and right click in the air: one stack of the selected material |
+| Keep a carving | Break the carved block: it drops with its carving, place it back anywhere |
+
+Keys can be changed in Options, Controls, under Bitsmith. The bag's tooltip lists its contents,
+the selected material is highlighted.
+
 ## Requirements
 
 - Minecraft 1.21.1
@@ -85,6 +101,22 @@ Pourquoi c'est plus rapide : des sculptures identiques partagent un seul maillag
 forme de collision, une édition ne reconstruit une section de rendu qu'une fois, les mises à jour
 réseau ne transportent que ce qui a changé, et rien n'est recalculé à chaque frame. Le détail et
 les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
+
+## Utilisation
+
+| Action | Comment |
+|---|---|
+| Ciseler | Ciseau en fer en main, clic gauche sur un bloc (maintenir pour continuer) |
+| Changer le mode du ciseau | `V` (bit seul, cube, ligne, plan, sphère) |
+| Changer la taille du ciseau | `B` (1, 2, 4, 8 bits) |
+| Poser un bit | Bits en main, clic droit sur une face |
+| Remplir le sac à bits | Garder le sac n'importe où dans l'inventaire en ciselant : les bits y vont en premier |
+| Poser depuis le sac | Sac en main, clic droit sur une face ; `V` choisit le matériau |
+| Sortir des bits du sac | Sac en main, accroupi + clic droit dans le vide : une pile du matériau sélectionné |
+| Garder une sculpture | Casser le bloc ciselé : il tombe avec sa sculpture, à reposer où l'on veut |
+
+Les touches se changent dans Options, Commandes, rubrique Bitsmith. L'infobulle du sac liste son
+contenu, le matériau sélectionné est en surbrillance.
 
 ## Prérequis
 

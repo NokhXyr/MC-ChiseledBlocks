@@ -79,7 +79,14 @@ public final class MeshCache {
         Vector3f to = new Vector3f(max[0], max[1], max[2]);
         int tint = CarvedColors.encode(material, appearance.tint(dir));
         BlockElementFace elementFace = new BlockElementFace(outer ? dir : null, tint, "", new BlockFaceUV(uvs(dir, from, to), 0));
-        return BAKERY.bakeQuad(from, to, elementFace, appearance.sprite(dir), dir, BlockModelRotation.X0_Y0, null, true);
+        BakedQuad quad = BAKERY.bakeQuad(from, to, elementFace, appearance.sprite(dir), dir, BlockModelRotation.X0_Y0, null, true);
+        if (outer) {
+            return quad;
+        }
+        // Vanilla ambient occlusion samples the blocks around the block position. For a face inside
+        // the block those are the solid neighbours around the carving, which would darken every
+        // inner face as if it sat in a closed corner. Inner faces use the light of the block itself.
+        return new BakedQuad(quad.getVertices(), quad.getTintIndex(), quad.getDirection(), quad.getSprite(), quad.isShade(), false);
     }
 
     /** Same projection as a vanilla model element without explicit UVs, so textures line up across bits. */
