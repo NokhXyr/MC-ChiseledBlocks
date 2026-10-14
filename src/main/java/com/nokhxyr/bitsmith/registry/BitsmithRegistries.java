@@ -18,6 +18,7 @@ import com.nokhxyr.bitsmith.item.TapeMeasureItem;
 import com.nokhxyr.bitsmith.item.WrenchItem;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -92,6 +93,16 @@ public final class BitsmithRegistries {
                     .build());
 
     private BitsmithRegistries() {
+    }
+
+    /**
+     * Makes worlds saved with Chisels & Bits load their chiseled blocks as carved blocks. Only when
+     * Chisels & Bits is not installed: with both mods present its own entries must stay its own.
+     */
+    public static void aliasChiselsAndBits() {
+        BLOCKS.addAlias(ResourceLocation.fromNamespaceAndPath("chiselsandbits", "chiseled"), CARVED_BLOCK.getId());
+        BLOCK_ENTITIES.addAlias(ResourceLocation.fromNamespaceAndPath("chiselsandbits", "chiseled_block"), CARVED_BLOCK_ENTITY.getId());
+        BLOCK_ENTITIES.addAlias(ResourceLocation.fromNamespaceAndPath("chiselsandbits", "chiseled"), CARVED_BLOCK_ENTITY.getId());
     }
 
     public static void register(IEventBus modEventBus) {

@@ -17,6 +17,8 @@ runs/
 run-clienttest/
 run-gametest/
 run-compat/
+run-cnb/
+run-cnb-migrate/
 
 # IDE
 .idea/

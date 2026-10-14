@@ -71,3 +71,19 @@
 **Root cause:** The carved block was registered with `PushReaction.BLOCK`, meant to stop vanilla pistons. Vanilla pistons already refuse any block with a block entity, so the setting only blocked Create.
 **Fix:** Default push reaction. Carved blocks also gained a horizontal facing so that rotations done by WorldEdit, structure blocks and Create turn the carving too.
 **Prevention:** Do not restrict movement beyond what vanilla already does; check other mods' movers in the compatibility playtest.
+
+## [2026-10-14 22:53] — Chisels & Bits test client failed to load (missing library)
+
+**Context:** `runClientCnbSource`, the run that carves with Chisels & Bits 21.1.33 to produce real data.
+**Error:** `NoClassDefFoundError: com/communi/suggestu/saecularia/caudices/core/block/IBlockWithWorldlyProperties`, then the client stayed on the error screen.
+**Root cause:** Chisels & Bits needs Saecularia Caudices, which is not bundled. Its maven jar nests the needed classes in a jar marked `FMLModType: MOD` without mod metadata, which the development loader skips.
+**Fix:** Saecularia Caudices 21.1.11 is downloaded from its author's maven with a SHA-512 check; for the test run only, the nested library is repacked as a `GAMELIBRARY` in `run-cnb/mods`. Only the test client process (identified by its own args file) was stopped; the user's game was left running.
+**Prevention:** Before a run that adds third party mods, read their declared dependencies and nested jars. Wait for either a report or a crash report, never for a fixed time only.
+
+## [2026-10-14 23:00] — Chisels & Bits data read as empty
+
+**Context:** First comparison of Bitsmith's reader against blocks saved by Chisels & Bits.
+**Error:** Blocks decoded as all air, then `UTFDataFormatException` while reading the NBT.
+**Root cause:** Three differences between the format as read in the source and as saved: the payload sits inside a `data` compound, the root NBT tag is unnamed (`writeAnyTag`), and palette entries nest the block state twice (`{state:{state:{Name}}}`).
+**Fix:** The reader handles all three; it is checked voxel by voxel against Chisels & Bits' own shapes, and a real saved block is kept as a game test fixture.
+**Prevention:** Never trust a format read from code alone: check against data saved by the real program.

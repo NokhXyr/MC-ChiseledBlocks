@@ -76,6 +76,24 @@ neoForge {
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
+        // Chisels & Bits import, step 1: carve with Chisels & Bits itself and save a world.
+        clientCnbSource {
+            client()
+            gameDirectory = project.file("run-cnb")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "cnbSource"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        // Step 2: open a copy of that world with Bitsmith only and check every block.
+        clientCnbMigrate {
+            client()
+            gameDirectory = project.file("run-cnb-migrate")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "cnbMigrate"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
         gameTestServer {
             type = "gameTestServer"
             // Own directory: no development client mods, no clash with a running client.
@@ -213,7 +231,7 @@ idea {
 
 // Options for the playtest client: muted, never paused when unfocused, no first launch screens.
 def writePlaytestOptions = tasks.register('writePlaytestOptions') {
-    def files = [file('run-clienttest/options.txt'), file('run-compat/options.txt')]
+    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate'].collect { file("$it/options.txt") }
     outputs.files(files)
     doLast {
         files.findAll { !it.exists() }.each { options ->
@@ -232,7 +250,7 @@ def writePlaytestOptions = tasks.register('writePlaytestOptions') {
         }
     }
 }
-tasks.matching { it.name == 'runClientTest' || it.name == 'runClientCompat' }.configureEach {
+tasks.matching { it.name in ['runClientTest', 'runClientCompat', 'runClientCnbSource', 'runClientCnbMigrate'] }.configureEach {
     dependsOn writePlaytestOptions
 }
 
@@ -258,4 +276,47 @@ def installCompatAssets = tasks.register('installCompatAssets', Copy) {
 }
 tasks.matching { it.name == 'runClientCompat' }.configureEach {
     dependsOn writeCompatConfig, installCompatAssets
+}
+
+// Chisels & Bits 1.21.1 for the import test, from the official CurseForge CDN, checked by hash.
+// Never part of the mod jar; used only by runClientCnbSource.
+def cnbDownloads = [
+        [file("run-cnb/mods/chisels-and-bits-neoforge-${cnb_version}.jar"), cnb_url, 'SHA-256', cnb_sha256],
+        [file("run-cnb/mods/saecularia-caudices-neoforge-${saecularia_version}.jar"), saecularia_url, 'SHA-512', saecularia_sha512],
+]
+def installChiselsAndBits = tasks.register('installChiselsAndBits') {
+    outputs.files(cnbDownloads.collect { it[0] })
+    doLast {
+        cnbDownloads.each { target, url, algorithm, expected ->
+            if (!target.exists()) {
+                target.parentFile.mkdirs()
+                new URI(url).toURL().withInputStream { input -> target.withOutputStream { it << input } }
+            }
+            def actual = java.security.MessageDigest.getInstance(algorithm).digest(target.bytes).encodeHex().toString()
+            if (actual != expected) {
+                target.delete()
+                throw new GradleException("Checksum mismatch for ${target.name}: ${actual}")
+            }
+        }
+    }
+}
+tasks.matching { it.name == 'runClientCnbSource' }.configureEach {
+    dependsOn installChiselsAndBits
+}
+
+// Copies the world saved by the source run, and the expected results, for the migration run.
+def copyCnbWorld = tasks.register('copyCnbWorld', Sync) {
+    from('run-cnb') {
+        include 'saves/cnb-source/**'
+        include 'cnb-expected.txt'
+    }
+    into 'run-cnb-migrate'
+    preserve {
+        include '**'
+        exclude 'saves/cnb-source/**'
+        exclude 'cnb-expected.txt'
+    }
+}
+tasks.matching { it.name == 'runClientCnbMigrate' }.configureEach {
+    dependsOn copyCnbWorld
 }

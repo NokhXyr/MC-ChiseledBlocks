@@ -7,7 +7,7 @@ for performance and stability.
 Inspired by [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith is an
 independent implementation: it contains no code or assets from Chisels & Bits.
 
-> Status: early development (milestone M4). Carving, bits, bit bag, survival rules, undo, patterns and the advanced tools (mirror, wrench, saw, tape measure) work; Chisels & Bits import is next.
+> Status: early development (milestone M5). Carving, bits, bit bag, survival rules, undo, patterns, the advanced tools and the Chisels & Bits world import work; compatibility is checked with Sodium, Iris, ModernFix, Create, WorldEdit and KubeJS.
 
 ## Features
 
@@ -74,6 +74,7 @@ Requires Java 21.
 - [Specification](docs/SPECIFICATION.md)
 - [Profiling protocol](docs/PROFILING.md)
 - [Compatibility](docs/COMPATIBILITY.md)
+- [Chisels & Bits import](docs/CNB_FORMAT.md)
 - [Benchmarks](docs/benchmarks/)
 
 ## License
@@ -97,7 +98,7 @@ Minecraft 1.21.1, conçu dès le départ pour la performance et la stabilité.
 Inspiré de [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith est une
 implémentation indépendante : il ne contient aucun code ni aucune ressource de Chisels & Bits.
 
-> État : début de développement (jalon M4). Le ciselage, les bits, le sac à bits, les règles de survie, l'annulation, les patterns et les outils avancés (miroir, clé, scie, mètre ruban) fonctionnent ; l'import Chisels & Bits est la suite.
+> État : début de développement (jalon M5). Le ciselage, les bits, le sac à bits, les règles de survie, l'annulation, les patterns, les outils avancés et l'import des mondes Chisels & Bits fonctionnent ; la compatibilité est vérifiée avec Sodium, Iris, ModernFix, Create, WorldEdit et KubeJS.
 
 ## Caractéristiques
 
@@ -165,6 +166,7 @@ Nécessite Java 21.
 - [Cahier des charges](docs/SPECIFICATION.md)
 - [Protocole de profilage](docs/PROFILING.md)
 - [Compatibilité](docs/COMPATIBILITY.md)
+- [Import Chisels & Bits](docs/CNB_FORMAT.md)
 - [Benchmarks](docs/benchmarks/)
 
 ## Licence

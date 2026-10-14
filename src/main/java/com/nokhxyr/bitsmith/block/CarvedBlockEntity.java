@@ -4,6 +4,7 @@
  */
 package com.nokhxyr.bitsmith.block;
 
+import com.nokhxyr.bitsmith.compat.cnb.ChiselsAndBitsImport;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.voxel.BitGridInterner;
@@ -43,6 +44,8 @@ public final class CarvedBlockEntity extends BlockEntity {
     private BitGrid grid = EMPTY;
     /** Orientation of the block state when the grid was last aligned. */
     private Direction gridFacing = Direction.NORTH;
+    /** Set when the data came from Chisels & Bits: the block is saved again in Bitsmith's format. */
+    private boolean importedFromChiselsAndBits;
     private @Nullable BitGridBuilder pending;
 
     public CarvedBlockEntity(BlockPos pos, BlockState state) {
@@ -104,6 +107,10 @@ public final class CarvedBlockEntity extends BlockEntity {
     @Override
     public void onLoad() {
         super.onLoad();
+        if (importedFromChiselsAndBits && level != null && !level.isClientSide) {
+            importedFromChiselsAndBits = false;
+            setChanged();
+        }
         if (level != null && !level.isClientSide && grid.isEmpty()) {
             // Normally filled within the same tick (placement, paste, item). If not, the block would
             // stay as an invisible empty shell: the batcher removes it at the end of the tick.
@@ -125,6 +132,12 @@ public final class CarvedBlockEntity extends BlockEntity {
             Direction saved = Direction.byName(tag.getString("facing"));
             gridFacing = saved != null && saved.getAxis().isHorizontal() ? saved : Direction.NORTH;
             setGrid(alignToState(GridNbt.read(tag.getCompound("grid"), registries)));
+        } else if (ChiselsAndBitsImport.isChiselsAndBitsData(tag)) {
+            // A block saved by Chisels & Bits, loaded through the registry aliases.
+            BitGrid imported = ChiselsAndBitsImport.read(tag, registries);
+            gridFacing = Direction.NORTH;
+            setGrid(alignToState(imported != null ? imported : EMPTY));
+            importedFromChiselsAndBits = true;
         }
     }
 

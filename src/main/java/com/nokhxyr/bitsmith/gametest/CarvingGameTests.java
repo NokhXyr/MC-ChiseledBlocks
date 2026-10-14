@@ -9,6 +9,7 @@ import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.CarvedBlock;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
+import com.nokhxyr.bitsmith.compat.cnb.ChiselsAndBitsImport;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
 import com.nokhxyr.bitsmith.core.edit.Symmetry;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
@@ -31,6 +32,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -46,6 +48,9 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
+import java.nio.charset.StandardCharsets;
+import java.util.BitSet;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -457,6 +462,31 @@ public final class CarvingGameTests {
                 .filter(stack -> stack.is(BitsmithRegistries.CARVED_BLOCK_ITEM.get())).findFirst().orElse(ItemStack.EMPTY);
         BitGrid sliceGrid = piece.get(BitsmithComponents.GRID.get());
         helper.assertTrue(sliceGrid != null && sliceGrid.filledCount() == 1024, "the slice is given as a carved block");
+        helper.succeed();
+    }
+
+    // Chisels & Bits import
+
+    @GameTest(template = TEMPLATE)
+    public static void readsARealChiselsAndBitsBlock(GameTestHelper helper) throws Exception {
+        // Block entity data saved by Chisels & Bits 21.1.33 for planks holding one stone bit, and the
+        // occupancy Chisels & Bits computed for it (see runClientCnbSource).
+        List<String> fixture;
+        try (var in = CarvingGameTests.class.getResourceAsStream("/bitsmith_test/cnb_planks_with_stone_bit.txt")) {
+            fixture = new String(in.readAllBytes(), StandardCharsets.UTF_8).lines().toList();
+        }
+        CompoundTag tag = TagParser.parseTag(fixture.get(0));
+        String[] expected = fixture.get(1).split(" ");
+
+        BitGrid grid = ChiselsAndBitsImport.read(tag, helper.getLevel().registryAccess());
+        helper.assertTrue(grid != null, "the data is read");
+        helper.assertTrue(grid.filledCount() == BitGrid.VOLUME - 3, "3 bits carved out");
+        helper.assertTrue(grid.contains(Materials.id(Blocks.OAK_PLANKS.defaultBlockState())), "planks");
+        helper.assertTrue(grid.contains(STONE), "the stone bit");
+        BitSet occupied = BitSet.valueOf(HexFormat.of().parseHex(expected[4]));
+        for (int i = 0; i < BitGrid.VOLUME; i++) {
+            helper.assertTrue(occupied.get(i) == (grid.get(i) != BitGrid.AIR), "voxel " + i + " matches Chisels & Bits");
+        }
         helper.succeed();
     }
 

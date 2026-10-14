@@ -31,6 +31,7 @@ All notable changes to Bitsmith are documented here.
 - **Tool menu sizing** — The radial menu shrinks to fit the screen at large GUI scales.
 - **Compatibility** — Checked in game with Sodium, Iris (with a shader pack), ModernFix (dynamic model loading on), FerriteCore, Lithium, ImmediatelyFast, Entity Culling, WorldEdit, Create and KubeJS through `./gradlew runClientCompat`. See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 - **Turning with other tools** — Carved blocks have a horizontal facing; WorldEdit `//rotate`, structure blocks and Create rotations now turn the carving with the block.
+- **Chisels & Bits import** — Worlds saved with Chisels & Bits 1.21.1 open with Bitsmith instead: chiseled blocks load as carved blocks with the same shape and materials, then are saved in Bitsmith's format. Checked against blocks carved with Chisels & Bits itself (0 voxel difference). Items are not converted. See [docs/CNB_FORMAT.md](docs/CNB_FORMAT.md).
 - **Client playtest** — `./gradlew runClientTest` plays the mod like a player in a fresh flat world (key presses, menus, clicks), checks each step, takes screenshots and writes `run-clienttest/playtest-report.txt`, then quits. It uses its own game directory.
 
 ### Fixed
@@ -70,6 +71,7 @@ All notable changes to Bitsmith are documented here.
 - **Taille du menu de l'outil** — Le menu radial rétrécit pour tenir à l'écran aux grandes échelles d'interface.
 - **Compatibilité** — Vérifiée en jeu avec Sodium, Iris (avec un shader), ModernFix (chargement dynamique des modèles activé), FerriteCore, Lithium, ImmediatelyFast, Entity Culling, WorldEdit, Create et KubeJS via `./gradlew runClientCompat`. Voir [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 - **Rotation par d'autres outils** — Les blocs ciselés ont une orientation horizontale ; `//rotate` de WorldEdit, les blocs structure et les rotations de Create tournent maintenant la sculpture avec le bloc.
+- **Import Chisels & Bits** — Les mondes sauvegardés avec Chisels & Bits 1.21.1 s'ouvrent avec Bitsmith à la place : les blocs ciselés se chargent comme blocs Bitsmith avec la même forme et les mêmes matériaux, puis sont enregistrés au format Bitsmith. Vérifié sur des blocs ciselés avec Chisels & Bits lui-même (0 voxel de différence). Les items ne sont pas convertis. Voir [docs/CNB_FORMAT.md](docs/CNB_FORMAT.md).
 - **Partie de test client** — `./gradlew runClientTest` joue le mod comme un joueur dans un monde plat neuf (touches, menus, clics), vérifie chaque étape, prend des captures et écrit `run-clienttest/playtest-report.txt`, puis quitte. Il utilise son propre dossier de jeu.
 
 ### Correctifs

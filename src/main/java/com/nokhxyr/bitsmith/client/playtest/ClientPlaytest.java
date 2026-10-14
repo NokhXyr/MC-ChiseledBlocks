@@ -68,7 +68,8 @@ import java.util.stream.Stream;
  * {@code playtest-report.txt}, and the game quits when done.
  */
 public final class ClientPlaytest {
-    private static final String WORLD = "bitsmith-playtest";
+    private static final String MODE = System.getProperty("bitsmith.playtest", "main");
+    private static final String WORLD = MODE.startsWith("cnb") ? ChiselsAndBitsPlaytest.WORLD : "bitsmith-playtest";
     private static final int WORLD_SETTLE_TICKS = 60;
     private static final int TIMEOUT_TICKS = 20 * 360;
     /** Extra ticks a failing check is retried for, in case the game runs slow. */
@@ -104,7 +105,11 @@ public final class ClientPlaytest {
     private BitGrid movedGrid;
 
     public ClientPlaytest() {
-        script();
+        switch (MODE) {
+            case "cnbSource" -> ChiselsAndBitsPlaytest.sourceScript(this);
+            case "cnbMigrate" -> ChiselsAndBitsPlaytest.migrateScript(this);
+            default -> script();
+        }
     }
 
     // Input, through the game's own handlers
@@ -123,15 +128,15 @@ public final class ClientPlaytest {
         key(glfwKey, false);
     }
 
-    private void hotbar(int slot) {
+    void hotbar(int slot) {
         tap(GLFW.GLFW_KEY_1 + slot);
     }
 
-    private void attack() {
+    void attack() {
         KeyMapping.click(mc.options.keyAttack.getKey());
     }
 
-    private void use() {
+    void use() {
         KeyMapping.click(mc.options.keyUse.getKey());
     }
 
@@ -153,11 +158,11 @@ public final class ClientPlaytest {
         mc.mouseHandler.onPress(window(), GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_RELEASE, 0);
     }
 
-    private void command(String command) {
+    void command(String command) {
         mc.player.connection.sendCommand(command);
     }
 
-    private void look(Vec3 point) {
+    void look(Vec3 point) {
         mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, point);
     }
 
@@ -167,7 +172,7 @@ public final class ClientPlaytest {
 
     // Reading the game state as the client sees it
 
-    private BitGrid gridAt(BlockPos pos) {
+    BitGrid gridAt(BlockPos pos) {
         return mc.level.getBlockEntity(pos) instanceof CarvedBlockEntity carved ? carved.getGrid() : null;
     }
 
@@ -201,7 +206,7 @@ public final class ClientPlaytest {
 
     // Checks that remember what they saw
 
-    private boolean eq(String what, int actual, int expected) {
+    boolean eq(String what, int actual, int expected) {
         observed = what + " = " + actual + ", expected " + expected;
         return actual == expected;
     }
@@ -212,13 +217,13 @@ public final class ClientPlaytest {
     }
 
     /** Whether the server has moved the player to the given position yet. */
-    private boolean at(double x, double y, double z) {
+    boolean at(double x, double y, double z) {
         Vec3 position = mc.player.position();
         observed = "player at " + position + ", expected " + x + " " + y + " " + z;
         return position.distanceToSqr(x, y, z) < 0.01;
     }
 
-    private boolean that(String what, boolean condition) {
+    boolean that(String what, boolean condition) {
         observed = what;
         return condition;
     }
@@ -232,11 +237,11 @@ public final class ClientPlaytest {
 
     // The script
 
-    private void step(String name, Runnable action, int wait, BooleanSupplier check) {
+    void step(String name, Runnable action, int wait, BooleanSupplier check) {
         steps.add(new Step(name, action, wait, check, null));
     }
 
-    private void shot(String name, Runnable action, int wait, BooleanSupplier check, String screenshot) {
+    void shot(String name, Runnable action, int wait, BooleanSupplier check, String screenshot) {
         steps.add(new Step(name, action, wait, check, screenshot));
     }
 
@@ -549,6 +554,14 @@ public final class ClientPlaytest {
             return;
         }
         worldRequested = true;
+        if (MODE.equals("cnbMigrate")) {
+            mc.createWorldOpenFlows().openWorld(WORLD, () -> {
+                report.add("FAIL could not open the saved Chisels & Bits world");
+                failures++;
+                finish();
+            });
+            return;
+        }
         deleteOldWorld();
         mc.createWorldOpenFlows().createFreshLevel(WORLD,
                 new LevelSettings("Bitsmith playtest", GameType.CREATIVE, false, Difficulty.PEACEFUL, true,
@@ -577,8 +590,9 @@ public final class ClientPlaytest {
             return;
         }
         if (++ticks > TIMEOUT_TICKS) {
-            report.add("TIMEOUT at step " + index);
+            report.add("TIMEOUT at step " + index + ", screen " + mc.screen);
             failures++;
+            Screenshot.grab(mc.gameDirectory, "playtest_timeout.png", mc.getMainRenderTarget(), message -> { });
             finish();
             return;
         }
