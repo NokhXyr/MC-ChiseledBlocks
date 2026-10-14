@@ -10,6 +10,8 @@ import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.edit.ChiselShape;
+import com.nokhxyr.bitsmith.core.edit.Symmetry;
+import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BoxMerger;
 import com.nokhxyr.bitsmith.core.voxel.Face;
@@ -18,10 +20,12 @@ import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.PatternMode;
+import com.nokhxyr.bitsmith.item.SawItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
@@ -91,6 +95,40 @@ public final class ChiselHighlight {
     }
 
     @SubscribeEvent
+    public static void onSawHighlight(RenderHighlightEvent.Block event) {
+        Player player = Minecraft.getInstance().player;
+        if (player == null || !(player.getMainHandItem().getItem() instanceof SawItem)) {
+            return;
+        }
+        BlockHitResult hit = event.getTarget();
+        BlockPos pos = hit.getBlockPos();
+        Level level = player.level();
+        if (!(level.getBlockEntity(pos) instanceof CarvedBlockEntity)
+                && !Materials.isCarvable(level.getBlockState(pos), level, pos)) {
+            return;
+        }
+        int thickness = SawItem.thickness(player.getMainHandItem());
+        Direction face = hit.getDirection();
+        int axis = face.getAxis().ordinal();
+        double[] min = {0, 0, 0};
+        double[] max = {1, 1, 1};
+        if (face.getAxisDirection() == Direction.AxisDirection.POSITIVE) {
+            min[axis] = 1 - thickness * UNIT;
+        } else {
+            max[axis] = thickness * UNIT;
+        }
+
+        Vec3 camera = event.getCamera().getPosition();
+        PoseStack pose = event.getPoseStack();
+        pose.pushPose();
+        pose.translate(pos.getX() - camera.x, pos.getY() - camera.y, pos.getZ() - camera.z);
+        LevelRenderer.renderLineBox(pose, event.getMultiBufferSource().getBuffer(RenderType.lines()),
+                min[0], min[1], min[2], max[0], max[1], max[2], 0.9F, 0.5F, 0.1F, 0.9F);
+        pose.popPose();
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent
     public static void onHighlight(RenderHighlightEvent.Block event) {
         Player player = Minecraft.getInstance().player;
         if (player == null || !(player.getMainHandItem().getItem() instanceof ChiselItem)) {
@@ -113,9 +151,24 @@ public final class ChiselHighlight {
         PoseStack pose = event.getPoseStack();
         pose.pushPose();
         pose.translate(pos.getX() - camera.x, pos.getY() - camera.y, pos.getZ() - camera.z);
-        LevelRenderer.renderLineBox(pose, event.getMultiBufferSource().getBuffer(RenderType.lines()),
+        VertexConsumer lines = event.getMultiBufferSource().getBuffer(RenderType.lines());
+        LevelRenderer.renderLineBox(pose, lines,
                 box[0] * UNIT, box[1] * UNIT, box[2] * UNIT, box[3] * UNIT, box[4] * UNIT, box[5] * UNIT,
                 0.0F, 0.0F, 0.0F, 0.6F);
+        // Mirror images of the stroke, in blue.
+        Symmetry symmetry = PlayerSymmetry.client();
+        for (int mask = 1; mask < 8; mask++) {
+            boolean mx = (mask & 1) != 0;
+            boolean my = (mask & 2) != 0;
+            boolean mz = (mask & 4) != 0;
+            if ((mx && !symmetry.mirrorsX()) || (my && !symmetry.mirrorsY()) || (mz && !symmetry.mirrorsZ())) {
+                continue;
+            }
+            LevelRenderer.renderLineBox(pose, lines,
+                    (mx ? 16 - box[3] : box[0]) * UNIT, (my ? 16 - box[4] : box[1]) * UNIT, (mz ? 16 - box[5] : box[2]) * UNIT,
+                    (mx ? 16 - box[0] : box[3]) * UNIT, (my ? 16 - box[1] : box[4]) * UNIT, (mz ? 16 - box[2] : box[5]) * UNIT,
+                    0.2F, 0.4F, 1.0F, 0.7F);
+        }
         pose.popPose();
         event.setCanceled(true);
     }

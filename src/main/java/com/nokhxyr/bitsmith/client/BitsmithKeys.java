@@ -22,6 +22,10 @@ public final class BitsmithKeys {
     public static final KeyMapping MODE = new KeyMapping("key.bitsmith.mode", KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY);
 
+    /** Cycles the mirror setting. */
+    public static final KeyMapping SYMMETRY = new KeyMapping("key.bitsmith.symmetry", KeyConflictContext.IN_GAME,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, CATEGORY);
+
     /** Cycles the chisel size. */
     public static final KeyMapping SIZE = new KeyMapping("key.bitsmith.size", KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY);

@@ -38,7 +38,8 @@ public class BitItem extends Item {
         if (material.isAir()) {
             return InteractionResult.FAIL;
         }
-        return BitPlacement.place(context, material, () -> context.getItemInHand().shrink(1));
+        ItemStack bits = context.getItemInHand();
+        return BitPlacement.place(context, material, bits.getCount(), bits::shrink);
     }
 
     @Override

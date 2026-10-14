@@ -46,8 +46,8 @@ public class BitBagItem extends Item {
         if (entry == null) {
             return InteractionResult.FAIL;
         }
-        return BitPlacement.place(context, entry.material(),
-                () -> setContents(bag, contents(bag).remove(entry.material(), 1)));
+        return BitPlacement.place(context, entry.material(), entry.count(),
+                amount -> setContents(bag, contents(bag).remove(entry.material(), amount)));
     }
 
     @Override

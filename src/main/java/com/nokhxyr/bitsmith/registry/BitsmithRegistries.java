@@ -13,6 +13,9 @@ import com.nokhxyr.bitsmith.item.BlankPatternItem;
 import com.nokhxyr.bitsmith.item.CarvedBlockItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.item.PatternItem;
+import com.nokhxyr.bitsmith.item.SawItem;
+import com.nokhxyr.bitsmith.item.TapeMeasureItem;
+import com.nokhxyr.bitsmith.item.WrenchItem;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -67,6 +70,15 @@ public final class BitsmithRegistries {
     public static final DeferredItem<PatternItem> PATTERN = ITEMS.register("pattern",
             () -> new PatternItem(new Item.Properties()));
 
+    public static final DeferredItem<WrenchItem> WRENCH = ITEMS.register("wrench",
+            () -> new WrenchItem(new Item.Properties().durability(512)));
+
+    public static final DeferredItem<SawItem> SAW = ITEMS.register("saw",
+            () -> new SawItem(new Item.Properties().durability(512)));
+
+    public static final DeferredItem<TapeMeasureItem> TAPE_MEASURE = ITEMS.register("tape_measure",
+            () -> new TapeMeasureItem(new Item.Properties()));
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = TABS.register("main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.bitsmith"))
@@ -75,6 +87,9 @@ public final class BitsmithRegistries {
                         output.accept(IRON_CHISEL.get());
                         output.accept(BIT_BAG.get());
                         output.accept(BLANK_PATTERN.get());
+                        output.accept(WRENCH.get());
+                        output.accept(SAW.get());
+                        output.accept(TAPE_MEASURE.get());
                     })
                     .build());
 

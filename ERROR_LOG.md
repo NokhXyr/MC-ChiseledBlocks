@@ -47,3 +47,11 @@
 **Root cause:** The targeted voxel was derived from the hit point stepped behind the face. On an edge shared with a voxel already removed, rounding picked that empty voxel every time.
 **Fix:** In a carved block the target is found by tracing the view ray through the grid with `BitRaycast`; the hit point method is kept only for plain blocks, where every voxel is solid.
 **Prevention:** Never derive a voxel from a hit point lying on voxel boundaries when the exact grid is available.
+
+## [2026-10-14 21:46] — Tape measure box drawn out of view
+
+**Context:** Client playtest of the tape measure: the measurement text showed, the box did not.
+**Error:** No yellow box on screen.
+**Root cause:** In 1.21.1 the level renderer has already applied the camera rotation to the model view stack when `RenderLevelStageEvent` fires; multiplying the event's model view matrix again rotated the box a second time, off screen.
+**Fix:** Use the event's pose stack (or an identity one) and only translate by the camera position.
+**Prevention:** World space drawing in level render stages translates by the camera position only. Check it on a playtest screenshot.

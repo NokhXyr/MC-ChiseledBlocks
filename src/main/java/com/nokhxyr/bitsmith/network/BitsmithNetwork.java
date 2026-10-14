@@ -9,14 +9,17 @@ import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
+import com.nokhxyr.bitsmith.core.edit.ChiselShape;
 import com.nokhxyr.bitsmith.edit.ChiselLogic;
 import com.nokhxyr.bitsmith.edit.EditHistory;
+import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
 import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.PatternMode;
+import com.nokhxyr.bitsmith.item.SawItem;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,7 +34,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 public final class BitsmithNetwork {
-    private static final String VERSION = "4";
+    private static final String VERSION = "5";
     /** Furthest a player may ask for a grid, in blocks, squared. */
     private static final double RESYNC_RANGE_SQUARED = 64 * 64;
     private static final int RESYNCS_PER_TICK = 8;
@@ -47,6 +50,8 @@ public final class BitsmithNetwork {
         registrar.playToServer(ResyncPayload.TYPE, ResyncPayload.CODEC, BitsmithNetwork::onResync);
         registrar.playToServer(UndoPayload.TYPE, UndoPayload.CODEC, BitsmithNetwork::onUndo);
         registrar.playToServer(ToolOptionPayload.TYPE, ToolOptionPayload.CODEC, BitsmithNetwork::onToolOption);
+        registrar.playToServer(SymmetryPayload.TYPE, SymmetryPayload.CODEC,
+                (payload, context) -> PlayerSymmetry.setOnServer(context.player(), payload.symmetry()));
         registrar.playToClient(GridDeltaPayload.TYPE, GridDeltaPayload.CODEC, BitsmithNetwork::onDelta);
         registrar.playToClient(GridFullPayload.TYPE, GridFullPayload.CODEC, BitsmithNetwork::onFull);
     }
@@ -67,6 +72,10 @@ public final class BitsmithNetwork {
             ChiselSettings next = payload.size() ? current.withNextSize() : current.withNextMode();
             held.set(BitsmithComponents.CHISEL_SETTINGS.get(), next);
             player.displayClientMessage(next.describe(), true);
+        } else if (held.getItem() instanceof SawItem && payload.size()) {
+            int thickness = ChiselShape.nextSize(SawItem.thickness(held));
+            held.set(BitsmithComponents.SAW_THICKNESS.get(), thickness);
+            player.displayClientMessage(Component.translatable("bitsmith.saw.thickness", thickness), true);
         } else if (held.getItem() instanceof PatternItem && !payload.size()) {
             PatternMode mode = PatternItem.mode(held).next();
             held.set(BitsmithComponents.PATTERN_MODE.get(), mode);
@@ -113,6 +122,13 @@ public final class BitsmithNetwork {
                     PatternMode mode = PatternMode.byOrdinal(payload.value());
                     held.set(BitsmithComponents.PATTERN_MODE.get(), mode);
                     player.displayClientMessage(Component.translatable("bitsmith.pattern.mode", mode.displayName()), true);
+                }
+            }
+            case SAW_THICKNESS -> {
+                if (held.getItem() instanceof SawItem) {
+                    int thickness = ChiselShape.validSize(payload.value());
+                    held.set(BitsmithComponents.SAW_THICKNESS.get(), thickness);
+                    player.displayClientMessage(Component.translatable("bitsmith.saw.thickness", thickness), true);
                 }
             }
             case BAG_MATERIAL -> {

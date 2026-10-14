@@ -9,12 +9,14 @@ import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
+import com.nokhxyr.bitsmith.core.edit.Symmetry;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.voxel.Face;
 import com.nokhxyr.bitsmith.edit.BitInventory;
 import com.nokhxyr.bitsmith.edit.ChiselLogic;
 import com.nokhxyr.bitsmith.edit.EditHistory;
+import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
 import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
@@ -367,6 +369,93 @@ public final class CarvingGameTests {
         helper.assertTrue(carved.getGrid().get(0, 0, 0) == BitGrid.AIR, "the bottom half is carved out");
         helper.assertTrue(carved.getGrid().get(0, 8, 0) == STONE, "the top half stays");
         helper.assertTrue(BitBagItem.contents(bag).count(Blocks.STONE.defaultBlockState()) == 2048, "the carved bits are given");
+        helper.succeed();
+    }
+
+    // Advanced tools
+
+    @GameTest(template = TEMPLATE)
+    public static void mirrorRepeatsAChiselStroke(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = creative(helper, 1.5);
+        PlayerSymmetry.setOnServer(player, Symmetry.X);
+        ChiselLogic.chisel(player, helper.absolutePos(TARGET), BitGrid.index(2, 15, 3), Face.UP);
+
+        CarvedBlockEntity carved = helper.getBlockEntity(TARGET);
+        helper.assertTrue(carved.getGrid().get(2, 15, 3) == BitGrid.AIR, "the clicked bit is removed");
+        helper.assertTrue(carved.getGrid().get(13, 15, 3) == BitGrid.AIR, "its mirror image is removed too");
+        helper.assertTrue(carved.getGrid().filledCount() == BitGrid.VOLUME - 2, "nothing else is touched");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void mirrorRepeatsAPlacementWithinTheBits(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = survival(helper);
+        PlayerSymmetry.setOnServer(player, Symmetry.XZ);
+        player.setItemInHand(InteractionHand.MAIN_HAND, BitItem.of(Blocks.OAK_PLANKS.defaultBlockState(), 3));
+        BlockPos target = helper.absolutePos(TARGET);
+        Vec3 click = new Vec3(target.getX() + 0.1, target.getY() + 1.0, target.getZ() + 0.1);
+        player.getMainHandItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND,
+                new BlockHitResult(click, Direction.UP, target, false)));
+
+        CarvedBlockEntity placed = helper.getBlockEntity(TARGET.above());
+        helper.assertTrue(placed.getGrid().filledCount() == 3, "only as many bits as held are placed");
+        helper.assertTrue(placed.getGrid().get(1, 0, 1) != BitGrid.AIR, "the clicked bit is placed first");
+        helper.assertTrue(player.getMainHandItem().isEmpty(), "the 3 bits are used");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void wrenchTurnsACarving(GameTestHelper helper) {
+        int planks = Materials.id(Blocks.OAK_PLANKS.defaultBlockState());
+        placeCarved(helper, new BitGridBuilder().fill(0, 0, 0, 16, 1, 16, STONE).set(8, 3, 0, planks).build());
+        ServerPlayer player = survival(helper);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(BitsmithRegistries.WRENCH.get()));
+        useOnTop(player, helper, TARGET);
+
+        // Edits on an existing carving are applied at the end of the tick.
+        helper.runAfterDelay(1, () -> {
+            CarvedBlockEntity carved = helper.getBlockEntity(TARGET);
+            helper.assertTrue(carved.getGrid().get(15, 3, 8) == planks, "a quarter turn moves north to east");
+            helper.assertTrue(carved.getGrid().get(8, 3, 0) == BitGrid.AIR, "the old place is empty");
+            helper.assertTrue(player.getMainHandItem().getDamageValue() == 1, "the wrench wears");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void sneakingWrenchMirrorsACarving(GameTestHelper helper) {
+        placeCarved(helper, new BitGridBuilder().fill(0, 0, 0, 16, 4, 16, STONE).build());
+        ServerPlayer player = survival(helper);
+        player.setShiftKeyDown(true);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(BitsmithRegistries.WRENCH.get()));
+        useOnTop(player, helper, TARGET);
+
+        helper.runAfterDelay(1, () -> {
+            CarvedBlockEntity carved = helper.getBlockEntity(TARGET);
+            helper.assertTrue(carved.getGrid().get(0, 15, 0) == STONE && carved.getGrid().get(0, 0, 0) == BitGrid.AIR,
+                    "mirrored upside down across the clicked face's axis");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void sawCutsASliceIntoAnItem(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = survival(helper);
+        ItemStack saw = new ItemStack(BitsmithRegistries.SAW.get());
+        saw.set(BitsmithComponents.SAW_THICKNESS.get(), 4);
+        player.setItemInHand(InteractionHand.MAIN_HAND, saw);
+        useOnTop(player, helper, TARGET);
+
+        CarvedBlockEntity carved = helper.getBlockEntity(TARGET);
+        helper.assertTrue(carved.getGrid().filledCount() == BitGrid.VOLUME - 1024, "a 4 bit slice is cut from the top");
+        helper.assertTrue(carved.getGrid().get(0, 11, 0) == STONE && carved.getGrid().get(0, 12, 0) == BitGrid.AIR, "the cut is at y 12");
+        ItemStack piece = player.getInventory().items.stream()
+                .filter(stack -> stack.is(BitsmithRegistries.CARVED_BLOCK_ITEM.get())).findFirst().orElse(ItemStack.EMPTY);
+        BitGrid sliceGrid = piece.get(BitsmithComponents.GRID.get());
+        helper.assertTrue(sliceGrid != null && sliceGrid.filledCount() == 1024, "the slice is given as a carved block");
         helper.succeed();
     }
 

@@ -7,7 +7,7 @@ for performance and stability.
 Inspired by [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith is an
 independent implementation: it contains no code or assets from Chisels & Bits.
 
-> Status: early development (milestone M3). Carving with modes and sizes, bits as items, bit bag, survival rules, undo and patterns work; the advanced tools are not there yet.
+> Status: early development (milestone M4). Carving, bits, bit bag, survival rules, undo, patterns and the advanced tools (mirror, wrench, saw, tape measure) work; Chisels & Bits import is next.
 
 ## Features
 
@@ -41,6 +41,10 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 | Print a pattern | Right click a face: prints next to it (sneak: into the clicked block, empty space only) |
 | Carve with a pattern | Switch the pattern to carve mode (`V` or tool menu), right click the block |
 | Wipe a pattern | Sneak and right click in the air |
+| Mirror | `N` or the outer ring of the tool menu: off, X, Y, Z, X+Z; strokes and placements are repeated across the block |
+| Turn a carved block | Wrench, right click: quarter turn around the clicked face (sneak: mirror) |
+| Cut a slice | Saw, right click a face: the slice comes off as a carved block; `B` or tool menu sets 1, 2, 4, 8 bits |
+| Measure | Tape measure, right click two bits; sneak and right click in the air to clear |
 | Keep a carving | Break the carved block: it drops with its carving, place it back anywhere |
 
 Keys can be changed in Options, Controls, under Bitsmith. The bag's tooltip lists its contents,
@@ -91,7 +95,7 @@ Minecraft 1.21.1, conçu dès le départ pour la performance et la stabilité.
 Inspiré de [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith est une
 implémentation indépendante : il ne contient aucun code ni aucune ressource de Chisels & Bits.
 
-> État : début de développement (jalon M3). Le ciselage avec modes et tailles, les bits en items, le sac à bits, les règles de survie, l'annulation et les patterns fonctionnent ; les outils avancés ne sont pas encore là.
+> État : début de développement (jalon M4). Le ciselage, les bits, le sac à bits, les règles de survie, l'annulation, les patterns et les outils avancés (miroir, clé, scie, mètre ruban) fonctionnent ; l'import Chisels & Bits est la suite.
 
 ## Caractéristiques
 
@@ -126,6 +130,10 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 | Imprimer un pattern | Clic droit sur une face : imprime à côté (accroupi : dans le bloc visé, espace vide seulement) |
 | Creuser avec un pattern | Passer le pattern en mode creuser (`V` ou menu de l'outil), clic droit sur le bloc |
 | Effacer un pattern | Accroupi + clic droit dans le vide |
+| Miroir | `N` ou l'anneau extérieur du menu de l'outil : aucun, X, Y, Z, X+Z ; coups et poses sont répétés de l'autre côté du bloc |
+| Tourner un bloc ciselé | Clé, clic droit : quart de tour autour de la face visée (accroupi : miroir) |
+| Découper une tranche | Scie, clic droit sur une face : la tranche sort comme bloc ciselé ; `B` ou le menu règle 1, 2, 4, 8 bits |
+| Mesurer | Mètre ruban, clic droit sur deux bits ; accroupi + clic droit dans le vide pour effacer |
 | Garder une sculpture | Casser le bloc ciselé : il tombe avec sa sculpture, à reposer où l'on veut |
 
 Les touches se changent dans Options, Commandes, rubrique Bitsmith. L'infobulle du sac liste son

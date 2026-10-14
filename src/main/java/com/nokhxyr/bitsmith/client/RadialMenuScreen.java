@@ -7,6 +7,8 @@ package com.nokhxyr.bitsmith.client;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
 import com.nokhxyr.bitsmith.core.edit.ChiselShape;
+import com.nokhxyr.bitsmith.core.edit.Symmetry;
+import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
 import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
@@ -14,6 +16,7 @@ import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.PatternMode;
+import com.nokhxyr.bitsmith.item.SawItem;
 import com.nokhxyr.bitsmith.network.ToolOptionPayload;
 import com.nokhxyr.bitsmith.network.UndoPayload;
 import net.minecraft.client.gui.GuiGraphics;
@@ -52,6 +55,8 @@ public final class RadialMenuScreen extends Screen {
     }
 
     private final List<Ring> rings = new ArrayList<>();
+    /** Shrinks the whole menu when it would not fit the screen (large GUI scales). */
+    private float menuScale = 1.0F;
     private @Nullable Slot hovered;
     private int hoveredCenter;
 
@@ -76,6 +81,7 @@ public final class RadialMenuScreen extends Screen {
             }
             screen.rings.add(new Ring(30, 58, sizes));
             screen.rings.add(new Ring(62, 112, modes));
+            screen.rings.add(new Ring(116, 150, symmetrySlots()));
             return screen;
         }
         if (held.getItem() instanceof PatternItem) {
@@ -101,13 +107,46 @@ public final class RadialMenuScreen extends Screen {
             if (!materials.isEmpty()) {
                 screen.rings.add(new Ring(36, 104, materials));
             }
+            screen.rings.add(new Ring(108, 142, symmetrySlots()));
+            return screen;
+        }
+        if (held.getItem() instanceof SawItem) {
+            int current = SawItem.thickness(held);
+            List<Slot> sizes = new ArrayList<>();
+            for (int size : ChiselShape.SIZES) {
+                sizes.add(new Slot(Component.translatable("bitsmith.saw.thickness", size), null, size == current,
+                        () -> send(ToolOptionPayload.Option.SAW_THICKNESS, size)));
+            }
+            screen.rings.add(new Ring(36, 96, sizes));
+            return screen;
+        }
+        if (held.getItem() instanceof BitItem) {
+            screen.rings.add(new Ring(36, 96, symmetrySlots()));
             return screen;
         }
         return null;
     }
 
+    /** The mirror choices, shared by every tool that carves or places bits. */
+    private static List<Slot> symmetrySlots() {
+        List<Slot> slots = new ArrayList<>();
+        for (Symmetry symmetry : Symmetry.values()) {
+            slots.add(new Slot(SymmetryControl.name(symmetry), null, PlayerSymmetry.client() == symmetry,
+                    () -> SymmetryControl.set(symmetry)));
+        }
+        return slots;
+    }
+
     private static void send(ToolOptionPayload.Option option, int value) {
         PacketDistributor.sendToServer(new ToolOptionPayload(option, value));
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        // Room for the menu plus its caption above it.
+        float available = Math.min(width, height) / 2.0F - 16;
+        menuScale = Math.min(1.0F, available / (outerRadius() + 14));
     }
 
     @Override
@@ -125,6 +164,10 @@ public final class RadialMenuScreen extends Screen {
         float cx = width / 2.0F;
         float cy = height / 2.0F;
         hoverAt(mouseX, mouseY);
+        graphics.pose().pushPose();
+        graphics.pose().translate(cx, cy, 0);
+        graphics.pose().scale(menuScale, menuScale, 1);
+        graphics.pose().translate(-cx, -cy, 0);
 
         Matrix4f matrix = graphics.pose().last().pose();
         VertexConsumer buffer = graphics.bufferSource().getBuffer(RenderType.gui());
@@ -167,8 +210,10 @@ public final class RadialMenuScreen extends Screen {
                 : hoveredCenter > 0 ? Component.translatable("bitsmith.radial.redo")
                 : hovered != null ? hovered.label() : null;
         if (caption != null) {
-            graphics.drawCenteredString(font, caption, (int) cx, (int) (cy + outerRadius() + 8), TEXT);
+            // Above the menu: below it the caption would collide with the action bar message.
+            graphics.drawCenteredString(font, caption, (int) cx, (int) (cy - outerRadius() - 14), TEXT);
         }
+        graphics.pose().popPose();
     }
 
     /**
@@ -177,8 +222,8 @@ public final class RadialMenuScreen extends Screen {
      * actually under the cursor.
      */
     private void hoverAt(double mouseX, double mouseY) {
-        float dx = (float) (mouseX - width / 2.0);
-        float dy = (float) (mouseY - height / 2.0);
+        float dx = (float) ((mouseX - width / 2.0) / menuScale);
+        float dy = (float) ((mouseY - height / 2.0) / menuScale);
         updateHover(Mth.sqrt(dx * dx + dy * dy), angleOf(dx, dy), dx);
     }
 

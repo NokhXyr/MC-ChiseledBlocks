@@ -16,7 +16,8 @@ public record ToolOptionPayload(Option option, int value) implements CustomPacke
         CHISEL_MODE,
         CHISEL_SIZE,
         BAG_MATERIAL,
-        PATTERN_MODE;
+        PATTERN_MODE,
+        SAW_THICKNESS;
 
         private static final Option[] VALUES = values();
     }

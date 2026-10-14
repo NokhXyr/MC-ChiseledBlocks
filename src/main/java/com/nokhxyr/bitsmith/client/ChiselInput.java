@@ -11,6 +11,7 @@ import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.voxel.BitRaycast;
 import com.nokhxyr.bitsmith.core.voxel.Face;
 import com.nokhxyr.bitsmith.edit.ChiselOperation;
+import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
 import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.network.ChiselPayload;
 import com.nokhxyr.bitsmith.network.CyclePayload;
@@ -112,7 +113,7 @@ public final class ChiselInput {
             return;
         }
         BitGridBuilder builder = carved.getGrid().toBuilder();
-        int removed = ChiselOperation.apply(ChiselItem.settings(tool), voxel, face, builder::get, chisel::canCut,
+        int removed = ChiselOperation.apply(ChiselItem.settings(tool), PlayerSymmetry.client(), voxel, face, builder::get, chisel::canCut,
                 (index, material) -> builder.set(index, BitGrid.AIR));
         if (removed > 0 && builder.changes() < BitGrid.VOLUME) {
             BitGrid predicted = builder.build();

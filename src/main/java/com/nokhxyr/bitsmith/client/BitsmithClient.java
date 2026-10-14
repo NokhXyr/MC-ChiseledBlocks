@@ -97,5 +97,6 @@ public final class BitsmithClient {
         event.register(BitsmithKeys.RADIAL);
         event.register(BitsmithKeys.UNDO);
         event.register(BitsmithKeys.REDO);
+        event.register(BitsmithKeys.SYMMETRY);
     }
 }

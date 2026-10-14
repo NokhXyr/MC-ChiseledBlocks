@@ -6,6 +6,7 @@ package com.nokhxyr.bitsmith.edit;
 
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
+import com.nokhxyr.bitsmith.core.edit.Symmetry;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.voxel.Face;
@@ -51,6 +52,7 @@ public final class ChiselLogic {
         }
 
         ChiselSettings settings = ChiselItem.settings(tool);
+        Symmetry symmetry = PlayerSymmetry.of(player);
         Int2IntOpenHashMap removed = new Int2IntOpenHashMap();
         BlockState state = level.getBlockState(pos);
         int soundMaterial;
@@ -60,7 +62,7 @@ public final class ChiselLogic {
         if (level.getBlockEntity(pos) instanceof CarvedBlockEntity carved) {
             before = BlockSnapshot.current(level, pos);
             int[] count = {0};
-            carved.edit(builder -> count[0] = ChiselOperation.apply(settings, voxel, face, builder::get, chisel::canCut,
+            carved.edit(builder -> count[0] = ChiselOperation.apply(settings, symmetry, voxel, face, builder::get, chisel::canCut,
                     (index, material) -> {
                         builder.set(index, BitGrid.AIR);
                         removed.addTo(material, 1);
@@ -78,7 +80,7 @@ public final class ChiselLogic {
             // Convert the plain block. The client receives the new block and its data through
             // vanilla's block entity sync, already carved.
             BitGridBuilder builder = BitGrid.filled(material).toBuilder();
-            ChiselOperation.apply(settings, voxel, face, builder::get, chisel::canCut, (index, m) -> {
+            ChiselOperation.apply(settings, symmetry, voxel, face, builder::get, chisel::canCut, (index, m) -> {
                 builder.set(index, BitGrid.AIR);
                 removed.addTo(m, 1);
             });

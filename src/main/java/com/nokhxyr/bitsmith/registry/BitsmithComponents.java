@@ -4,6 +4,7 @@
  */
 package com.nokhxyr.bitsmith.registry;
 
+import com.mojang.serialization.Codec;
 import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.GridCodecs;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
@@ -45,6 +46,11 @@ public final class BitsmithComponents {
             COMPONENTS.registerComponentType("pattern_mode", builder -> builder
                     .persistent(PatternMode.CODEC)
                     .networkSynchronized(PatternMode.STREAM_CODEC));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SAW_THICKNESS =
+            COMPONENTS.registerComponentType("saw_thickness", builder -> builder
+                    .persistent(Codec.intRange(1, 8))
+                    .networkSynchronized(ByteBufCodecs.VAR_INT));
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<BagContents>> BAG_CONTENTS =
             COMPONENTS.registerComponentType("bag_contents", builder -> builder

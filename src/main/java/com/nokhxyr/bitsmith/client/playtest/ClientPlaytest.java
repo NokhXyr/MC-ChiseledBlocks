@@ -9,12 +9,19 @@ import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.client.BitsmithKeys;
 import com.nokhxyr.bitsmith.client.RadialMenuScreen;
+import com.nokhxyr.bitsmith.client.TapeMeasureClient;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
+import com.nokhxyr.bitsmith.core.edit.Symmetry;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
+import com.nokhxyr.bitsmith.core.voxel.GridTransforms;
+import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
+import com.nokhxyr.bitsmith.item.CarvedBlockItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.item.PatternItem;
+import com.nokhxyr.bitsmith.item.SawItem;
+import com.nokhxyr.bitsmith.item.WrenchItem;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -46,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntUnaryOperator;
 import java.util.stream.Stream;
 
 /**
@@ -66,6 +74,7 @@ public final class ClientPlaytest {
     private static final BlockPos B = new BlockPos(1, -60, 3);
     private static final BlockPos C = new BlockPos(-1, -60, 3);
     private static final BlockPos E = new BlockPos(-2, -60, 3);
+    private static final BlockPos F = new BlockPos(2, -60, 3);
     private static final BlockPos PIT = new BlockPos(5, -61, 4);
 
     private record Step(String name, Runnable action, int waitTicks, BooleanSupplier check, String screenshot) {
@@ -84,6 +93,8 @@ public final class ClientPlaytest {
     private boolean finished;
     /** What the last check saw, reported when it fails. */
     private String observed;
+    private BitGrid beforeWrench;
+    private int sawBefore;
 
     public ClientPlaytest() {
         script();
@@ -330,6 +341,69 @@ public final class ClientPlaytest {
         shot("pattern tool menu", () -> key(BitsmithKeys.RADIAL.getKey().getValue(), true), 5,
                 () -> mc.screen instanceof RadialMenuScreen, "07_radial_pattern");
         step("close the pattern menu", () -> key(BitsmithKeys.RADIAL.getKey().getValue(), false), 4, () -> mc.screen == null);
+
+        // Advanced tools
+        step("N turns the mirror on (X)", () -> {
+            hotbar(0);
+            tap(BitsmithKeys.SYMMETRY.getKey().getValue());
+        }, 4, () -> that("mirror " + PlayerSymmetry.client(), PlayerSymmetry.client() == Symmetry.X));
+        shot("the outline shows the mirrored stroke", () -> look(new Vec3(F.getX() + 0.2, F.getY() + 0.6, F.getZ())), 6,
+                () -> true, "09_mirror_preview");
+        step("a mirrored cube stroke", this::attack, 8, () -> eq("bits in F", filled(F), BitGrid.VOLUME - 128));
+        step("mirror back off", () -> {
+            for (int i = 0; i < 4; i++) {
+                tap(BitsmithKeys.SYMMETRY.getKey().getValue());
+            }
+        }, 4, () -> that("mirror " + PlayerSymmetry.client(), PlayerSymmetry.client() == Symmetry.NONE));
+
+        step("take the wrench", () -> {
+            command("item replace entity @s hotbar.4 with bitsmith:wrench");
+        }, 6, () -> true);
+        step("aim at the top of the mirrored block", () -> {
+            hotbar(4);
+            lookAtFace(F, Direction.UP);
+            beforeWrench = gridAt(F);
+        }, 4, () -> that("wrench in hand", held().getItem() instanceof WrenchItem));
+        step("right click turns it a quarter turn", this::use, 8, () -> that("grid turned",
+                beforeWrench != null && GridTransforms.rotate(beforeWrench, 1, IntUnaryOperator.identity()).equals(gridAt(F))));
+
+        step("take the saw", () -> command("item replace entity @s hotbar.5 with bitsmith:saw"), 6, () -> true);
+        step("select the saw", () -> hotbar(5), 4, () -> that("saw in hand", held().getItem() instanceof SawItem));
+        step("B sets the saw to 2 bits", () -> tap(BitsmithKeys.SIZE.getKey().getValue()), 6, () -> eq("saw thickness", SawItem.thickness(held()), 2));
+        shot("the outline shows the slice", () -> lookAtFace(C, Direction.UP), 6, () -> true, "10_saw_preview");
+        step("right click cuts the slice off", () -> {
+            sawBefore = filled(C);
+            use();
+        }, 8, () -> eq("bits cut from C", sawBefore - filled(C), 512)
+                && that("slice in the inventory", mc.player.getInventory().items.stream().anyMatch(
+                        stack -> stack.getItem() instanceof CarvedBlockItem)));
+        shot("saw tool menu", () -> key(BitsmithKeys.RADIAL.getKey().getValue(), true), 5,
+                () -> mc.screen instanceof RadialMenuScreen, "11_radial_saw");
+        step("close the saw menu", () -> key(BitsmithKeys.RADIAL.getKey().getValue(), false), 4, () -> mc.screen == null);
+
+        step("take the tape measure", () -> command("item replace entity @s hotbar.6 with bitsmith:tape_measure"), 6, () -> true);
+        step("first point on A", () -> {
+            hotbar(6);
+            lookAtFace(A, Direction.NORTH);
+        }, 4, () -> true);
+        step("right click sets the first point", this::use, 4, () -> that("first point", TapeMeasureClient.first() != null));
+        step("aim at F", () -> look(new Vec3(F.getX() + 0.9, F.getY() + 0.1, F.getZ())), 4, () -> true);
+        shot("right click sets the second point", this::use, 6,
+                () -> that("second point", TapeMeasureClient.second() != null), "12_tape_measure");
+
+        step("large GUI scale", () -> {
+            hotbar(0);
+            mc.options.guiScale().set(4);
+            mc.resizeDisplay();
+        // The game caps the scale to what the window allows (3 for 1280x720).
+        }, 4, () -> between("gui scale", (int) mc.getWindow().getGuiScale(), 3, 4));
+        shot("the chisel menu still fits", () -> key(BitsmithKeys.RADIAL.getKey().getValue(), true), 5,
+                () -> mc.screen instanceof RadialMenuScreen, "13_radial_gui_scale_4");
+        step("close and restore the GUI scale", () -> {
+            key(BitsmithKeys.RADIAL.getKey().getValue(), false);
+            mc.options.guiScale().set(2);
+            mc.resizeDisplay();
+        }, 4, () -> mc.screen == null);
 
         shot("overview", () -> {
             command("tp @s 0.5 -58.6 -1.5 0 20");
