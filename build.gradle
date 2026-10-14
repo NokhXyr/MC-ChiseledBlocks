@@ -21,6 +21,21 @@ base {
     archivesName = mod_id
 }
 
+repositories {
+    // Modrinth maven, limited to Modrinth artifacts. Used for development runtime mods only.
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
@@ -41,6 +56,15 @@ neoForge {
             server()
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        // Plays the game like a player would (real key presses, menus, screenshots) and quits.
+        // Uses its own game directory so it never touches a client already running from run/.
+        clientTest {
+            client()
+            gameDirectory = project.file("run-clienttest")
+            systemProperty "bitsmith.clientTest", "true"
+            programArguments.addAll "--width", "1280", "--height", "720"
         }
 
         gameTestServer {
@@ -71,6 +95,9 @@ configurations {
 }
 
 dependencies {
+    // Development runtime only: never part of the mod jar or its published dependencies.
+    localRuntime "maven.modrinth:pehkui:${pehkui_version}"
+
     testImplementation platform("org.junit:junit-bom:${junit_version}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
