@@ -46,6 +46,7 @@ import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RenderFrameEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.lwjgl.glfw.GLFW;
 
@@ -69,9 +70,14 @@ import java.util.stream.Stream;
  */
 public final class ClientPlaytest {
     private static final String MODE = System.getProperty("bitsmith.playtest", "main");
-    private static final String WORLD = MODE.startsWith("cnb") ? ChiselsAndBitsPlaytest.WORLD : "bitsmith-playtest";
+    private static final String WORLD = MODE.startsWith("cnb") ? ChiselsAndBitsPlaytest.WORLD : "bitsmith-" + MODE;
     private static final int WORLD_SETTLE_TICKS = 60;
-    private static final int TIMEOUT_TICKS = 20 * 360;
+    /** Hard stop: generous for the long runs (bench, soak), 6 minutes for the others. */
+    private static final int TIMEOUT_TICKS = 20 * switch (System.getProperty("bitsmith.playtest", "main")) {
+        case "bench" -> 900;
+        case "soak" -> Integer.getInteger("bitsmith.soak.minutes", 10) * 75 + 300;
+        default -> 360;
+    };
     /** Extra ticks a failing check is retried for, in case the game runs slow. */
     private static final int GRACE_TICKS = 40;
 
@@ -108,6 +114,8 @@ public final class ClientPlaytest {
         switch (MODE) {
             case "cnbSource" -> ChiselsAndBitsPlaytest.sourceScript(this);
             case "cnbMigrate" -> ChiselsAndBitsPlaytest.migrateScript(this);
+            case "bench" -> BenchPlaytest.script(this);
+            case "soak" -> SoakPlaytest.script(this);
             default -> script();
         }
     }
@@ -118,12 +126,12 @@ public final class ClientPlaytest {
         return mc.getWindow().getWindow();
     }
 
-    private void key(int glfwKey, boolean press) {
+    void key(int glfwKey, boolean press) {
         mc.keyboardHandler.keyPress(window(), glfwKey, GLFW.glfwGetKeyScancode(glfwKey),
                 press ? GLFW.GLFW_PRESS : GLFW.GLFW_RELEASE, 0);
     }
 
-    private void tap(int glfwKey) {
+    void tap(int glfwKey) {
         key(glfwKey, true);
         key(glfwKey, false);
     }
@@ -166,7 +174,7 @@ public final class ClientPlaytest {
         mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, point);
     }
 
-    private void lookAtFace(BlockPos pos, Direction face) {
+    void lookAtFace(BlockPos pos, Direction face) {
         look(pos.getCenter().add(Vec3.atLowerCornerOf(face.getNormal()).scale(0.5)));
     }
 
@@ -176,12 +184,12 @@ public final class ClientPlaytest {
         return mc.level.getBlockEntity(pos) instanceof CarvedBlockEntity carved ? carved.getGrid() : null;
     }
 
-    private int filled(BlockPos pos) {
+    int filled(BlockPos pos) {
         BitGrid grid = gridAt(pos);
         return grid == null ? -1 : grid.filledCount();
     }
 
-    private ItemStack held() {
+    ItemStack held() {
         return mc.player.getMainHandItem();
     }
 
@@ -546,6 +554,64 @@ public final class ClientPlaytest {
         return count;
     }
 
+    // Frame timing, for the performance runs
+
+    /** Frame rate figures over a recording window. */
+    record FrameStats(int frames, double averageFps, double onePercentLowFps, double worstFrameMs) {
+        @Override
+        public String toString() {
+            return String.format(java.util.Locale.ROOT, "%.0f fps average, %.0f fps 1%% low, worst frame %.1f ms (%d frames)",
+                    averageFps, onePercentLowFps, worstFrameMs, frames);
+        }
+    }
+
+    private final List<Long> frameNanos = new ArrayList<>();
+    private long lastFrame;
+    private boolean recordingFrames;
+    /** When set, the player keeps flying even after touching the ground (the client would stop it). */
+    boolean keepFlying;
+
+    @SubscribeEvent
+    public void onFrame(RenderFrameEvent.Post event) {
+        long now = System.nanoTime();
+        if (recordingFrames && lastFrame != 0) {
+            frameNanos.add(now - lastFrame);
+        }
+        lastFrame = now;
+    }
+
+    void startFrames() {
+        frameNanos.clear();
+        recordingFrames = true;
+    }
+
+    FrameStats stopFrames() {
+        recordingFrames = false;
+        if (frameNanos.isEmpty()) {
+            return new FrameStats(0, 0, 0, 0);
+        }
+        long total = 0;
+        for (long nanos : frameNanos) {
+            total += nanos;
+        }
+        List<Long> sorted = new ArrayList<>(frameNanos);
+        sorted.sort(Comparator.reverseOrder());
+        int worstCount = Math.max(1, sorted.size() / 100);
+        long worstTotal = 0;
+        for (int i = 0; i < worstCount; i++) {
+            worstTotal += sorted.get(i);
+        }
+        double averageFps = frameNanos.size() / (total / 1e9);
+        double lowFps = 1e9 / ((double) worstTotal / worstCount);
+        return new FrameStats(frameNanos.size(), averageFps, lowFps, sorted.get(0) / 1e6);
+    }
+
+    /** Adds a free line to the report. */
+    void note(String line) {
+        report.add(line);
+        Bitsmith.LOGGER.info("[playtest] {}", line);
+    }
+
     // Driving
 
     @SubscribeEvent
@@ -586,6 +652,10 @@ public final class ClientPlaytest {
 
     @SubscribeEvent
     public void onClientTick(ClientTickEvent.Post event) {
+        if (keepFlying && mc.player != null && !mc.player.getAbilities().flying && mc.player.getAbilities().mayfly) {
+            mc.player.getAbilities().flying = true;
+            mc.player.onUpdateAbilities();
+        }
         if (finished || !worldRequested) {
             return;
         }

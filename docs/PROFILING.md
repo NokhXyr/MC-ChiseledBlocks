@@ -9,6 +9,12 @@
 The same protocol measures Chisels & Bits (the baseline) and Bitsmith, so the numbers compare.
 Change one thing only between the two runs: the carving mod.
 
+**Automated.** `./gradlew runClientBench` and `./gradlew runClientBenchCnb` play these scenes by
+themselves (same settings, same scene built with each mod's own chisel) and write their results
+to `run-bench*/playtest-report.txt`; Spark profiles are saved as files in
+`run-bench*/config/spark/`. `./gradlew runClientSoak` is the multiplayer endurance run. Results:
+`docs/benchmarks/`. The manual steps below remain valid for measuring on another setup.
+
 ### 1. Instance
 
 - NeoForge 21.1.x for Minecraft 1.21.1, Java 21, 6 GB of memory.
@@ -64,6 +70,13 @@ with the instance details (mod versions, Sodium yes or no).
 
 Le même protocole mesure Chisels & Bits (la référence) et Bitsmith, pour que les chiffres soient
 comparables. Entre les deux passages, une seule chose change : le mod de ciselage.
+
+**Automatisé.** `./gradlew runClientBench` et `./gradlew runClientBenchCnb` jouent ces scènes tout
+seuls (mêmes réglages, même scène construite avec le ciseau de chaque mod) et écrivent leurs
+résultats dans `run-bench*/playtest-report.txt` ; les profils Spark sont enregistrés en fichiers
+dans `run-bench*/config/spark/`. `./gradlew runClientSoak` est le test d'endurance multijoueur.
+Résultats : `docs/benchmarks/`. Les étapes manuelles ci-dessous restent valables pour mesurer sur
+une autre configuration.
 
 ### 1. Instance
 

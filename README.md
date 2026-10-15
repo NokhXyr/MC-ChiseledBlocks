@@ -7,7 +7,7 @@ for performance and stability.
 Inspired by [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith is an
 independent implementation: it contains no code or assets from Chisels & Bits.
 
-> Status: early development (milestone M5). Carving, bits, bit bag, survival rules, undo, patterns, the advanced tools and the Chisels & Bits world import work; compatibility is checked with Sodium, Iris, ModernFix, Create, WorldEdit and KubeJS.
+> Status: release candidate in progress (milestone M6, measured in [docs/benchmarks/](docs/benchmarks/)). Carving, bits, bit bag, survival rules, undo, patterns, the advanced tools and the Chisels & Bits world import work; compatibility is checked with Sodium, Iris, ModernFix, Create, WorldEdit and KubeJS.
 
 ## Features
 
@@ -98,7 +98,7 @@ Minecraft 1.21.1, conçu dès le départ pour la performance et la stabilité.
 Inspiré de [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Bitsmith est une
 implémentation indépendante : il ne contient aucun code ni aucune ressource de Chisels & Bits.
 
-> État : début de développement (jalon M5). Le ciselage, les bits, le sac à bits, les règles de survie, l'annulation, les patterns, les outils avancés et l'import des mondes Chisels & Bits fonctionnent ; la compatibilité est vérifiée avec Sodium, Iris, ModernFix, Create, WorldEdit et KubeJS.
+> État : release candidate en cours (jalon M6, mesuré dans [docs/benchmarks/](docs/benchmarks/)). Le ciselage, les bits, le sac à bits, les règles de survie, l'annulation, les patterns, les outils avancés et l'import des mondes Chisels & Bits fonctionnent ; la compatibilité est vérifiée avec Sodium, Iris, ModernFix, Create, WorldEdit et KubeJS.
 
 ## Caractéristiques
 

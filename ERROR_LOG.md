@@ -87,3 +87,11 @@
 **Root cause:** Three differences between the format as read in the source and as saved: the payload sits inside a `data` compound, the root NBT tag is unnamed (`writeAnyTag`), and palette entries nest the block state twice (`{state:{state:{Name}}}`).
 **Fix:** The reader handles all three; it is checked voxel by voxel against Chisels & Bits' own shapes, and a real saved block is kept as a game test fixture.
 **Prevention:** Never trust a format read from code alone: check against data saved by the real program.
+
+## [2026-10-15 13:15] — Refused chisel strokes of fake players threw an exception
+
+**Context:** Multiplayer soak test (`runClientSoak`): bot players carving at random, some out of reach.
+**Error:** `NullPointerException: ... Connection.channel() is null` from `NetworkRegistry.hasChannel`, 2361 times in 10 minutes. Carvings stayed in sync, but the bot's action was aborted.
+**Root cause:** A refused stroke sends the true grid back to correct the client's prediction. Fake players (bots, and machines of other mods such as a Create deployer holding a chisel) have a connection without a netty channel, and NeoForge's channel check dereferences it.
+**Fix:** No resync for fake players (`isFakePlayer()`); a game test covers a refused stroke by a fake player.
+**Prevention:** Every packet sent to a single player first checks `isFakePlayer()`. Soak tests include bot players.

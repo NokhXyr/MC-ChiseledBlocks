@@ -12,6 +12,7 @@ import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.voxel.Face;
 import com.nokhxyr.bitsmith.item.ChiselItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
+import com.nokhxyr.bitsmith.metrics.Metrics;
 import com.nokhxyr.bitsmith.network.GridFullPayload;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -39,6 +40,17 @@ public final class ChiselLogic {
     }
 
     public static void chisel(ServerPlayer player, BlockPos pos, int voxel, Face face) {
+        if (!Metrics.ENABLED) {
+            doChisel(player, pos, voxel, face);
+            return;
+        }
+        long start = System.nanoTime();
+        doChisel(player, pos, voxel, face);
+        Metrics.CHISEL_NANOS.addAndGet(System.nanoTime() - start);
+        Metrics.CHISEL_STROKES.incrementAndGet();
+    }
+
+    private static void doChisel(ServerPlayer player, BlockPos pos, int voxel, Face face) {
         ServerLevel level = player.serverLevel();
         ItemStack tool = player.getMainHandItem();
         if (!(tool.getItem() instanceof ChiselItem chisel)
@@ -106,10 +118,12 @@ public final class ChiselLogic {
     }
 
     /**
-     * Undoes a client prediction the server refused, by sending the true grid to that player.
+     * Undoes a client prediction the server refused, by sending the true grid to that player. Fake
+     * players (machines of other mods, bots) have no client to correct and no network channel.
      */
     private static void resync(ServerPlayer player, ServerLevel level, BlockPos pos) {
-        if (player.connection.hasChannel(GridFullPayload.TYPE)
+        if (!player.isFakePlayer()
+                && player.connection.hasChannel(GridFullPayload.TYPE)
                 && level.isLoaded(pos) && level.getBlockEntity(pos) instanceof CarvedBlockEntity carved) {
             PacketDistributor.sendToPlayer(player, GridFullPayload.of(pos, carved.getGrid()));
         }

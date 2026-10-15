@@ -32,10 +32,12 @@ All notable changes to Bitsmith are documented here.
 - **Compatibility** — Checked in game with Sodium, Iris (with a shader pack), ModernFix (dynamic model loading on), FerriteCore, Lithium, ImmediatelyFast, Entity Culling, WorldEdit, Create and KubeJS through `./gradlew runClientCompat`. See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 - **Turning with other tools** — Carved blocks have a horizontal facing; WorldEdit `//rotate`, structure blocks and Create rotations now turn the carving with the block.
 - **Chisels & Bits import** — Worlds saved with Chisels & Bits 1.21.1 open with Bitsmith instead: chiseled blocks load as carved blocks with the same shape and materials, then are saved in Bitsmith's format. Checked against blocks carved with Chisels & Bits itself (0 voxel difference). Items are not converted. See [docs/CNB_FORMAT.md](docs/CNB_FORMAT.md).
+- **Performance and endurance runs** — `runClientBench` and `runClientBenchCnb` play the same scenes with Bitsmith and with Chisels & Bits (Spark profiles saved to files), `runClientSoak` has bot players and the real client carve the same blocks. Results in [docs/benchmarks/](docs/benchmarks/): coming back to a build, 1 % low 312 fps against 32 and worst frame 83 ms against 527 ms; carving, worst frame 9.6 ms against 27.4 ms; 12000 bot operations without a desync.
 - **Client playtest** — `./gradlew runClientTest` plays the mod like a player in a fresh flat world (key presses, menus, clicks), checks each step, takes screenshots and writes `run-clienttest/playtest-report.txt`, then quits. It uses its own game directory.
 
 ### Fixed
 
+- **Machines holding a chisel** — A refused stroke by a fake player (bots, machines of other mods such as a Create deployer) threw an exception. Fake players are no longer sent a correction they cannot receive.
 - **Create could not move carved blocks** — Carved blocks were marked immovable, which only stopped Create. They now ride contraptions and keep their carving.
 - **Empty carved blocks** — A carved block left without a carving (WorldEdit `//set`, damaged data) is removed at the end of the tick instead of staying as an invisible shell.
 - **Radial menu choice** — An option picked by moving and releasing within the same frame is now taken into account.
@@ -72,10 +74,12 @@ All notable changes to Bitsmith are documented here.
 - **Compatibilité** — Vérifiée en jeu avec Sodium, Iris (avec un shader), ModernFix (chargement dynamique des modèles activé), FerriteCore, Lithium, ImmediatelyFast, Entity Culling, WorldEdit, Create et KubeJS via `./gradlew runClientCompat`. Voir [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 - **Rotation par d'autres outils** — Les blocs ciselés ont une orientation horizontale ; `//rotate` de WorldEdit, les blocs structure et les rotations de Create tournent maintenant la sculpture avec le bloc.
 - **Import Chisels & Bits** — Les mondes sauvegardés avec Chisels & Bits 1.21.1 s'ouvrent avec Bitsmith à la place : les blocs ciselés se chargent comme blocs Bitsmith avec la même forme et les mêmes matériaux, puis sont enregistrés au format Bitsmith. Vérifié sur des blocs ciselés avec Chisels & Bits lui-même (0 voxel de différence). Les items ne sont pas convertis. Voir [docs/CNB_FORMAT.md](docs/CNB_FORMAT.md).
+- **Mesures de performance et d'endurance** — `runClientBench` et `runClientBenchCnb` jouent les mêmes scènes avec Bitsmith et avec Chisels & Bits (profils Spark enregistrés en fichiers), `runClientSoak` fait ciseler les mêmes blocs à des robots et au vrai client. Résultats dans [docs/benchmarks/](docs/benchmarks/) : retour vers une construction, 1 % bas 312 FPS contre 32 et pire image 83 ms contre 527 ms ; ciselage, pire image 9,6 ms contre 27,4 ms ; 12000 opérations de robots sans désynchronisation.
 - **Partie de test client** — `./gradlew runClientTest` joue le mod comme un joueur dans un monde plat neuf (touches, menus, clics), vérifie chaque étape, prend des captures et écrit `run-clienttest/playtest-report.txt`, puis quitte. Il utilise son propre dossier de jeu.
 
 ### Correctifs
 
+- **Machines tenant un ciseau** — Un coup refusé d'un faux joueur (robots, machines d'autres mods comme un déployeur de Create) levait une exception. Les faux joueurs ne reçoivent plus de correction qu'ils ne peuvent pas recevoir.
 - **Create ne déplaçait pas les blocs ciselés** — Les blocs ciselés étaient marqués inamovibles, ce qui ne bloquait que Create. Ils voyagent maintenant sur les contraptions et gardent leur sculpture.
 - **Blocs ciselés vides** — Un bloc ciselé resté sans sculpture (`//set` de WorldEdit, données abîmées) est retiré à la fin du tick au lieu de rester une coque invisible.
 - **Choix dans le menu radial** — Une option choisie en bougeant puis en relâchant dans la même image est maintenant prise en compte.

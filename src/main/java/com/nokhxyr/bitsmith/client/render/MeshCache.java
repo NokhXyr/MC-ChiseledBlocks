@@ -10,6 +10,7 @@ import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.Face;
 import com.nokhxyr.bitsmith.core.voxel.GreedyMesher;
+import com.nokhxyr.bitsmith.metrics.Metrics;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockElementFace;
 import net.minecraft.client.renderer.block.model.BlockFaceUV;
@@ -53,6 +54,17 @@ public final class MeshCache {
     }
 
     private static CarvedMesh build(BitGrid grid, TextureAtlasSprite fallbackParticle) {
+        if (!Metrics.ENABLED) {
+            return buildMesh(grid, fallbackParticle);
+        }
+        long start = System.nanoTime();
+        CarvedMesh mesh = buildMesh(grid, fallbackParticle);
+        Metrics.MESH_NANOS.addAndGet(System.nanoTime() - start);
+        Metrics.MESH_BUILDS.incrementAndGet();
+        return mesh;
+    }
+
+    private static CarvedMesh buildMesh(BitGrid grid, TextureAtlasSprite fallbackParticle) {
         CarvedMesh.Builder builder = new CarvedMesh.Builder();
         MESHER.get().mesh(grid, Materials.OPAQUE, (face, material, plane, u0, v0, u1, v1, outer) -> {
             MaterialAppearance appearance = MaterialAppearance.of(material);

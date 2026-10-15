@@ -8,6 +8,7 @@ import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
+import com.nokhxyr.bitsmith.metrics.Metrics;
 import com.nokhxyr.bitsmith.network.GridDeltaPayload;
 import com.nokhxyr.bitsmith.network.GridFullPayload;
 import net.minecraft.core.BlockPos;
@@ -44,6 +45,17 @@ public final class EditBatcher {
     }
 
     public static void onServerTickPost(ServerTickEvent.Post event) {
+        if (!Metrics.ENABLED) {
+            flushTick();
+            return;
+        }
+        long start = System.nanoTime();
+        flushTick();
+        Metrics.FLUSH_NANOS.addAndGet(System.nanoTime() - start);
+        Metrics.FLUSH_TICKS.incrementAndGet();
+    }
+
+    private static void flushTick() {
         if (!EMPTY_CHECKS.isEmpty()) {
             CarvedBlockEntity[] checks = EMPTY_CHECKS.toArray(CarvedBlockEntity[]::new);
             EMPTY_CHECKS.clear();

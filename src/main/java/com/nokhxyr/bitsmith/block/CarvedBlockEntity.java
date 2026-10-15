@@ -10,6 +10,7 @@ import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.voxel.BitGridInterner;
 import com.nokhxyr.bitsmith.core.voxel.GridTransforms;
 import com.nokhxyr.bitsmith.edit.EditBatcher;
+import com.nokhxyr.bitsmith.metrics.Metrics;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
 import net.minecraft.core.component.DataComponentMap;
@@ -99,6 +100,9 @@ public final class CarvedBlockEntity extends BlockEntity {
     }
 
     private void onClientGridChanged() {
+        if (Metrics.ENABLED) {
+            Metrics.SECTION_DIRTY_MARKS.incrementAndGet();
+        }
         requestModelDataUpdate();
         // Flag 0: the section is rebuilt off thread on the next frame, never synchronously.
         level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 0);

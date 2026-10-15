@@ -161,6 +161,12 @@ storage blocks, Create contraption support, a chiseled printer block.
 | M5 Import | Format study, importer, migration test world | A test world converts with no lost block |
 | M6 Release candidate | Full Spark comparison, Iris, multiplayer soak test | P1 to P10 met and documented |
 
+**Progress (2026-10-15).** M0 to M5 done. M6: measured against Chisels & Bits in
+`docs/benchmarks/2026-10-15-m6.md` and `2026-10-15-soak.md`. P1, P2, P4, P6, P7, P8 and P9 met;
+P5 met by design; P10 met over a 10 minute soak, the 1 hour run remains; P3 not met as written (a
+2x median frame rule is unreachable above 1000 fps), a new wording is proposed in the report and
+waits for approval.
+
 ### 7. Engineering rules
 
 - `core.voxel` never imports Minecraft classes; every algorithm there has unit tests.
@@ -347,6 +353,12 @@ bits et autres blocs de stockage, support des contraptions Create, bloc impriman
 | M4 Outils avancés | Miroir, clé, mètre ruban, scie | Checklist fonctionnelle validée |
 | M5 Import | Étude du format, importeur, monde de test de migration | Un monde de test se convertit sans bloc perdu |
 | M6 Release candidate | Comparaison Spark complète, Iris, test d'endurance multijoueur | P1 à P10 atteints et documentés |
+
+**Avancement (2026-10-15).** M0 à M5 terminés. M6 : mesuré face à Chisels & Bits dans
+`docs/benchmarks/2026-10-15-m6.md` et `2026-10-15-soak.md`. P1, P2, P4, P6, P7, P8 et P9 atteints ;
+P5 atteint par conception ; P10 atteint sur une endurance de 10 minutes, le passage d'une heure
+reste à faire ; P3 non atteint tel qu'écrit (une règle de 2x la médiane est inatteignable au-delà
+de 1000 FPS), une nouvelle formulation est proposée dans le rapport et attend validation.
 
 ### 7. Règles d'ingénierie
 

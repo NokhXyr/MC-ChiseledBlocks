@@ -20,6 +20,7 @@ import com.nokhxyr.bitsmith.item.ChiselSettings;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.PatternMode;
 import com.nokhxyr.bitsmith.item.SawItem;
+import com.nokhxyr.bitsmith.metrics.Metrics;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -175,6 +176,7 @@ public final class BitsmithNetwork {
         // later strokes yet. Only a lasting mismatch means a real desync.
         if (result.hashCode() != payload.expectedHash()
                 && !PredictionTracker.isRecent(payload.pos(), level.getGameTime())) {
+            Metrics.RESYNC_REQUESTS.incrementAndGet();
             PacketDistributor.sendToServer(new ResyncPayload(payload.pos()));
         }
     }

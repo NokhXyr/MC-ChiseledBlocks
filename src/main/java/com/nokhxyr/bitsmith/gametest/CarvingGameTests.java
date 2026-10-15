@@ -25,13 +25,16 @@ import com.nokhxyr.bitsmith.item.BitItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.PatternMode;
+import com.nokhxyr.bitsmith.network.GridDeltaPayload;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import io.netty.buffer.Unpooled;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -165,6 +168,19 @@ public final class CarvingGameTests {
         helper.setBlock(TARGET, Blocks.STONE);
         ChiselLogic.chisel(creative(helper, 20), helper.absolutePos(TARGET), 0, Face.UP);
         helper.assertBlockPresent(Blocks.STONE, TARGET);
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void refusedStrokeOfAFakePlayerDoesNotThrow(GameTestHelper helper) {
+        // Machines of other mods hold tools as fake players: a refused stroke must not try to
+        // correct a client they do not have.
+        placeCarved(helper, STONE_SLAB);
+        FakePlayer machine = new FakePlayer(helper.getLevel(), new GameProfile(UUID.randomUUID(), "bitsmith-machine"));
+        machine.moveTo(helper.absolutePos(TARGET).getX() + 30, helper.absolutePos(TARGET).getY(), helper.absolutePos(TARGET).getZ());
+        machine.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(BitsmithRegistries.IRON_CHISEL.get()));
+        ChiselLogic.chisel(machine, helper.absolutePos(TARGET), 0, Face.UP);
+        helper.assertTrue(((CarvedBlockEntity) helper.getBlockEntity(TARGET)).getGrid().equals(STONE_SLAB), "the stroke was refused");
         helper.succeed();
     }
 
@@ -462,6 +478,24 @@ public final class CarvingGameTests {
                 .filter(stack -> stack.is(BitsmithRegistries.CARVED_BLOCK_ITEM.get())).findFirst().orElse(ItemStack.EMPTY);
         BitGrid sliceGrid = piece.get(BitsmithComponents.GRID.get());
         helper.assertTrue(sliceGrid != null && sliceGrid.filledCount() == 1024, "the slice is given as a carved block");
+        helper.succeed();
+    }
+
+    // Performance goals measured without a client
+
+    @GameTest(template = TEMPLATE)
+    public static void singleBitEditFitsInASmallPacket(GameTestHelper helper) {
+        // P7: one bit changed is sent as a delta. Payload bytes, plus the custom payload framing:
+        // packet id (1 byte) and the channel name with its length prefix.
+        GridDeltaPayload delta = new GridDeltaPayload(helper.absolutePos(TARGET), new int[]{BitGrid.index(3, 4, 5)},
+                new int[]{STONE}, 123456789);
+        RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), helper.getLevel().registryAccess());
+        GridDeltaPayload.CODEC.encode(buffer, delta);
+        int payloadBytes = buffer.readableBytes();
+        int framing = 1 + 1 + GridDeltaPayload.TYPE.id().toString().length();
+        int total = payloadBytes + framing;
+        Bitsmith.LOGGER.info("[gametest] single bit edit: {} payload bytes + {} framing = {} bytes", payloadBytes, framing, total);
+        helper.assertTrue(total < 128, "a single bit edit takes " + total + " bytes, goal under 128");
         helper.succeed();
     }
 

@@ -94,6 +94,36 @@ neoForge {
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
+        // Performance scenes (docs/PROFILING.md), with Bitsmith and then with Chisels & Bits.
+        clientBench {
+            client()
+            gameDirectory = project.file("run-bench")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "bench"
+            systemProperty "bitsmith.bench.mod", "bitsmith"
+            systemProperty "bitsmith.metrics", "true"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        clientBenchCnb {
+            client()
+            gameDirectory = project.file("run-bench-cnb")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "bench"
+            systemProperty "bitsmith.bench.mod", "cnb"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        // Multiplayer endurance: bot players and the real client carve the same blocks.
+        clientSoak {
+            client()
+            gameDirectory = project.file("run-soak")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "soak"
+            systemProperty "bitsmith.metrics", "true"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
         gameTestServer {
             type = "gameTestServer"
             // Own directory: no development client mods, no clash with a running client.
@@ -133,6 +163,11 @@ configurations {
         canBeResolved = true
         transitive = false
     }
+    benchClientMods {
+        canBeConsumed = false
+        canBeResolved = true
+        transitive = false
+    }
     compatShaderpacks {
         canBeConsumed = false
         canBeResolved = true
@@ -155,6 +190,7 @@ dependencies {
     compatClientMods "maven.modrinth:kubejs:${kubejs_version}"
     compatClientMods "maven.modrinth:rhino:${rhino_version}"
     compatClientMods "maven.modrinth:better-advanced-tooltips:${better_advanced_tooltips_version}"
+    benchClientMods "maven.modrinth:spark:${spark_version}"
     compatShaderpacks "maven.modrinth:complementary-reimagined:${complementary_version}@zip"
 
     testImplementation platform("org.junit:junit-bom:${junit_version}")
@@ -231,7 +267,8 @@ idea {
 
 // Options for the playtest client: muted, never paused when unfocused, no first launch screens.
 def writePlaytestOptions = tasks.register('writePlaytestOptions') {
-    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate'].collect { file("$it/options.txt") }
+    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate', 'run-bench', 'run-bench-cnb', 'run-soak']
+            .collect { file("$it/options.txt") }
     outputs.files(files)
     doLast {
         files.findAll { !it.exists() }.each { options ->
@@ -241,16 +278,23 @@ def writePlaytestOptions = tasks.register('writePlaytestOptions') {
                     'pauseOnLostFocus:false',
                     'narrator:0',
                     'soundCategory_master:0.0',
-                    'renderDistance:6',
                     'guiScale:2',
                     'tutorialStep:none',
                     'skipMultiplayerWarning:true',
                     'joinedFirstServer:true',
+                    // Performance settings of docs/PROFILING.md: render distance 12, no frame cap.
+                    'renderDistance:12',
+                    'simulationDistance:8',
+                    'maxFps:260',
+                    'enableVsync:false',
+                    'graphicsMode:1',
+                    'ao:true',
             ].join('\n') + '\n'
         }
     }
 }
-tasks.matching { it.name in ['runClientTest', 'runClientCompat', 'runClientCnbSource', 'runClientCnbMigrate'] }.configureEach {
+tasks.matching { it.name in ['runClientTest', 'runClientCompat', 'runClientCnbSource', 'runClientCnbMigrate',
+                             'runClientBench', 'runClientBenchCnb', 'runClientSoak'] }.configureEach {
     dependsOn writePlaytestOptions
 }
 
@@ -319,4 +363,58 @@ def copyCnbWorld = tasks.register('copyCnbWorld', Sync) {
 }
 tasks.matching { it.name == 'runClientCnbMigrate' }.configureEach {
     dependsOn copyCnbWorld
+}
+
+// Saecularia Caudices nests the classes Chisels & Bits needs in a jar the development loader skips;
+// for the test runs only, that nested jar is repacked as a game library.
+def saeculariaJar = cnbDownloads[1][0]
+def repackSaeculariaCore = tasks.register('repackSaeculariaCore', Jar) {
+    dependsOn installChiselsAndBits
+    archiveFileName = 'saecularia-caudices-core-gamelibrary.jar'
+    destinationDirectory = layout.buildDirectory.dir('cnb-test')
+    from({
+        def nested = zipTree(saeculariaJar).matching { include 'META-INF/jarjar/*core*.jar' }.singleFile
+        zipTree(nested).matching { exclude 'META-INF/MANIFEST.MF' }
+    })
+    manifest {
+        attributes 'FMLModType': 'GAMELIBRARY', 'Automatic-Module-Name': 'saecularia_caudices_core'
+    }
+}
+def installCnbRunMods = tasks.register('installCnbRunMods', Copy) {
+    dependsOn installChiselsAndBits, repackSaeculariaCore
+    from repackSaeculariaCore
+    into 'run-cnb/mods'
+}
+tasks.matching { it.name == 'runClientCnbSource' }.configureEach {
+    dependsOn installCnbRunMods
+}
+
+// Performance runs: Spark only, plus Chisels & Bits and its libraries for the comparison run.
+def installBenchMods = tasks.register('installBenchMods', Copy) {
+    from configurations.benchClientMods
+    into 'run-bench/mods'
+}
+def installBenchCnbMods = tasks.register('installBenchCnbMods', Copy) {
+    dependsOn installChiselsAndBits, repackSaeculariaCore, installCnbRunMods
+    from configurations.benchClientMods
+    from cnbDownloads.collect { it[0] }
+    from repackSaeculariaCore
+    into 'run-bench-cnb/mods'
+}
+tasks.matching { it.name == 'runClientBench' }.configureEach { dependsOn installBenchMods }
+tasks.matching { it.name == 'runClientBenchCnb' }.configureEach { dependsOn installBenchCnbMods }
+
+// Spark's background profiler would run during the measurements: off in the performance runs.
+def writeBenchConfig = tasks.register('writeBenchConfig') {
+    def configs = ['run-bench', 'run-bench-cnb'].collect { file("$it/config/spark/config.json") }
+    outputs.files(configs)
+    doLast {
+        configs.each { config ->
+            config.parentFile.mkdirs()
+            config.text = '{\n  "backgroundProfiler": false\n}\n'
+        }
+    }
+}
+tasks.matching { it.name in ['runClientBench', 'runClientBenchCnb'] }.configureEach {
+    dependsOn writeBenchConfig
 }
