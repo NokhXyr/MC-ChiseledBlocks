@@ -163,7 +163,7 @@ storage blocks, Create contraption support, a chiseled printer block.
 
 **Progress (2026-10-15).** M0 to M5 done. M6: measured against Chisels & Bits in
 `docs/benchmarks/2026-10-15-m6.md` and `2026-10-15-soak.md`. P1, P2, P4, P6, P7, P8 and P9 met;
-P5 met by design; P10 met over a 10 minute soak, the 1 hour run follows; P3 revised to "no frame above
+P5 met by design; P10 met over a 1 hour soak (72000 bot operations, 0 desync); P3 revised to "no frame above
 16.7 ms while carving": met in median and in 2 of 3 runs (one run had a 26.1 ms frame).
 
 ### 7. Engineering rules
@@ -355,8 +355,8 @@ bits et autres blocs de stockage, support des contraptions Create, bloc impriman
 
 **Avancement (2026-10-15).** M0 à M5 terminés. M6 : mesuré face à Chisels & Bits dans
 `docs/benchmarks/2026-10-15-m6.md` et `2026-10-15-soak.md`. P1, P2, P4, P6, P7, P8 et P9 atteints ;
-P5 atteint par conception ; P10 atteint sur une endurance de 10 minutes, le passage d'une heure
-suit ; P3 révisé en « aucune image au-dessus de 16,7 ms pendant le ciselage » : atteint en médiane
+P5 atteint par conception ; P10 atteint sur une endurance d'une heure (72000 opérations de
+robots, 0 désynchronisation) ; P3 révisé en « aucune image au-dessus de 16,7 ms pendant le ciselage » : atteint en médiane
 et dans 2 runs sur 3 (un run a eu une image à 26,1 ms).
 
 ### 7. Règles d'ingénierie
