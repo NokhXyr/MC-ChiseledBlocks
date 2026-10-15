@@ -4,6 +4,7 @@
  */
 package com.nokhxyr.bitsmith.edit;
 
+import com.nokhxyr.bitsmith.admin.BlockProfiler;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
@@ -72,7 +73,14 @@ public final class EditBatcher {
         CarvedBlockEntity[] batch = DIRTY.toArray(CarvedBlockEntity[]::new);
         DIRTY.clear();
         for (CarvedBlockEntity blockEntity : batch) {
-            flush(blockEntity);
+            if (BlockProfiler.active && blockEntity.getLevel() != null) {
+                long start = System.nanoTime();
+                flush(blockEntity);
+                BlockProfiler.record(blockEntity.getLevel(), blockEntity.getBlockPos(), BlockProfiler.Kind.APPLY,
+                        System.nanoTime() - start);
+            } else {
+                flush(blockEntity);
+            }
         }
     }
 

@@ -126,6 +126,15 @@ neoForge {
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
+        // The /bitsmith command played from the chat: searches, map, teleport links, profiling.
+        clientAdmin {
+            client()
+            gameDirectory = project.file("run-admin")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "admin"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
         gameTestServer {
             type = "gameTestServer"
             // Own directory: no development client mods, no clash with a running client.
@@ -269,7 +278,7 @@ idea {
 
 // Options for the playtest client: muted, never paused when unfocused, no first launch screens.
 def writePlaytestOptions = tasks.register('writePlaytestOptions') {
-    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate', 'run-bench', 'run-bench-cnb', 'run-soak']
+    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate', 'run-bench', 'run-bench-cnb', 'run-soak', 'run-admin']
             .collect { file("$it/options.txt") }
     outputs.files(files)
     doLast {
@@ -296,7 +305,7 @@ def writePlaytestOptions = tasks.register('writePlaytestOptions') {
     }
 }
 tasks.matching { it.name in ['runClientTest', 'runClientCompat', 'runClientCnbSource', 'runClientCnbMigrate',
-                             'runClientBench', 'runClientBenchCnb', 'runClientSoak'] }.configureEach {
+                             'runClientBench', 'runClientBenchCnb', 'runClientSoak', 'runClientAdmin'] }.configureEach {
     dependsOn writePlaytestOptions
 }
 

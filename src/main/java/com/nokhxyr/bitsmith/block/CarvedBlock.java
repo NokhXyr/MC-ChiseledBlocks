@@ -4,11 +4,13 @@
  */
 package com.nokhxyr.bitsmith.block;
 
+import com.nokhxyr.bitsmith.admin.BlockProfiler;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.Face;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.shape.ShapeCache;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -93,6 +95,16 @@ public final class CarvedBlock extends Block implements EntityBlock {
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        if (BlockProfiler.active && level instanceof Level world && !world.isClientSide) {
+            long start = System.nanoTime();
+            VoxelShape shape = shapeAt(level, pos);
+            BlockProfiler.record(world, pos, BlockProfiler.Kind.SHAPE, System.nanoTime() - start);
+            return shape;
+        }
+        return shapeAt(level, pos);
+    }
+
+    private static VoxelShape shapeAt(BlockGetter level, BlockPos pos) {
         BitGrid grid = gridAt(level, pos);
         return grid == null ? Shapes.block() : ShapeCache.get(grid);
     }

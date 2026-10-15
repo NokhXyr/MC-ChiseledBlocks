@@ -4,6 +4,7 @@
  */
 package com.nokhxyr.bitsmith.edit;
 
+import com.nokhxyr.bitsmith.admin.BlockProfiler;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.edit.Symmetry;
@@ -40,14 +41,20 @@ public final class ChiselLogic {
     }
 
     public static void chisel(ServerPlayer player, BlockPos pos, int voxel, Face face) {
-        if (!Metrics.ENABLED) {
+        if (!Metrics.ENABLED && !BlockProfiler.active) {
             doChisel(player, pos, voxel, face);
             return;
         }
         long start = System.nanoTime();
         doChisel(player, pos, voxel, face);
-        Metrics.CHISEL_NANOS.addAndGet(System.nanoTime() - start);
-        Metrics.CHISEL_STROKES.incrementAndGet();
+        long spent = System.nanoTime() - start;
+        if (Metrics.ENABLED) {
+            Metrics.CHISEL_NANOS.addAndGet(spent);
+            Metrics.CHISEL_STROKES.incrementAndGet();
+        }
+        if (BlockProfiler.active) {
+            BlockProfiler.record(player.serverLevel(), pos, BlockProfiler.Kind.CHISEL, spent);
+        }
     }
 
     private static void doChisel(ServerPlayer player, BlockPos pos, int voxel, Face face) {

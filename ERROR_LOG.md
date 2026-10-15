@@ -95,3 +95,11 @@
 **Root cause:** A refused stroke sends the true grid back to correct the client's prediction. Fake players (bots, and machines of other mods such as a Create deployer holding a chisel) have a connection without a netty channel, and NeoForge's channel check dereferences it.
 **Fix:** No resync for fake players (`isFakePlayer()`); a game test covers a refused stroke by a fake player.
 **Prevention:** Every packet sent to a single player first checks `isFakePlayer()`. Soak tests include bot players.
+
+## [2026-10-16 01:07] — Carved block not indexed right after placement
+
+**Context:** game test of the new carved block index used by `/bitsmith find`.
+**Error:** `indexandfindfollowcarvedblocks failed: a placed carved block is indexed`.
+**Root cause:** NeoForge calls `BlockEntity.onLoad()` from `Level.tickBlockEntities` (pending fresh block entities), so after `setBlock` the block entity is only indexed at the next level tick, not during the call.
+**Fix:** the test checks the index one tick after placing. The index itself is correct: searches run from commands, never in the same call as a placement.
+**Prevention:** anything registered from `onLoad()` is visible one tick after the block is placed; tests and code that need it at once must wait a tick or register explicitly.

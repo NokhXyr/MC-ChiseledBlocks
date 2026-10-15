@@ -4,6 +4,8 @@
  */
 package com.nokhxyr.bitsmith.block;
 
+import com.nokhxyr.bitsmith.admin.BlockProfiler;
+import com.nokhxyr.bitsmith.admin.CarvedIndex;
 import com.nokhxyr.bitsmith.compat.cnb.ChiselsAndBitsImport;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
@@ -48,6 +50,8 @@ public final class CarvedBlockEntity extends BlockEntity {
     /** Set when the data came from Chisels & Bits: the block is saved again in Bitsmith's format. */
     private boolean importedFromChiselsAndBits;
     private @Nullable BitGridBuilder pending;
+    /** Time spent reading this block from disk, kept until the level is known (profiling only). */
+    private long loadNanos;
 
     public CarvedBlockEntity(BlockPos pos, BlockState state) {
         super(BitsmithRegistries.CARVED_BLOCK_ENTITY.get(), pos, state);
@@ -111,6 +115,12 @@ public final class CarvedBlockEntity extends BlockEntity {
     @Override
     public void onLoad() {
         super.onLoad();
+        CarvedIndex.add(this);
+        if (loadNanos != 0 && level != null) {
+            // The level is not known yet while reading: the reading time is filed now.
+            BlockProfiler.record(level, worldPosition, BlockProfiler.Kind.LOAD, loadNanos);
+            loadNanos = 0;
+        }
         if (importedFromChiselsAndBits && level != null && !level.isClientSide) {
             importedFromChiselsAndBits = false;
             setChanged();
@@ -123,14 +133,32 @@ public final class CarvedBlockEntity extends BlockEntity {
     }
 
     @Override
+    public void setRemoved() {
+        super.setRemoved();
+        CarvedIndex.remove(this);
+    }
+
+    @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        long start = BlockProfiler.active ? System.nanoTime() : 0;
         super.saveAdditional(tag, registries);
         tag.put("grid", GridNbt.write(grid));
         tag.putString("facing", gridFacing.getSerializedName());
+        if (start != 0 && level != null) {
+            BlockProfiler.record(level, worldPosition, BlockProfiler.Kind.SAVE, System.nanoTime() - start);
+        }
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        long start = BlockProfiler.active ? System.nanoTime() : 0;
+        readGrid(tag, registries);
+        if (start != 0) {
+            loadNanos = System.nanoTime() - start;
+        }
+    }
+
+    private void readGrid(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         if (tag.contains("grid")) {
             Direction saved = Direction.byName(tag.getString("facing"));

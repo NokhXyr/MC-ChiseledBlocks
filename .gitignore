@@ -22,6 +22,7 @@ run-cnb-migrate/
 run-bench/
 run-bench-cnb/
 run-soak/
+run-admin/
 
 # IDE
 .idea/

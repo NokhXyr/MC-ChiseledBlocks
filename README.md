@@ -50,6 +50,23 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 Keys can be changed in Options, Controls, under Bitsmith. The bag's tooltip lists its contents,
 the selected material is highlighted.
 
+### Commands
+
+For operators (permission level 2). Every result in the chat has a `[TP]` link: click it to
+teleport on top of the block.
+
+| Command | What it does |
+|---|---|
+| `/bitsmith find radius <blocks> [material]` | Carved blocks within that many blocks, nearest first |
+| `/bitsmith find chunks <chunks> [material]` | Carved blocks within that many chunks around yours |
+| `/bitsmith find loaded [material]` | Carved blocks in every loaded chunk of the dimension, and the chunks holding the most |
+| `/bitsmith map [radius]` | Map of the chunks around you: not loaded, loaded, and how many carved blocks each holds; click a chunk to go there |
+| `/bitsmith perf [seconds]` | Measures Bitsmith's server time per carved block (10 s by default) and lists the costliest in µs per tick |
+| `/bitsmith perf stop` | Ends the measurement now and shows the report |
+
+The material filter keeps blocks containing at least one bit of it, for example
+`/bitsmith find loaded minecraft:oak_planks`. Searches never load a chunk.
+
 ## Requirements
 
 - Minecraft 1.21.1
@@ -141,6 +158,23 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 
 Les touches se changent dans Options, Commandes, rubrique Bitsmith. L'infobulle du sac liste son
 contenu, le matériau sélectionné est en surbrillance.
+
+### Commandes
+
+Pour les opérateurs (niveau de permission 2). Chaque résultat dans le chat porte un lien `[TP]` :
+un clic téléporte sur le bloc.
+
+| Commande | Effet |
+|---|---|
+| `/bitsmith find radius <blocs> [matériau]` | Blocs ciselés à moins de ce nombre de blocs, du plus proche au plus loin |
+| `/bitsmith find chunks <chunks> [matériau]` | Blocs ciselés à moins de ce nombre de chunks autour du tien |
+| `/bitsmith find loaded [matériau]` | Blocs ciselés dans tous les chunks chargés de la dimension, et les chunks qui en ont le plus |
+| `/bitsmith map [rayon]` | Carte des chunks autour de toi : non chargés, chargés, et combien de blocs ciselés chacun contient ; clic sur un chunk pour y aller |
+| `/bitsmith perf [secondes]` | Mesure le temps serveur de Bitsmith par bloc ciselé (10 s par défaut) et liste les plus coûteux en µs par tick |
+| `/bitsmith perf stop` | Termine la mesure tout de suite et affiche le rapport |
+
+Le filtre de matériau garde les blocs qui en contiennent au moins un bit, par exemple
+`/bitsmith find loaded minecraft:oak_planks`. Les recherches ne chargent jamais de chunk.
 
 ## Prérequis
 

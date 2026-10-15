@@ -25,6 +25,7 @@ import com.nokhxyr.bitsmith.item.WrenchItem;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -32,6 +33,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.Difficulty;
@@ -45,6 +48,7 @@ import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
@@ -58,6 +62,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -116,6 +121,7 @@ public final class ClientPlaytest {
             case "cnbMigrate" -> ChiselsAndBitsPlaytest.migrateScript(this);
             case "bench" -> BenchPlaytest.script(this);
             case "soak" -> SoakPlaytest.script(this);
+            case "admin" -> AdminPlaytest.script(this);
             default -> script();
         }
     }
@@ -161,13 +167,50 @@ public final class ClientPlaytest {
         cursorFromCentre(Math.cos(angle) * radius, Math.sin(angle) * radius);
     }
 
-    private void mouseClick() {
+    void mouseClick() {
         mc.mouseHandler.onPress(window(), GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_PRESS, 0);
         mc.mouseHandler.onPress(window(), GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_RELEASE, 0);
     }
 
     void command(String command) {
         mc.player.connection.sendCommand(command);
+    }
+
+    /** Moves the cursor to a point given in GUI units from the top left corner. */
+    void cursorAt(double guiX, double guiY) {
+        double scale = mc.getWindow().getGuiScale();
+        mc.mouseHandler.onMove(window(), guiX * scale, guiY * scale);
+    }
+
+    /**
+     * With the chat open, finds where a clickable text matching {@code wanted} is drawn, moves the
+     * cursor onto it and clicks, as a player would.
+     */
+    boolean clickChatLink(Predicate<Style> wanted) {
+        ChatComponent chat = mc.gui.getChat();
+        int height = mc.getWindow().getGuiScaledHeight();
+        for (int y = height - 16; y > 0; y--) {
+            for (int x = 2; x < 60; x += 2) {
+                Style style = chat.getClickedComponentStyleAt(x, y);
+                if (style != null && style.getClickEvent() != null && wanted.test(style)) {
+                    cursorAt(x, y);
+                    mouseClick();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // System messages received in the chat, newest last
+
+    final List<Component> systemChat = new ArrayList<>();
+
+    @SubscribeEvent
+    public void onSystemChat(ClientChatReceivedEvent.System event) {
+        if (!event.isOverlay()) {
+            systemChat.add(event.getMessage());
+        }
     }
 
     void look(Vec3 point) {
