@@ -5,9 +5,12 @@
 package com.nokhxyr.bitsmith.client.playtest;
 
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
+import com.nokhxyr.bitsmith.client.admin.AdminClient;
+import com.nokhxyr.bitsmith.client.admin.AdminScreen;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
+import com.nokhxyr.bitsmith.network.AdminPayloads;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
@@ -21,6 +24,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -63,6 +67,10 @@ final class AdminPlaytest {
             carve(level, DIAMOND, Blocks.DIAMOND_BLOCK, Blocks.GOLD_BLOCK);
         }).join(), 10, () -> p.that("client sees the near carvings", p.gridAt(AMETHYST) != null && p.gridAt(STONE) != null));
 
+        adminScreenScript(p);
+
+        // The same searches as text, for the server console.
+        p.step("back to the start", () -> p.command("tp @s 0.5 -60 0.5 0 30"), 20, () -> p.at(0.5, -60, 0.5));
         find(p, "bitsmith find radius 8", 2);
         find(p, "bitsmith find chunks 3", 3);
         find(p, "bitsmith find loaded", 4);
@@ -140,6 +148,94 @@ final class AdminPlaytest {
             Minecraft.getInstance().setScreen(null);
             p.command("bitsmith perf stop");
         }, 5, () -> p.that("refusal received", last(p, "bitsmith.perf.none") != null));
+
+        adminPerfScript(p);
+    }
+
+    // The admin screen, used with the mouse and keyboard
+
+    private static boolean onScreen() {
+        return Minecraft.getInstance().screen instanceof AdminScreen;
+    }
+
+    /** Moves the cursor onto a named area of the admin screen and clicks it. */
+    private static boolean click(ClientPlaytest p, String id) {
+        if (!(Minecraft.getInstance().screen instanceof AdminScreen screen)) {
+            return p.that("admin screen not open", false);
+        }
+        int[] point = screen.locate(id);
+        if (point == null) {
+            return p.that(id + " not on screen", false);
+        }
+        p.cursorAt(point[0], point[1]);
+        p.mouseClick();
+        return true;
+    }
+
+    private static int searchTotal() {
+        AdminPayloads.FindResult result = AdminClient.lastSearch();
+        return result == null || result.unknownMaterial() ? -1 : result.total();
+    }
+
+    private static void adminScreenScript(ClientPlaytest p) {
+        p.shot("/bitsmith opens the admin screen on the search tab", () -> p.command("bitsmith"), 10,
+                () -> p.that("admin screen open", onScreen()) && p.eq("blocks within 64 blocks", searchTotal(), 3), "ui_search");
+        p.step("click All loaded chunks", () -> click(p, "segment.2"), 5,
+                () -> p.eq("blocks in the loaded chunks", searchTotal(), 4));
+        p.step("click the material field", () -> click(p, "material"), 3, () -> true);
+        p.shot("type part of a material name", () -> p.type("diamond_bl"), 5, () -> true, "ui_suggestions");
+        p.shot("Enter picks the suggestion and searches", () -> p.tap(GLFW.GLFW_KEY_ENTER), 5,
+                () -> p.eq("diamond carvings", searchTotal(), 1), "ui_filtered");
+        p.step("click TP on the diamond carving", () -> click(p, "tp.search.0"), 20,
+                () -> p.at(100.5, -59, 100.5) && p.that("screen closed", !onScreen()));
+
+        p.step("reopen and go to the chunk map", () -> p.command("bitsmith"), 10, () -> p.that("open", onScreen()));
+        p.shot("click the Chunk map tab", () -> click(p, "tab.map"), 10, () -> {
+            AdminPayloads.MapResult map = AdminClient.lastMap();
+            int total = 0;
+            if (map != null) {
+                for (int count : map.counts()) {
+                    total += count;
+                }
+            }
+            return p.eq("carved blocks on the map", total, 4);
+        }, "ui_map");
+        p.shot("click the oak carving's chunk", () -> click(p, "cell.2.2"), 10, () -> {
+            AdminPayloads.FindResult chunk = AdminClient.lastChunk();
+            return p.eq("blocks listed for the chunk", chunk == null ? -1 : chunk.total(), 1);
+        }, "ui_map_chunk");
+        p.step("click TP in the chunk list", () -> click(p, "tp.chunk.0"), 20, () -> p.at(40.5, -59, 40.5));
+    }
+
+    private static void adminPerfScript(ClientPlaytest p) {
+        p.step("back to the near blocks for a measurement", () -> p.command("tp @s 0.5 -60 0.5 0 30"), 20,
+                () -> p.at(0.5, -60, 0.5));
+        p.step("open the admin screen", () -> p.command("bitsmith"), 10, () -> p.that("open", onScreen()));
+        p.step("click the Performance tab", () -> click(p, "tab.perf"), 5, () -> true);
+        p.shot("click Start measuring", () -> click(p, "perf.toggle"), 10,
+                () -> p.that("measurement running", AdminClient.perfRunning()), "ui_perf_running");
+        p.step("close the screen to play", () -> p.tap(GLFW.GLFW_KEY_ESCAPE), 5, () -> p.that("closed", !onScreen()));
+        for (int i = 0; i < 8; i++) {
+            p.step("carve during the measurement " + (i + 1), () -> {
+                p.look(new Vec3(STONE.getX() + 0.5, STONE.getY() + 0.25, STONE.getZ() + 0.02));
+                p.attack();
+            }, 4, () -> true);
+        }
+        p.step("the measurement ends", () -> { }, 200, () -> p.that("finished", !AdminClient.perfRunning()));
+        p.shot("reopen: the report is in the Performance tab", () -> p.command("bitsmith"), 10, () -> {
+            AdminPayloads.PerfReport report = AdminClient.lastPerfReport();
+            if (report == null || report.rows().isEmpty()) {
+                return p.that("no report", false);
+            }
+            AdminPayloads.PerfRow first = report.rows().get(0);
+            p.note(String.format(java.util.Locale.ROOT, "ui perf: %d ticks, %.1f us/t total, top block %s at %.1f us/t, %d chisel strokes",
+                    report.ticks(), report.perTick(report.totalNanos()), first.pos().toShortString(),
+                    report.perTick(first.totalNanos()), first.calls()[0]));
+            return p.that("screen open", onScreen()) && p.eq("window ticks", report.ticks(), 200)
+                    && p.that("the carved block is first, with its strokes", first.pos().equals(STONE) && first.calls()[0] > 0);
+        }, "ui_perf");
+        p.step("click TP on the costliest block", () -> click(p, "tp.perf.0"), 20,
+                () -> p.at(STONE.getX() + 0.5, STONE.getY() + 1, STONE.getZ() + 0.5));
     }
 
     private static void find(ClientPlaytest p, String command, int expected) {

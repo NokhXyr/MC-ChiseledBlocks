@@ -36,6 +36,10 @@ public final class BitsmithKeys {
     public static final KeyMapping REDO = new KeyMapping("key.bitsmith.redo", KeyConflictContext.IN_GAME,
             KeyModifier.CONTROL, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Y, CATEGORY);
 
+    /** Opens the admin screen (operators only). Unbound by default; {@code /bitsmith} also opens it. */
+    public static final KeyMapping ADMIN = new KeyMapping("key.bitsmith.admin", KeyConflictContext.IN_GAME,
+            InputConstants.UNKNOWN, CATEGORY);
+
     private BitsmithKeys() {
     }
 }

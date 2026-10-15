@@ -52,8 +52,20 @@ the selected material is highlighted.
 
 ### Commands
 
-For operators (permission level 2). Every result in the chat has a `[TP]` link: click it to
-teleport on top of the block.
+For operators (permission level 2). `/bitsmith` opens the admin panel (a key can be bound to it in
+Controls, unbound by default), with three tabs:
+
+- **Search**: carved blocks within a radius of blocks or chunks, or in every loaded chunk,
+  optionally only those containing a material (type part of its name, suggestions appear). A
+  table lists the nearest first with their materials, distance and bits.
+- **Chunk map**: the chunks around you, coloured by how many carved blocks they hold, with your
+  position and facing. Click a chunk to list its carved blocks. Refreshes every two seconds.
+- **Performance**: measures for a chosen time the server time Bitsmith spends on each carved
+  block, in µs per tick, split into chisel, apply, shape, save and load. Close the panel and play
+  while it measures; the report is there when you reopen it.
+
+Every row has a **TP** button that teleports you on top of the block. The same tools exist as
+text commands for the server console; their results in the chat carry a `[TP]` link:
 
 | Command | What it does |
 |---|---|
@@ -161,8 +173,22 @@ contenu, le matériau sélectionné est en surbrillance.
 
 ### Commandes
 
-Pour les opérateurs (niveau de permission 2). Chaque résultat dans le chat porte un lien `[TP]` :
-un clic téléporte sur le bloc.
+Pour les opérateurs (niveau de permission 2). `/bitsmith` ouvre le panneau d'administration (une
+touche peut lui être attribuée dans Commandes, aucune par défaut), avec trois onglets :
+
+- **Recherche** : les blocs ciselés dans un rayon en blocs ou en chunks, ou dans tous les chunks
+  chargés, éventuellement seulement ceux qui contiennent un matériau (tape une partie de son nom,
+  des suggestions apparaissent). Un tableau les liste du plus proche au plus loin, avec leurs
+  matériaux, leur distance et leurs bits.
+- **Carte des chunks** : les chunks autour de toi, colorés selon le nombre de blocs ciselés, avec
+  ta position et ta direction. Un clic sur un chunk liste ses blocs ciselés. Mise à jour toutes les
+  deux secondes.
+- **Performance** : mesure pendant une durée choisie le temps serveur que Bitsmith consacre à
+  chaque bloc ciselé, en µs par tick, détaillé en ciseau, application, forme, sauvegarde et
+  chargement. Ferme le panneau et joue pendant la mesure ; le rapport t'attend à la réouverture.
+
+Chaque ligne a un bouton **TP** qui te téléporte sur le bloc. Les mêmes outils existent en
+commandes texte pour la console du serveur ; leurs résultats dans le chat portent un lien `[TP]` :
 
 | Commande | Effet |
 |---|---|

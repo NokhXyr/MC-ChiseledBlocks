@@ -13,6 +13,7 @@ import com.nokhxyr.bitsmith.core.voxel.Face;
 import com.nokhxyr.bitsmith.edit.ChiselOperation;
 import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
 import com.nokhxyr.bitsmith.item.ChiselItem;
+import com.nokhxyr.bitsmith.network.AdminPayloads;
 import com.nokhxyr.bitsmith.network.ChiselPayload;
 import com.nokhxyr.bitsmith.network.CyclePayload;
 import com.nokhxyr.bitsmith.network.PredictionTracker;
@@ -69,6 +70,9 @@ public final class ChiselInput {
         }
         while (BitsmithKeys.REDO.consumeClick()) {
             PacketDistributor.sendToServer(new UndoPayload(true));
+        }
+        while (BitsmithKeys.ADMIN.consumeClick()) {
+            PacketDistributor.sendToServer(new AdminPayloads.RequestOpen());
         }
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.screen == null && minecraft.player != null && BitsmithKeys.RADIAL.isDown()) {

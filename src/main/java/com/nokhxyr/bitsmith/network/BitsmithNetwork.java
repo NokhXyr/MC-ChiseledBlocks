@@ -5,7 +5,9 @@
 package com.nokhxyr.bitsmith.network;
 
 import com.nokhxyr.bitsmith.Bitsmith;
+import com.nokhxyr.bitsmith.admin.AdminService;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
+import com.nokhxyr.bitsmith.client.admin.AdminClient;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
@@ -35,7 +37,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 public final class BitsmithNetwork {
-    private static final String VERSION = "5";
+    private static final String VERSION = "6";
     /** Furthest a player may ask for a grid, in blocks, squared. */
     private static final double RESYNC_RANGE_SQUARED = 64 * 64;
     private static final int RESYNCS_PER_TICK = 8;
@@ -55,6 +57,18 @@ public final class BitsmithNetwork {
                 (payload, context) -> PlayerSymmetry.setOnServer(context.player(), payload.symmetry()));
         registrar.playToClient(GridDeltaPayload.TYPE, GridDeltaPayload.CODEC, BitsmithNetwork::onDelta);
         registrar.playToClient(GridFullPayload.TYPE, GridFullPayload.CODEC, BitsmithNetwork::onFull);
+        AdminService.register(registrar);
+        // Client handlers live in a client only class, only reached when a message arrives.
+        registrar.playToClient(AdminPayloads.Open.TYPE, AdminPayloads.Open.CODEC,
+                (payload, context) -> AdminClient.open());
+        registrar.playToClient(AdminPayloads.FindResult.TYPE, AdminPayloads.FindResult.CODEC,
+                (payload, context) -> AdminClient.onFindResult(payload));
+        registrar.playToClient(AdminPayloads.MapResult.TYPE, AdminPayloads.MapResult.CODEC,
+                (payload, context) -> AdminClient.onMapResult(payload));
+        registrar.playToClient(AdminPayloads.PerfState.TYPE, AdminPayloads.PerfState.CODEC,
+                (payload, context) -> AdminClient.onPerfState(payload));
+        registrar.playToClient(AdminPayloads.PerfReport.TYPE, AdminPayloads.PerfReport.CODEC,
+                (payload, context) -> AdminClient.onPerfReport(payload));
     }
 
     private static void onChisel(ChiselPayload payload, IPayloadContext context) {

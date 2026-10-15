@@ -98,5 +98,6 @@ public final class BitsmithClient {
         event.register(BitsmithKeys.UNDO);
         event.register(BitsmithKeys.REDO);
         event.register(BitsmithKeys.SYMMETRY);
+        event.register(BitsmithKeys.ADMIN);
     }
 }

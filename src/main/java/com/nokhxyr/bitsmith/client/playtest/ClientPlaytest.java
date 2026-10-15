@@ -176,6 +176,11 @@ public final class ClientPlaytest {
         mc.player.connection.sendCommand(command);
     }
 
+    /** Types text into the focused field, one character at a time, through the keyboard handler. */
+    void type(String text) {
+        text.codePoints().forEach(codePoint -> mc.keyboardHandler.charTyped(window(), codePoint, 0));
+    }
+
     /** Moves the cursor to a point given in GUI units from the top left corner. */
     void cursorAt(double guiX, double guiY) {
         double scale = mc.getWindow().getGuiScale();
