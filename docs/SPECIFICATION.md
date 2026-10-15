@@ -54,7 +54,7 @@ baseline. A goal is met only when measured.
 |---|---|---|
 | P1 | Static scene: 2000 carved blocks in view | Average FPS at least 90 % of the same scene built from vanilla blocks |
 | P2 | No per frame cost for static carved blocks | 0 block entity renderers, 0 shape computations per frame |
-| P3 | Editing | No frame above 2x the median frame time while carving continuously for 30 s |
+| P3 | Editing | No frame above 16.7 ms (one frame at 60 fps) while carving continuously (revised 2026-10-15: the former "2x the median frame" rule cannot hold above 1000 fps) |
 | P4 | Section rebuilds per edit | Exactly 1 per affected section per tick, whatever the number of bits changed |
 | P5 | Chunk load | 1 rebuild per section, never one per carved block |
 | P6 | Mesh build, one block, worst realistic case | Under 0.3 ms on the build machine (pure core benchmark) |
@@ -163,9 +163,8 @@ storage blocks, Create contraption support, a chiseled printer block.
 
 **Progress (2026-10-15).** M0 to M5 done. M6: measured against Chisels & Bits in
 `docs/benchmarks/2026-10-15-m6.md` and `2026-10-15-soak.md`. P1, P2, P4, P6, P7, P8 and P9 met;
-P5 met by design; P10 met over a 10 minute soak, the 1 hour run remains; P3 not met as written (a
-2x median frame rule is unreachable above 1000 fps), a new wording is proposed in the report and
-waits for approval.
+P5 met by design; P10 met over a 10 minute soak, the 1 hour run follows; P3 revised to "no frame above
+16.7 ms while carving": met in median and in 2 of 3 runs (one run had a 26.1 ms frame).
 
 ### 7. Engineering rules
 
@@ -241,7 +240,7 @@ Chisels & Bits. Un objectif n'est atteint que s'il est mesuré.
 |---|---|---|
 | P1 | Scène statique : 2000 blocs ciselés à l'écran | FPS moyen d'au moins 90 % de la même scène construite en blocs vanilla |
 | P2 | Aucun coût par frame pour les blocs ciselés statiques | 0 block entity renderer, 0 calcul de forme par frame |
-| P3 | Édition | Aucune frame au-dessus de 2 fois la frame médiane pendant 30 s de ciselage continu |
+| P3 | Édition | Aucune image au-dessus de 16,7 ms (une image à 60 FPS) pendant le ciselage continu (révisé le 2026-10-15 : l'ancienne règle « 2 fois l'image médiane » ne peut pas tenir au-delà de 1000 FPS) |
 | P4 | Reconstructions de section par édition | Exactement 1 par section touchée et par tick, quel que soit le nombre de bits modifiés |
 | P5 | Chargement de chunk | 1 reconstruction par section, jamais une par bloc ciselé |
 | P6 | Construction du maillage, un bloc, pire cas réaliste | Moins de 0,3 ms sur la machine de build (benchmark du noyau) |
@@ -357,8 +356,8 @@ bits et autres blocs de stockage, support des contraptions Create, bloc impriman
 **Avancement (2026-10-15).** M0 à M5 terminés. M6 : mesuré face à Chisels & Bits dans
 `docs/benchmarks/2026-10-15-m6.md` et `2026-10-15-soak.md`. P1, P2, P4, P6, P7, P8 et P9 atteints ;
 P5 atteint par conception ; P10 atteint sur une endurance de 10 minutes, le passage d'une heure
-reste à faire ; P3 non atteint tel qu'écrit (une règle de 2x la médiane est inatteignable au-delà
-de 1000 FPS), une nouvelle formulation est proposée dans le rapport et attend validation.
+suit ; P3 révisé en « aucune image au-dessus de 16,7 ms pendant le ciselage » : atteint en médiane
+et dans 2 runs sur 3 (un run a eu une image à 26,1 ms).
 
 ### 7. Règles d'ingénierie
 

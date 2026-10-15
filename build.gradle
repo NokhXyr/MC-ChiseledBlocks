@@ -120,6 +120,8 @@ neoForge {
             gameDirectory = project.file("run-soak")
             systemProperty "bitsmith.clientTest", "true"
             systemProperty "bitsmith.playtest", "soak"
+            // ./gradlew runClientSoak -PsoakMinutes=60 for the one hour run.
+            systemProperty "bitsmith.soak.minutes", project.findProperty("soakMinutes") ?: "10"
             systemProperty "bitsmith.metrics", "true"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
