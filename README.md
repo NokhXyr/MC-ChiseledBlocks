@@ -38,6 +38,8 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 | Place from the bag | Hold the bag and right click a face; the tool menu or `V` picks the material |
 | Placement modes | Bits or a bag in hand, tool menu: **single bit**; **draw** (hold right click and paint on the layer of the first bit); **line**, **plane** or **box** (first right click sets the start, the second the end, an outline previews the shape; right click in the air to cancel). A shape may cross blocks (8 blocks per side, 16,384 bits at most) and is undone with one Ctrl+Z; in survival it is refused when bits are missing |
 | Bag pages | A bag holds up to 64 materials; the tool menu shows 12 per page, use the arrows on the right or the mouse wheel to turn pages |
+| Put bits back in the bag | In an inventory, right click bits onto the bag, or the bag onto bits. Bits picked up from the ground go into the bag first |
+| Bit mill | Cuts whole blocks into 4096 bits each. Load it by right click or from any side with hoppers, Create chutes, funnels or belts, or storage buses; take the bits from below or any side the same way, or right click it with a bit bag. A comparator reads how full it is; broken, it keeps its contents |
 | Take bits out of the bag | Hold the bag, sneak and right click in the air: one stack of the selected material |
 | Creative bit bag | Creative tab or `/give` only, no recipe. Sneak and right click a block or a bit: adds its material and selects it. Places without limit, pays for patterns, and swallows chiseled bits while in the inventory |
 | Copy a carving | Right click a carved block with a blank pattern |
@@ -179,6 +181,8 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 | Poser depuis le sac | Sac en main, clic droit sur une face ; le menu de l'outil ou `V` choisit le matériau |
 | Méthodes de pose | Bits ou sac en main, menu de l'outil : **bit seul** ; **dessin** (clic droit maintenu, on peint sur la couche du premier bit) ; **ligne**, **plan** ou **boîte** (premier clic droit : départ, second : arrivée, un contour montre la forme ; clic droit dans le vide pour annuler). Une forme peut traverser plusieurs blocs (8 blocs par côté, 16 384 bits au plus) et s'annule d'un seul Ctrl+Z ; en survie elle est refusée s'il manque des bits |
 | Pages du sac | Un sac contient jusqu'à 64 matériaux ; le menu en montre 12 par page, flèches à droite ou molette pour changer de page |
+| Remettre des bits dans le sac | Dans un inventaire, clic droit avec des bits sur le sac, ou avec le sac sur des bits. Les bits ramassés au sol vont d'abord dans le sac |
+| Moulin à bits | Découpe chaque bloc entier en 4096 bits. On le charge par clic droit ou par n'importe quelle face avec des trémies, goulottes, entonnoirs ou tapis de Create, ou des bus de stockage ; les bits se récupèrent de la même façon par le dessous ou une autre face, ou par clic droit avec un sac à bits. Un comparateur lit son remplissage ; cassé, il garde son contenu |
 | Sortir des bits du sac | Sac en main, accroupi + clic droit dans le vide : une pile du matériau sélectionné |
 | Sac à bits créatif | Créatif ou `/give` seulement, sans recette. Accroupi + clic droit sur un bloc ou un bit : ajoute son matériau et le choisit. Pose sans limite, paie les patterns, et avale les bits ciselés tant qu'il est dans l'inventaire |
 | Copier une sculpture | Clic droit sur un bloc ciselé avec un pattern vierge |

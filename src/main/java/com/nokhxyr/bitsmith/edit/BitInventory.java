@@ -10,10 +10,13 @@ import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
 import com.nokhxyr.bitsmith.item.CreativeBitBagItem;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.util.TriState;
+import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -109,6 +112,32 @@ public final class BitInventory {
             }
         }
         return null;
+    }
+
+    /**
+     * Bits picked up from the ground go into the player's bags first, like chiseled ones. A
+     * creative bag does not swallow them: it is meant for building, not for clearing the floor.
+     */
+    public static void onPickup(ItemEntityPickupEvent.Pre event) {
+        Player player = event.getPlayer();
+        ItemEntity entity = event.getItemEntity();
+        ItemStack stack = entity.getItem();
+        if (player.level().isClientSide || !(stack.getItem() instanceof BitItem) || entity.hasPickUpDelay()
+                || creativeBag(player.getInventory()) != null) {
+            return;
+        }
+        int count = stack.getCount();
+        int left = intoBags(player.getInventory(), BitItem.material(stack), count);
+        if (left == count) {
+            return;
+        }
+        if (left == 0) {
+            player.take(entity, count);
+            entity.discard();
+            event.setCanPickup(TriState.FALSE);
+        } else {
+            stack.setCount(left);
+        }
     }
 
     private static int intoBags(Inventory inventory, BlockState material, int count) {

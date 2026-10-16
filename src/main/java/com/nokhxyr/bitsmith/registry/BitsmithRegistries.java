@@ -17,9 +17,12 @@ import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.SawItem;
 import com.nokhxyr.bitsmith.item.TapeMeasureItem;
 import com.nokhxyr.bitsmith.item.WrenchItem;
+import com.nokhxyr.bitsmith.machine.BitMillBlock;
+import com.nokhxyr.bitsmith.machine.BitMillBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -27,6 +30,8 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -51,6 +56,20 @@ public final class BitsmithRegistries {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CarvedBlockEntity>> CARVED_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("carved_block",
                     () -> BlockEntityType.Builder.of(CarvedBlockEntity::new, CARVED_BLOCK.get()).build(null));
+
+    /** Cuts whole blocks into bits, for automation. */
+    public static final DeferredBlock<BitMillBlock> BIT_MILL = BLOCKS.register("bit_mill",
+            () -> new BitMillBlock(BlockBehaviour.Properties.of()
+                    .strength(3.5F, 6.0F)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops()));
+
+    @SuppressWarnings("DataFlowIssue")
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BitMillBlockEntity>> BIT_MILL_ENTITY =
+            BLOCK_ENTITIES.register("bit_mill",
+                    () -> BlockEntityType.Builder.of(BitMillBlockEntity::new, BIT_MILL.get()).build(null));
+
+    public static final DeferredItem<BlockItem> BIT_MILL_ITEM = ITEMS.registerSimpleBlockItem("bit_mill", BIT_MILL);
 
     public static final DeferredItem<CarvedBlockItem> CARVED_BLOCK_ITEM = ITEMS.register("carved_block",
             () -> new CarvedBlockItem(CARVED_BLOCK.get(), new Item.Properties()));
@@ -91,6 +110,7 @@ public final class BitsmithRegistries {
                         output.accept(IRON_CHISEL.get());
                         output.accept(BIT_BAG.get());
                         output.accept(CREATIVE_BIT_BAG.get());
+                        output.accept(BIT_MILL_ITEM.get());
                         output.accept(BLANK_PATTERN.get());
                         output.accept(WRENCH.get());
                         output.accept(SAW.get());
@@ -118,5 +138,11 @@ public final class BitsmithRegistries {
         ITEMS.register(modEventBus);
         BLOCK_ENTITIES.register(modEventBus);
         TABS.register(modEventBus);
+        modEventBus.addListener(BitsmithRegistries::onCapabilities);
+    }
+
+    /** The mill's inventory, for hoppers, Create's logistics and storage mods' buses, on every side. */
+    private static void onCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BIT_MILL_ENTITY.get(), (mill, side) -> mill.handler());
     }
 }

@@ -28,6 +28,8 @@ import com.nokhxyr.bitsmith.item.ChiselSettings;
 import com.nokhxyr.bitsmith.item.CreativeBitBagItem;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.PatternMode;
+import com.nokhxyr.bitsmith.machine.BitMillBlockEntity;
+import com.nokhxyr.bitsmith.machine.MillContents;
 import com.nokhxyr.bitsmith.network.GridDeltaPayload;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
@@ -45,6 +47,11 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.SlotAccess;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
@@ -55,7 +62,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -282,6 +291,78 @@ public final class CarvingGameTests {
                 .anyMatch(recipe -> recipe.value().getResultItem(helper.getLevel().registryAccess())
                         .is(BitsmithRegistries.CREATIVE_BIT_BAG.get()));
         helper.assertFalse(craftable, "no recipe makes the creative bit bag");
+        helper.succeed();
+    }
+
+    // Bit mill and putting bits back
+
+    @GameTest(template = TEMPLATE, timeoutTicks = 100)
+    public static void millCutsBlocksThroughItsInventory(GameTestHelper helper) {
+        helper.setBlock(TARGET, BitsmithRegistries.BIT_MILL.get());
+        BlockPos pos = helper.absolutePos(TARGET);
+        IItemHandler items = helper.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, pos, Direction.UP);
+        helper.assertTrue(items != null, "the mill exposes an item handler, like a chest");
+        ItemStack torches = new ItemStack(Blocks.TORCH, 5);
+        helper.assertTrue(items.insertItem(0, torches, false).getCount() == 5, "torches cannot be cut");
+        ItemStack left = items.insertItem(0, new ItemStack(Blocks.STONE, 3), false);
+        helper.assertTrue(left.isEmpty(), "three stone blocks go in");
+        helper.assertTrue(items.extractItem(0, 64, false).isEmpty(), "blocks cannot be pulled back by machines");
+
+        helper.runAfterDelay(25, () -> {
+            BitMillBlockEntity mill = helper.getBlockEntity(TARGET);
+            helper.assertTrue(mill.bits() == 2 * 4096, "two blocks cut, the store is full: " + mill.bits());
+            helper.assertTrue(mill.input().getCount() == 1, "one block still waiting");
+            helper.assertTrue(helper.getLevel().getBlockState(pos).getAnalogOutputSignal(helper.getLevel(), pos) == 15,
+                    "a comparator reads it full");
+            ItemStack out = items.extractItem(1, 64, false);
+            helper.assertTrue(out.getItem() instanceof BitItem && out.getCount() == 64
+                    && BitItem.material(out) == Blocks.STONE.defaultBlockState(), "64 stone bits come out");
+            helper.assertTrue(mill.bits() == 2 * 4096 - 64, "taken from the store");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void millKeepsItsContentsWhenBroken(GameTestHelper helper) {
+        helper.setBlock(TARGET, BitsmithRegistries.BIT_MILL.get());
+        BitMillBlockEntity mill = helper.getBlockEntity(TARGET);
+        mill.insert(new ItemStack(Blocks.OAK_PLANKS, 10));
+        BlockPos pos = helper.absolutePos(TARGET);
+        List<ItemStack> drops = Block.getDrops(helper.getLevel().getBlockState(pos), helper.getLevel(), pos, mill);
+        helper.assertTrue(drops.size() == 1 && drops.get(0).is(BitsmithRegistries.BIT_MILL_ITEM.get()), "the mill drops itself only");
+        MillContents kept = drops.get(0).get(BitsmithComponents.MILL_CONTENTS.get());
+        helper.assertTrue(kept != null && kept.input().is(Blocks.OAK_PLANKS.asItem()) && kept.input().getCount() == 10,
+                "with its ten planks inside");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void bitsGoBackIntoTheBag(GameTestHelper helper) {
+        ServerPlayer player = survival(helper);
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        ItemStack bag = new ItemStack(BitsmithRegistries.BIT_BAG.get());
+        SimpleContainer container = new SimpleContainer(2);
+        container.setItem(0, bag);
+        container.setItem(1, BitItem.of(stone, 40));
+        BitBagItem bagItem = (BitBagItem) bag.getItem();
+
+        // Bits on the cursor, right clicked onto the bag.
+        ItemStack cursor = BitItem.of(stone, 24);
+        bagItem.overrideOtherStackedOnMe(bag, cursor, new Slot(container, 0, 0, 0), ClickAction.SECONDARY, player, SlotAccess.NULL);
+        helper.assertTrue(cursor.isEmpty() && BitBagItem.contents(bag).count(stone) == 24, "24 bits put in from the cursor");
+
+        // The bag on the cursor, right clicked onto a stack of bits.
+        bagItem.overrideStackedOnOther(bag, new Slot(container, 1, 0, 0), ClickAction.SECONDARY, player);
+        helper.assertTrue(container.getItem(1).isEmpty() && BitBagItem.contents(bag).count(stone) == 64, "the stack of 40 taken in");
+
+        // Bits lying on the ground go to the bag when picked up.
+        player.getInventory().setItem(5, bag);
+        ItemEntity loose = new ItemEntity(helper.getLevel(), player.getX(), player.getY(), player.getZ(), BitItem.of(stone, 16));
+        loose.setNoPickUpDelay();
+        helper.getLevel().addFreshEntity(loose);
+        loose.playerTouch(player);
+        helper.assertTrue(BitBagItem.contents(bag).count(stone) == 80, "picked up into the bag: " + BitBagItem.contents(bag).count(stone));
+        helper.assertTrue(bitsInInventory(player, stone) == 0, "nothing loose in the inventory");
         helper.succeed();
     }
 

@@ -8,7 +8,11 @@ import com.nokhxyr.bitsmith.edit.BitPlacement;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.SlotAccess;
+import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -17,13 +21,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 
 /**
  * Collects the bits chiseled while it is in the inventory. Held in hand, it places bits of the
  * selected material (cycle with the mode key); sneak and right click in the air to take out a
- * stack of the selected material.
+ * stack of the selected material. In an inventory, right click bits onto it (or it onto bits) to
+ * put them back.
  */
 public class BitBagItem extends Item {
     /** Materials listed in the tooltip; the menu shows them all, page by page. */
@@ -39,6 +45,50 @@ public class BitBagItem extends Item {
 
     public static void setContents(ItemStack stack, BagContents contents) {
         stack.set(BitsmithComponents.BAG_CONTENTS.get(), contents);
+    }
+
+    /**
+     * Puts bits into the bag and returns how many it took. The creative bag takes them all: it
+     * only remembers the material.
+     */
+    public int store(ItemStack bag, BlockState material, int count) {
+        BagContents contents = contents(bag);
+        int room = contents.room(material, count);
+        if (room > 0) {
+            setContents(bag, contents.add(material, room));
+        }
+        return room;
+    }
+
+    /** Right click with bits on the bag, in an inventory: the bits go in. */
+    @Override
+    public boolean overrideOtherStackedOnMe(ItemStack bag, ItemStack other, Slot slot, ClickAction action, Player player,
+            SlotAccess access) {
+        if (action != ClickAction.SECONDARY || !(other.getItem() instanceof BitItem) || !slot.allowModification(player)) {
+            return false;
+        }
+        int stored = store(bag, BitItem.material(other), other.getCount());
+        if (stored > 0) {
+            other.shrink(stored);
+            player.playSound(SoundEvents.BUNDLE_INSERT, 0.8F, 0.8F + player.level().getRandom().nextFloat() * 0.4F);
+        }
+        return true;
+    }
+
+    /** Right click with the bag on a stack of bits, in an inventory: the bag takes them. */
+    @Override
+    public boolean overrideStackedOnOther(ItemStack bag, Slot slot, ClickAction action, Player player) {
+        ItemStack there = slot.getItem();
+        if (action != ClickAction.SECONDARY || !(there.getItem() instanceof BitItem) || !slot.allowModification(player)) {
+            return false;
+        }
+        int stored = store(bag, BitItem.material(there), there.getCount());
+        if (stored > 0) {
+            there.shrink(stored);
+            slot.setChanged();
+            player.playSound(SoundEvents.BUNDLE_INSERT, 0.8F, 0.8F + player.level().getRandom().nextFloat() * 0.4F);
+        }
+        return true;
     }
 
     /** The action bar message when a material is selected. */

@@ -15,7 +15,14 @@ import com.nokhxyr.bitsmith.core.edit.Symmetry;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.GridTransforms;
 import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
+import com.nokhxyr.bitsmith.block.Materials;
+import com.nokhxyr.bitsmith.compat.jade.BitsmithJadePlugin;
+import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
+import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
+import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
+import com.nokhxyr.bitsmith.registry.CarvedItems;
+import net.neoforged.fml.ModList;
 import com.nokhxyr.bitsmith.item.BitItem;
 import com.nokhxyr.bitsmith.item.CarvedBlockItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
@@ -457,6 +464,98 @@ public final class ClientPlaytest {
         shot("overview of the row", () -> look(new Vec3(0.5, -59.5, 3.5)), 8, () -> true, "08_overview");
     }
 
+    // Compatibility: storage mods, Create logistics into the bit mill, JEI and Jade
+
+    private static final BlockPos MILL = new BlockPos(20, -60, -14);
+
+    /** Items whose components must survive storage: a carving, bits, a filled bag. */
+    private List<ItemStack> storedSamples() {
+        BitGrid grid = new BitGridBuilder().fill(0, 0, 0, 16, 8, 16, Materials.id(Blocks.STONE.defaultBlockState()))
+                .fill(0, 8, 0, 8, 16, 16, Materials.id(Blocks.OAK_PLANKS.defaultBlockState())).build();
+        ItemStack carved = CarvedItems.stackFor(grid);
+        carved.setCount(5);
+        ItemStack bag = new ItemStack(BitsmithRegistries.BIT_BAG.get());
+        BitBagItem.setContents(bag, BagContents.EMPTY.add(Blocks.STONE.defaultBlockState(), 1000)
+                .add(Blocks.GOLD_BLOCK.defaultBlockState(), 20));
+        return List.of(carved, BitItem.of(Blocks.STONE.defaultBlockState(), 64), bag);
+    }
+
+    private void storageAndViewersScript() {
+        if (ModList.get().isLoaded("ae2")) {
+            step("AE2 cells keep carvings, bits and bag contents", () -> { }, 1, () -> {
+                for (ItemStack sample : storedSamples()) {
+                    String problem = mc.getSingleplayerServer().submit(() -> StorageCompat.throughAe2(sample)).join();
+                    if (problem != null) {
+                        return that(sample.getHoverName().getString() + ": " + problem, false);
+                    }
+                }
+                return true;
+            });
+        }
+        if (ModList.get().isLoaded("refinedstorage")) {
+            step("Refined Storage keeps carvings, bits and bag contents", () -> { }, 1, () -> {
+                var registries = mc.getSingleplayerServer().registryAccess();
+                for (ItemStack sample : storedSamples()) {
+                    String problem = mc.getSingleplayerServer().submit(() -> StorageCompat.throughRefinedStorage(sample, registries)).join();
+                    if (problem != null) {
+                        return that(sample.getHoverName().getString() + ": " + problem, false);
+                    }
+                }
+                return true;
+            });
+        }
+
+        // A Create chute feeds the mill from above, a hopper empties it into a chest below.
+        step("build a chute, a bit mill, a hopper and a chest", () -> {
+            command("setblock 20 -58 -14 create:chute");
+            command("setblock 20 -59 -14 create:chute");
+            command("setblock 20 -60 -14 bitsmith:bit_mill");
+            command("setblock 20 -61 -14 minecraft:hopper[facing=down]");
+            command("setblock 20 -62 -14 minecraft:chest");
+            command("tp @s 20.5 -59 -18.5 0 20");
+        }, 20, () -> that("mill placed", mc.level.getBlockState(MILL).is(BitsmithRegistries.BIT_MILL.get())));
+        step("throw two stone blocks into the chute", () -> {
+            command("summon item 20.5 -57.2 -13.5 {Item:{id:\"minecraft:stone\",count:2}}");
+        }, 80, () -> {
+            int bits = mc.getSingleplayerServer().submit(() -> {
+                var level = mc.getSingleplayerServer().overworld();
+                int total = 0;
+                if (level.getBlockEntity(MILL.below(2)) instanceof net.minecraft.world.Container chest) {
+                    for (int i = 0; i < chest.getContainerSize(); i++) {
+                        if (chest.getItem(i).getItem() instanceof BitItem) {
+                            total += chest.getItem(i).getCount();
+                        }
+                    }
+                }
+                return total;
+            }).join();
+            return that("stone bits in the chest " + bits, bits > 0);
+        });
+        shot("the automated line", () -> look(new Vec3(20.5, -60, -13.5)), 10, () -> true, "18_create_bit_mill");
+
+        if (ModList.get().isLoaded("jade")) {
+            step("Jade on a carved block", () -> look(new Vec3(A.getX() + 0.5, A.getY() + 0.3, A.getZ())), 1, () -> true);
+            step("look at it", () -> command("tp @s 0.5 -60 0.5 0 30"), 30,
+                    () -> that("Jade asked Bitsmith " + BitsmithJadePlugin.carvedTooltips + " times",
+                            BitsmithJadePlugin.carvedTooltips > 0));
+            shot("Jade shows the materials", () -> look(new Vec3(A.getX() + 0.5, A.getY() + 0.3, A.getZ())), 15,
+                    () -> true, "19_jade_carved");
+            step("Jade on the mill", () -> command("tp @s 20.5 -59 -16.5 0 30"), 15, () -> true);
+            shot("Jade shows the mill's contents", () -> look(new Vec3(20.5, -59.5, -14)), 30,
+                    () -> that("Jade asked Bitsmith " + BitsmithJadePlugin.millTooltips + " times",
+                            BitsmithJadePlugin.millTooltips > 0), "20_jade_mill");
+        }
+        if (ModList.get().isLoaded("jei")) {
+            step("JEI lists the carved items and the mill page", () -> { }, 20, () -> {
+                String problem = JeiCheck.listsBitsmith();
+                return that(problem == null ? "listed" : problem, problem == null);
+            });
+            shot("JEI: how stone bits are made", JeiCheck::showStoneBits, 15,
+                    () -> that("recipe screen " + mc.screen, mc.screen != null), "21_jei_bit_mill");
+            step("close JEI", () -> tap(GLFW.GLFW_KEY_ESCAPE), 5, () -> mc.screen == null);
+        }
+    }
+
     // Compatibility (runClientCompat): KubeJS, WorldEdit, Create, under Sodium, Iris and ModernFix
 
     private static final BlockPos PISTON = new BlockPos(10, -60, -14);
@@ -552,6 +651,8 @@ public final class ClientPlaytest {
             }
             return that("carving not found at x 11 to 14, contraptions " + contraptions(), false);
         }, "16_create_after");
+
+        storageAndViewersScript();
 
         shot("shaders view", () -> {
             command("tp @s 0.5 -58.6 -1.5 0 20");

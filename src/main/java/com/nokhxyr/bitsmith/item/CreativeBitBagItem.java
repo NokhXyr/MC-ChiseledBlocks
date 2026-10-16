@@ -77,6 +77,13 @@ public class CreativeBitBagItem extends BitBagItem {
         setContents(bag, contents.add(material, 1));
     }
 
+    /** Bits put in are swallowed; only their material is remembered. */
+    @Override
+    public int store(ItemStack bag, BlockState material, int count) {
+        remember(bag, material);
+        return count;
+    }
+
     @Override
     public Component describeSelection(BagContents.Entry entry) {
         return Component.translatable("bitsmith.creative_bag.selected", entry.material().getBlock().getName());

@@ -159,5 +159,17 @@
   "bitsmith.place.started": "%s : départ fixé, clic droit sur l'arrivée (clic droit dans le vide pour annuler)",
   "bitsmith.place.cleared": "Départ annulé",
   "bitsmith.place.too_big": "Trop grand : %s bits maximum et 8 blocs par côté",
-  "bitsmith.place.missing": "Il manque %s bits de %s (%s nécessaires)"
+  "bitsmith.place.missing": "Il manque %s bits de %s (%s nécessaires)",
+  "block.bitsmith.bit_mill": "Moulin à bits",
+  "bitsmith.mill.status": "Blocs en attente : %s, bits prêts : %s (%s)",
+  "bitsmith.mill.bag_full": "Le sac n'a plus de place pour ces bits",
+  "bitsmith.jei.bit": "Un bit fait un seizième de bloc de côté : 4096 bits font un bloc. Cisèle des blocs pour obtenir des bits, ou découpe des blocs entiers dans un moulin à bits.",
+  "bitsmith.jei.mill": "Découpe chaque bloc entier en 4096 bits. Les blocs entrent par n'importe quelle face (trémies, goulottes, entonnoirs et tapis de Create, bus de stockage), les bits sortent par le dessous ou par n'importe quelle face par le même inventaire. Clic droit avec un sac à bits pour le remplir. Les comparateurs lisent son remplissage.",
+  "bitsmith.jei.mill.bits": "1 bloc = %s bits",
+  "bitsmith.jade.material": "%s : %s %%",
+  "bitsmith.jade.mill.blocks": "Blocs en attente : %s",
+  "bitsmith.jade.mill.bits": "Bits prêts : %s (%s)",
+  "bitsmith.jade.mill.empty": "Aucun bit prêt",
+  "config.jade.plugin_bitsmith.carved_block": "Matériaux des blocs ciselés",
+  "config.jade.plugin_bitsmith.bit_mill": "Contenu du moulin à bits"
 }

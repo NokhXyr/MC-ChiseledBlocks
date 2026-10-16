@@ -210,6 +210,11 @@ configurations {
 }
 
 dependencies {
+    // Optional integrations: compiled against, never required at run time nor shipped.
+    compileOnly "maven.modrinth:jei:${jei_version}"
+    compileOnly "maven.modrinth:jade:${jade_version}"
+    compileOnly "maven.modrinth:ae2:${ae2_version}"
+    compileOnly "maven.modrinth:refined-storage:${refined_storage_version}"
     // Development client mods only: never part of the mod jar or its published dependencies.
     devClientMods "maven.modrinth:pehkui:${pehkui_version}"
     compatClientMods "maven.modrinth:sodium:${sodium_version}"
@@ -224,6 +229,12 @@ dependencies {
     compatClientMods "maven.modrinth:kubejs:${kubejs_version}"
     compatClientMods "maven.modrinth:rhino:${rhino_version}"
     compatClientMods "maven.modrinth:better-advanced-tooltips:${better_advanced_tooltips_version}"
+    compatClientMods "maven.modrinth:ae2:${ae2_version}"
+    compatClientMods "maven.modrinth:guideme:${guideme_version}"
+    compatClientMods "maven.modrinth:refined-storage:${refined_storage_version}"
+    compatClientMods "maven.modrinth:jei:${jei_version}"
+    compatClientMods "maven.modrinth:mezzconfig:${mezzconfig_version}"
+    compatClientMods "maven.modrinth:jade:${jade_version}"
     benchClientMods "maven.modrinth:spark:${spark_version}"
     permsClientMods "maven.modrinth:luckperms:${luckperms_version}"
     compatShaderpacks "maven.modrinth:complementary-reimagined:${complementary_version}@zip"

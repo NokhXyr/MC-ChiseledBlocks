@@ -11,6 +11,7 @@ import com.nokhxyr.bitsmith.admin.BlockProfiler;
 import com.nokhxyr.bitsmith.admin.CarvedIndex;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.compat.cnb.ChiselsAndBitsImport;
+import com.nokhxyr.bitsmith.edit.BitInventory;
 import com.nokhxyr.bitsmith.edit.EditBatcher;
 import com.nokhxyr.bitsmith.edit.EditHistory;
 import com.nokhxyr.bitsmith.network.BitsmithNetwork;
@@ -44,6 +45,7 @@ public final class Bitsmith {
         NeoForge.EVENT_BUS.addListener(EditBatcher::onServerTickPost);
         NeoForge.EVENT_BUS.addListener(EditBatcher::onServerStopped);
         NeoForge.EVENT_BUS.addListener(EditHistory::onServerStopped);
+        NeoForge.EVENT_BUS.addListener(BitInventory::onPickup);
         NeoForge.EVENT_BUS.addListener(BitsmithCommand::onRegisterCommands);
         NeoForge.EVENT_BUS.addListener(BitsmithPermissions::onGatherNodes);
         NeoForge.EVENT_BUS.addListener(CarvedIndex::onServerStopped);

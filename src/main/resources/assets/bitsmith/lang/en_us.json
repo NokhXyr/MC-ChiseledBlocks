@@ -159,5 +159,17 @@
   "bitsmith.place.started": "%s: start set, right click the end (right click in the air to cancel)",
   "bitsmith.place.cleared": "Start cleared",
   "bitsmith.place.too_big": "Too large: at most %s bits and 8 blocks per side",
-  "bitsmith.place.missing": "%s %s bits missing (%s needed)"
+  "bitsmith.place.missing": "%s %s bits missing (%s needed)",
+  "block.bitsmith.bit_mill": "Bit Mill",
+  "bitsmith.mill.status": "Blocks waiting: %s, bits ready: %s (%s)",
+  "bitsmith.mill.bag_full": "The bag has no room for these bits",
+  "bitsmith.jei.bit": "A bit is a sixteenth of a block on each side: 4096 bits make a block. Chisel blocks for bits, or cut whole blocks in a Bit Mill.",
+  "bitsmith.jei.mill": "Cuts whole blocks into 4096 bits each. Blocks go in from any side (hoppers, Create chutes, funnels and belts, storage buses), bits come out below or from any side through the same inventory. Right click with a bit bag to fill it. Comparators read how full it is.",
+  "bitsmith.jei.mill.bits": "1 block = %s bits",
+  "bitsmith.jade.material": "%s: %s %%",
+  "bitsmith.jade.mill.blocks": "Blocks waiting: %s",
+  "bitsmith.jade.mill.bits": "Bits ready: %s (%s)",
+  "bitsmith.jade.mill.empty": "No bits ready",
+  "config.jade.plugin_bitsmith.carved_block": "Carved block materials",
+  "config.jade.plugin_bitsmith.bit_mill": "Bit mill contents"
 }

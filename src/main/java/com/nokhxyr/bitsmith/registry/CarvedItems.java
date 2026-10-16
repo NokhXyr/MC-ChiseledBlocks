@@ -85,7 +85,7 @@ public final class CarvedItems {
     }
 
     /** Whether a player could carve this block as it is placed by default. */
-    private static boolean isCarvable(Block block) {
+    public static boolean isCarvable(Block block) {
         if (block instanceof CarvedBlock) {
             return false;
         }
