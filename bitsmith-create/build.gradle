@@ -1,4 +1,4 @@
-// Bitsmith: Create, an optional addon that adds the Mechanical Bit Mill. Needs Bitsmith and Create.
+// Bitsmith: Create, an optional addon that adds the bit line (slicer, cutter, crusher). Needs Bitsmith and Create.
 // Author: NokhXyr
 plugins {
     id 'java-library'
@@ -95,6 +95,9 @@ dependencies {
     compileOnly "maven.modrinth:jei:${jei_version}"
     compileOnly "maven.modrinth:jade:${jade_version}"
     createRuntime "maven.modrinth:create:${create_version}"
+    // JEI, to check the line's recipe pages in game.
+    createRuntime "maven.modrinth:jei:${jei_version}"
+    createRuntime "maven.modrinth:mezzconfig:${mezzconfig_version}"
 }
 
 // Create goes into the mods folder of each run; Bitsmith and the addon come from the source sets.

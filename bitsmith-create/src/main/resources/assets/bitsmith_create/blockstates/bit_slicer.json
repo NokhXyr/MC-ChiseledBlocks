@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "bitsmith_create:block/bit_slicer/block"
+    },
+    "facing=east": {
+      "model": "bitsmith_create:block/bit_slicer/block",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "bitsmith_create:block/bit_slicer/block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "bitsmith_create:block/bit_slicer/block",
+      "y": 270
+    }
+  }
+}

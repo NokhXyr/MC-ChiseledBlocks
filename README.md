@@ -104,17 +104,22 @@ player may use, and the server checks every request again.
 
 Bitsmith alone makes bits by hand, with the chisel. Producing bits in bulk is only possible with
 the optional addon **Bitsmith: Create** (`bitsmith_create`, built from `bitsmith-create/`), which
-needs Bitsmith and Create. It adds the **Mechanical Bit Mill**:
+needs Bitsmith and Create. It adds a production line of three machines that work on Create belts
+and depots, like the mechanical press:
 
-- a shaft runs through it; it cuts whole blocks into 4096 bits each, as fast as the shaft turns
-  (about 3 seconds per block at 16 rpm, a fifth of a second at 256 rpm), and does nothing while
-  it stands still; stress impact 4 per rpm, like the mechanical saw;
-- blocks go in and bits come out through a standard inventory on every side: Create's chutes,
-  funnels and belts, hoppers and storage buses work with it; right click with blocks to load it,
-  with a bit bag to fill the bag, empty handed to take bits;
-- comparators read how full it is, and a broken mill keeps its contents;
-- recipe: iron chisel, two shafts, an andesite casing and a stonecutter;
-- JEI shows a page for every material, Jade shows what it holds.
+- the **Bit Slicer** cuts a block into 16 slices, the **Bit Cutter** a slice into 16 rods, the
+  **Bit Crusher** a rod into 16 bits: 4096 bits per block, in the block's material;
+- each machine sits two blocks above the belt or depot, with one block of air between them, and
+  is turned by a shaft through its sides; it holds the item under it, cuts the whole stack at
+  once and lets the pieces move on (2 seconds per cut at 16 rpm, faster as the shaft turns
+  faster); stopped, it lets items pass; stress impact 8 per rpm each;
+- each machine only takes its own input, so one belt can carry the three stages in a row;
+- the tools move: the slicer lowers a spinning saw, the cutter drops a blade, the crusher strikes
+  three times per cut;
+- recipes: the slicer from a shaft, two iron chisels, an andesite casing and a stonecutter; the
+  cutter from a shaft, two iron ingots, a copper casing and an iron chisel; the crusher from a
+  shaft, two iron ingots, a brass casing and an iron block;
+- JEI shows a page per machine and material, and how to build the line on each machine.
 
 ## Requirements
 
@@ -130,7 +135,7 @@ needs Bitsmith and Create. It adds the **Mechanical Bit Mill**:
 ./gradlew runGameTestServer  # in game tests, headless
 ./gradlew runClientTest      # plays the mod like a player, screenshots and report
 ./gradlew runClientCompat    # the same with Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
-./gradlew :bitsmith-create:runClientCreate  # plays the Create addon: motor, mill, chute, hopper
+./gradlew :bitsmith-create:runClientCreate  # plays the Create addon: belt, three machines, 4096 bits
 ./gradlew runClient    # development client
 ```
 
@@ -265,18 +270,26 @@ permis au joueur, et le serveur revérifie chaque demande.
 
 Bitsmith seul fait les bits à la main, avec le ciseau. Produire des bits en masse n'est possible
 qu'avec l'addon optionnel **Bitsmith: Create** (`bitsmith_create`, construit depuis
-`bitsmith-create/`), qui demande Bitsmith et Create. Il ajoute le **moulin à bits mécanique** :
+`bitsmith-create/`), qui demande Bitsmith et Create. Il ajoute une chaîne de trois machines qui
+travaillent sur les tapis et les dépôts de Create, comme la presse mécanique :
 
-- un arbre le traverse ; il découpe chaque bloc entier en 4096 bits, aussi vite que l'arbre tourne
-  (environ 3 secondes par bloc à 16 tr/min, un cinquième de seconde à 256 tr/min), et ne fait
-  rien à l'arrêt ; impact de contrainte 4 par tr/min, comme la scie mécanique ;
-- les blocs entrent et les bits sortent par un inventaire standard sur toutes les faces :
-  goulottes, entonnoirs et tapis de Create, trémies et bus de stockage fonctionnent avec ; clic
-  droit avec des blocs pour le charger, avec un sac à bits pour le remplir, main vide pour
-  prendre des bits ;
-- les comparateurs lisent son remplissage, et un moulin cassé garde son contenu ;
-- recette : ciseau en fer, deux arbres, un boîtier en andésite et un tailleur de pierre ;
-- JEI montre une page pour chaque matériau, Jade montre ce qu'il contient.
+- la **Trancheuse à bits** coupe un bloc en 16 tranches, la **Découpeuse à bits** une tranche en
+  16 baguettes, la **Concasseuse à bits** une baguette en 16 bits : 4096 bits par bloc, dans la
+  matière du bloc ;
+- chaque machine se pose deux blocs au-dessus du tapis ou du dépôt, avec un bloc d'air entre les
+  deux, et tourne grâce à un arbre qui la traverse ; elle retient l'objet en dessous, coupe toute
+  la pile d'un coup et laisse repartir les morceaux (2 secondes par coupe à 16 tr/min, plus vite
+  si l'arbre tourne plus vite) ; à l'arrêt, elle laisse passer les objets ; impact de contrainte
+  8 par tr/min chacune ;
+- chaque machine ne prend que son entrée, donc un seul tapis peut porter les trois étapes à la
+  suite ;
+- les outils bougent : la trancheuse descend une scie qui tourne, la découpeuse abat une lame, la
+  concasseuse frappe trois fois par coupe ;
+- recettes : la trancheuse avec un arbre, deux ciseaux en fer, un boîtier en andésite et un
+  tailleur de pierre ; la découpeuse avec un arbre, deux lingots de fer, un boîtier en cuivre et
+  un ciseau en fer ; la concasseuse avec un arbre, deux lingots de fer, un boîtier en laiton et un
+  bloc de fer ;
+- JEI montre une page par machine et par matériau, et comment monter la chaîne sur chaque machine.
 
 ## Prérequis
 
@@ -292,7 +305,7 @@ qu'avec l'addon optionnel **Bitsmith: Create** (`bitsmith_create`, construit dep
 ./gradlew runGameTestServer  # tests en jeu, sans fenêtre
 ./gradlew runClientTest      # joue le mod comme un joueur, captures et rapport
 ./gradlew runClientCompat    # pareil avec Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
-./gradlew :bitsmith-create:runClientCreate  # joue l'addon Create : moteur, moulin, goulotte, trémie
+./gradlew :bitsmith-create:runClientCreate  # joue l'addon Create : tapis, trois machines, 4096 bits
 ./gradlew runClient    # client de développement
 ```
 

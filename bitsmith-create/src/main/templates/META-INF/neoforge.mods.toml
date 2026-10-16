@@ -8,7 +8,7 @@ version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
 description='''
-Bulk bit production with Create: the Mechanical Bit Mill cuts whole blocks into bits, driven by rotation.
+Bulk bit production with Create: a line of three machines on Create belts cuts blocks into slices, rods, then bits.
 '''
 
 [[dependencies.${mod_id}]]

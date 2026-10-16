@@ -83,6 +83,7 @@ public final class ClientPlaytest {
     private static final int TIMEOUT_TICKS = 20 * switch (System.getProperty("bitsmith.playtest", "main")) {
         case "bench" -> 900;
         case "soak" -> Integer.getInteger("bitsmith.soak.minutes", 10) * 75 + 300;
+        case "create" -> 600;
         default -> 360;
     };
     /** Extra ticks a failing check is retried for, in case the game runs slow. */

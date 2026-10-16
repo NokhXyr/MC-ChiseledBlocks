@@ -1,0 +1,60 @@
+{
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "bitsmith_create:block/line/pole",
+    "pole": "bitsmith_create:block/line/pole"
+  },
+  "elements": [
+    {
+      "name": "Pole",
+      "from": [
+        6.5,
+        0,
+        6.5
+      ],
+      "to": [
+        9.5,
+        16,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3,
+            0,
+            6,
+            16
+          ],
+          "texture": "#pole"
+        },
+        "south": {
+          "uv": [
+            3,
+            0,
+            6,
+            16
+          ],
+          "texture": "#pole"
+        },
+        "west": {
+          "uv": [
+            3,
+            0,
+            6,
+            16
+          ],
+          "texture": "#pole"
+        },
+        "east": {
+          "uv": [
+            3,
+            0,
+            6,
+            16
+          ],
+          "texture": "#pole"
+        }
+      }
+    }
+  ]
+}

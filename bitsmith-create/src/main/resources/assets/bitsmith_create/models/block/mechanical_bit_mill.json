@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "render_type": "minecraft:cutout",
-  "textures": {
-    "end": "bitsmith_create:block/mechanical_bit_mill_end",
-    "side": "bitsmith_create:block/mechanical_bit_mill_side"
-  }
-}

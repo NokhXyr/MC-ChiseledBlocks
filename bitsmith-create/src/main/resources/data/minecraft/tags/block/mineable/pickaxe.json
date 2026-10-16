@@ -1,4 +1,8 @@
 {
   "replace": false,
-  "values": ["bitsmith_create:mechanical_bit_mill"]
+  "values": [
+    "bitsmith_create:bit_slicer",
+    "bitsmith_create:bit_cutter",
+    "bitsmith_create:bit_crusher"
+  ]
 }
