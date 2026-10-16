@@ -11,7 +11,7 @@ version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
 description='''
-Carve any block into 1/16 bits, without the frame rate cost.
+Chisel any block into pixels, sixteen to a side, without the frame rate cost.
 '''
 
 [[dependencies.${mod_id}]]

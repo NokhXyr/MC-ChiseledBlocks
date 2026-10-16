@@ -1,0 +1,160 @@
+// Chiseled Blocks: Create, an optional addon that adds the pixel line (slicer, cutter, crusher). Needs Chiseled Blocks and Create.
+// Author: NokhXyr
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = addon_mod_id
+}
+
+repositories {
+    // Create and the libraries it is built with, from Create's own maven (compile only).
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Create"
+                url = "https://maven.createmod.net"
+            }
+        }
+        filter {
+            includeGroup "com.simibubi.create"
+            includeGroup "dev.engine-room.flywheel"
+            includeGroup "net.createmod.ponder"
+        }
+    }
+    // Modrinth: the released Create jar, run in the development clients only.
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    mods {
+        "${addon_mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+        chiseledblocks {
+            sourceSet(project(':').sourceSets.main)
+        }
+    }
+
+    runs {
+        // Plays the addon like a player (shares Chiseled Blocks's playtest driver, mode "create").
+        clientCreate {
+            client()
+            gameDirectory = rootProject.file("run-create")
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "create"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        // Builds the Ponder scenes in a world as a player would and saves them as schematics
+        // into src/main/resources/assets/chiseledblocks_create/ponder.
+        clientCreatePonderExport {
+            client()
+            gameDirectory = rootProject.file("run-create")
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "createPonderExport"
+            systemProperty "chiseledblocks.ponderExport", file("src/main/resources/assets/${addon_mod_id}/ponder").absolutePath
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        gameTestServer {
+            type = "gameTestServer"
+            gameDirectory = rootProject.file("run-create-gametest")
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.addon_mod_id
+        }
+    }
+}
+
+configurations {
+    // The released Create jar, with its libraries inside, for the development runs only.
+    createRuntime {
+        canBeConsumed = false
+        canBeResolved = true
+        transitive = false
+    }
+}
+
+dependencies {
+    implementation project(':')
+    compileOnly("com.simibubi.create:create-1.21.1:${create_maven_version}:slim") { transitive = false }
+    compileOnly("dev.engine-room.flywheel:flywheel-neoforge-1.21.1:${flywheel_maven_version}") { transitive = false }
+    compileOnly("net.createmod.ponder:ponder-neoforge:${ponder_maven_version}") { transitive = false }
+    compileOnly "maven.modrinth:jei:${jei_version}"
+    compileOnly "maven.modrinth:jade:${jade_version}"
+    createRuntime "maven.modrinth:create:${create_version}"
+    // JEI, to check the line's recipe pages in game.
+    createRuntime "maven.modrinth:jei:${jei_version}"
+    createRuntime "maven.modrinth:mezzconfig:${mezzconfig_version}"
+}
+
+// Create goes into the mods folder of each run; Chiseled Blocks and the addon come from the source sets.
+['run-create', 'run-create-gametest'].each { gameDir ->
+    def install = tasks.register("installCreate${gameDir.split('-').collect { it.capitalize() }.join()}", Copy) {
+        from configurations.createRuntime
+        into rootProject.file("${gameDir}/mods")
+    }
+    tasks.matching { it.name in ['runClientCreate', 'runClientCreatePonderExport', 'runGameTestServer'] }.configureEach { dependsOn install }
+}
+
+// Muted, never paused, no first launch screens, like Chiseled Blocks's playtest clients.
+def writeCreateOptions = tasks.register('writeCreateOptions') {
+    def options = rootProject.file('run-create/options.txt')
+    outputs.file(options)
+    doLast {
+        if (!options.exists()) {
+            options.parentFile.mkdirs()
+            options.text = ['onboardAccessibility:false', 'pauseOnLostFocus:false', 'narrator:0',
+                            'soundCategory_master:0.0', 'guiScale:2', 'tutorialStep:none', 'maxFps:260',
+                            'enableVsync:false', 'graphicsMode:1', 'ao:true'].join('\n') + '\n'
+        }
+    }
+}
+tasks.matching { it.name in ['runClientCreate', 'runClientCreatePonderExport'] }.configureEach { dependsOn writeCreateOptions }
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            loader_version_range   : loader_version_range,
+            mod_id                 : addon_mod_id,
+            mod_name               : addon_mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            chiseledblocks_id            : mod_id,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

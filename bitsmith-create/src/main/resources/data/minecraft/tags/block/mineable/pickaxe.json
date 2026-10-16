@@ -1,8 +1,0 @@
-{
-  "replace": false,
-  "values": [
-    "bitsmith_create:bit_slicer",
-    "bitsmith_create:bit_cutter",
-    "bitsmith_create:bit_crusher"
-  ]
-}

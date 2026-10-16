@@ -1,0 +1,130 @@
+/*
+ * Chiseled Blocks
+ * Author: NokhXyr
+ */
+package com.nokhxyr.chiseledblocks.edit;
+
+import com.nokhxyr.chiseledblocks.admin.BlockProfiler;
+import com.nokhxyr.chiseledblocks.block.ChiseledBlockEntity;
+import com.nokhxyr.chiseledblocks.block.Materials;
+import com.nokhxyr.chiseledblocks.core.voxel.PixelGrid;
+import com.nokhxyr.chiseledblocks.core.voxel.PixelGridBuilder;
+import com.nokhxyr.chiseledblocks.metrics.Metrics;
+import com.nokhxyr.chiseledblocks.network.GridDeltaPayload;
+import com.nokhxyr.chiseledblocks.network.GridFullPayload;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+/**
+ * Applies every pending carved block edit once per server tick: one pack, one save mark and
+ * one network update per block, however many bits changed during the tick.
+ */
+public final class EditBatcher {
+    private static final Set<ChiseledBlockEntity> DIRTY = new LinkedHashSet<>();
+    private static final Set<ChiseledBlockEntity> EMPTY_CHECKS = new LinkedHashSet<>();
+
+    private EditBatcher() {
+    }
+
+    public static void enqueue(ChiseledBlockEntity blockEntity) {
+        DIRTY.add(blockEntity);
+    }
+
+    /** Asks for the block to be removed at the end of the tick if it is still empty by then. */
+    public static void checkEmpty(ChiseledBlockEntity blockEntity) {
+        EMPTY_CHECKS.add(blockEntity);
+    }
+
+    public static void onServerTickPost(ServerTickEvent.Post event) {
+        if (!Metrics.ENABLED) {
+            flushTick();
+            return;
+        }
+        long start = System.nanoTime();
+        flushTick();
+        Metrics.FLUSH_NANOS.addAndGet(System.nanoTime() - start);
+        Metrics.FLUSH_TICKS.incrementAndGet();
+    }
+
+    private static void flushTick() {
+        if (!EMPTY_CHECKS.isEmpty()) {
+            ChiseledBlockEntity[] checks = EMPTY_CHECKS.toArray(ChiseledBlockEntity[]::new);
+            EMPTY_CHECKS.clear();
+            for (ChiseledBlockEntity blockEntity : checks) {
+                if (!blockEntity.isRemoved() && blockEntity.effectiveGrid().isEmpty()
+                        && blockEntity.getLevel() instanceof ServerLevel level) {
+                    level.removeBlock(blockEntity.getBlockPos(), false);
+                }
+            }
+        }
+        if (DIRTY.isEmpty()) {
+            return;
+        }
+        ChiseledBlockEntity[] batch = DIRTY.toArray(ChiseledBlockEntity[]::new);
+        DIRTY.clear();
+        for (ChiseledBlockEntity blockEntity : batch) {
+            if (BlockProfiler.active && blockEntity.getLevel() != null) {
+                long start = System.nanoTime();
+                flush(blockEntity);
+                BlockProfiler.record(blockEntity.getLevel(), blockEntity.getBlockPos(), BlockProfiler.Kind.APPLY,
+                        System.nanoTime() - start);
+            } else {
+                flush(blockEntity);
+            }
+        }
+    }
+
+    public static void onServerStopped(ServerStoppedEvent event) {
+        DIRTY.clear();
+        EMPTY_CHECKS.clear();
+    }
+
+    private static void flush(ChiseledBlockEntity blockEntity) {
+        PixelGridBuilder builder = blockEntity.takePending();
+        if (builder == null || blockEntity.isRemoved() || !(blockEntity.getLevel() instanceof ServerLevel level)) {
+            return;
+        }
+        PixelGrid before = blockEntity.getGrid();
+        PixelGrid after = builder.build();
+        if (after.equals(before)) {
+            return;
+        }
+
+        BlockPos pos = blockEntity.getBlockPos();
+        if (after.isEmpty()) {
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+            return;
+        }
+        if (after.isUniformSolid()) {
+            level.setBlock(pos, Materials.state(after.paletteEntry(0)), Block.UPDATE_ALL);
+            return;
+        }
+
+        blockEntity.setGrid(after);
+        PacketDistributor.sendToPlayersTrackingChunk(level, new ChunkPos(pos), update(pos, builder, after));
+    }
+
+    /** A delta when it is smaller than the whole grid, the whole grid otherwise. */
+    private static CustomPacketPayload update(BlockPos pos, PixelGridBuilder builder, PixelGrid after) {
+        int[] indices = builder.changedIndices();
+        // A delta entry costs about 4 bytes, the full grid its packed payload.
+        if (indices.length * 4 < after.payloadBytes()) {
+            int[] materials = new int[indices.length];
+            for (int i = 0; i < indices.length; i++) {
+                materials[i] = builder.get(indices[i]);
+            }
+            return new GridDeltaPayload(pos, indices, materials, after.hashCode());
+        }
+        return GridFullPayload.of(pos, after);
+    }
+}

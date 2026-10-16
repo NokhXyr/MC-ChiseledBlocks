@@ -38,7 +38,7 @@ repositories {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-def stressHeap = providers.gradleProperty('bitsmith.stress.xmx').getOrElse('8G')
+def stressHeap = providers.gradleProperty('chiseledblocks.stress.xmx').getOrElse('8G')
 
 neoForge {
     version = project.neo_version
@@ -65,7 +65,7 @@ neoForge {
         clientTest {
             client()
             gameDirectory = project.file("run-clienttest")
-            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "chiseledblocks.clientTest", "true"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
@@ -73,8 +73,8 @@ neoForge {
         clientCompat {
             client()
             gameDirectory = project.file("run-compat")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.compatTest", "true"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.compatTest", "true"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
@@ -82,41 +82,41 @@ neoForge {
         clientCnbSource {
             client()
             gameDirectory = project.file("run-cnb")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "cnbSource"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "cnbSource"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
-        // Step 2: open a copy of that world with Bitsmith only and check every block.
+        // Step 2: open a copy of that world with Chiseled Blocks only and check every block.
         clientCnbMigrate {
             client()
             gameDirectory = project.file("run-cnb-migrate")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "cnbMigrate"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "cnbMigrate"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
-        // Performance scenes (docs/PROFILING.md), with Bitsmith and then with Chisels & Bits.
+        // Performance scenes (docs/PROFILING.md), with Chiseled Blocks and then with Chisels & Bits.
         clientBench {
             client()
             gameDirectory = project.file("run-bench")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "bench"
-            systemProperty "bitsmith.bench.mod", "bitsmith"
-            systemProperty "bitsmith.metrics", "true"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "bench"
+            systemProperty "chiseledblocks.bench.mod", "chiseledblocks"
+            systemProperty "chiseledblocks.metrics", "true"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
-        // Stress runs: the same heavy scenes with Bitsmith alone, with the usual optimisation
-        // mods, and inside the Arcadia modpack. Same memory for all three (8G, -Pbitsmith.stress.xmx=12G).
+        // Stress runs: the same heavy scenes with Chiseled Blocks alone, with the usual optimisation
+        // mods, and inside the Arcadia modpack. Same memory for all three (8G, -Pchiseledblocks.stress.xmx=12G).
         clientStress {
             client()
             gameDirectory = project.file("run-stress")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "stress"
-            systemProperty "bitsmith.stress.config", "alone"
-            systemProperty "bitsmith.stress.jfr", providers.gradleProperty("bitsmith.stress.jfr").getOrElse("false")
-            systemProperty "bitsmith.metrics", "true"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "stress"
+            systemProperty "chiseledblocks.stress.config", "alone"
+            systemProperty "chiseledblocks.stress.jfr", providers.gradleProperty("chiseledblocks.stress.jfr").getOrElse("false")
+            systemProperty "chiseledblocks.metrics", "true"
             jvmArguments.addAll "-Xms2G", "-Xmx" + stressHeap
             programArguments.addAll "--width", "1280", "--height", "720"
         }
@@ -124,11 +124,11 @@ neoForge {
         clientStressOpti {
             client()
             gameDirectory = project.file("run-stress-opti")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "stress"
-            systemProperty "bitsmith.stress.config", "opti"
-            systemProperty "bitsmith.stress.jfr", providers.gradleProperty("bitsmith.stress.jfr").getOrElse("false")
-            systemProperty "bitsmith.metrics", "true"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "stress"
+            systemProperty "chiseledblocks.stress.config", "opti"
+            systemProperty "chiseledblocks.stress.jfr", providers.gradleProperty("chiseledblocks.stress.jfr").getOrElse("false")
+            systemProperty "chiseledblocks.metrics", "true"
             jvmArguments.addAll "-Xms2G", "-Xmx" + stressHeap
             programArguments.addAll "--width", "1280", "--height", "720"
         }
@@ -136,11 +136,11 @@ neoForge {
         clientStressArcadia {
             client()
             gameDirectory = project.file("run-stress-arcadia")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "stress"
-            systemProperty "bitsmith.stress.config", "arcadia"
-            systemProperty "bitsmith.stress.jfr", providers.gradleProperty("bitsmith.stress.jfr").getOrElse("false")
-            systemProperty "bitsmith.metrics", "true"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "stress"
+            systemProperty "chiseledblocks.stress.config", "arcadia"
+            systemProperty "chiseledblocks.stress.jfr", providers.gradleProperty("chiseledblocks.stress.jfr").getOrElse("false")
+            systemProperty "chiseledblocks.metrics", "true"
             // A launcher passes the logging configuration as a URI; some mods of the pack parse it
             // as one (Create Numismatics fails to load on the plain Windows path of a dev run).
             systemProperty "log4j2.configurationFile", project.file("build/moddev/clientStressArcadiaLog4j2.xml").toURI().toString()
@@ -148,16 +148,16 @@ neoForge {
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
-        // The stress run with Chisels & Bits instead of Bitsmith, for comparison (the same scenes,
+        // The stress run with Chisels & Bits instead of Chiseled Blocks, for comparison (the same scenes,
         // without the placement storm, which Chisels & Bits has no equivalent for).
         clientStressCnb {
             client()
             gameDirectory = project.file("run-stress-cnb")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "stress"
-            systemProperty "bitsmith.stress.config", "cnb"
-            systemProperty "bitsmith.bench.mod", "cnb"
-            systemProperty "bitsmith.stress.jfr", providers.gradleProperty("bitsmith.stress.jfr").getOrElse("false")
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "stress"
+            systemProperty "chiseledblocks.stress.config", "cnb"
+            systemProperty "chiseledblocks.bench.mod", "cnb"
+            systemProperty "chiseledblocks.stress.jfr", providers.gradleProperty("chiseledblocks.stress.jfr").getOrElse("false")
             jvmArguments.addAll "-Xms2G", "-Xmx" + stressHeap
             programArguments.addAll "--width", "1280", "--height", "720"
         }
@@ -165,9 +165,9 @@ neoForge {
         clientBenchCnb {
             client()
             gameDirectory = project.file("run-bench-cnb")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "bench"
-            systemProperty "bitsmith.bench.mod", "cnb"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "bench"
+            systemProperty "chiseledblocks.bench.mod", "cnb"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
@@ -175,11 +175,11 @@ neoForge {
         clientSoak {
             client()
             gameDirectory = project.file("run-soak")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "soak"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "soak"
             // ./gradlew runClientSoak -PsoakMinutes=60 for the one hour run.
-            systemProperty "bitsmith.soak.minutes", project.findProperty("soakMinutes") ?: "10"
-            systemProperty "bitsmith.metrics", "true"
+            systemProperty "chiseledblocks.soak.minutes", project.findProperty("soakMinutes") ?: "10"
+            systemProperty "chiseledblocks.metrics", "true"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
@@ -187,8 +187,8 @@ neoForge {
         clientAdmin {
             client()
             gameDirectory = project.file("run-admin")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "admin"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "admin"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
@@ -204,8 +204,8 @@ neoForge {
         clientPerms {
             client()
             gameDirectory = project.file("run-perms")
-            systemProperty "bitsmith.clientTest", "true"
-            systemProperty "bitsmith.playtest", "perms"
+            systemProperty "chiseledblocks.clientTest", "true"
+            systemProperty "chiseledblocks.playtest", "perms"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
@@ -538,8 +538,8 @@ def writePermsServerFiles = tasks.register('writePermsServerFiles') {
                 'server-port=25599',
                 'enable-rcon=true',
                 'rcon.port=25598',
-                'rcon.password=bitsmith-playtest',
-                'level-name=bitsmith-perms',
+                'rcon.password=chiseledblocks-playtest',
+                'level-name=chiseledblocks-perms',
                 'level-type=minecraft\\:flat',
                 'gamemode=creative',
                 'spawn-protection=0',
@@ -554,7 +554,7 @@ tasks.matching { it.name == 'runServerPerms' }.configureEach { dependsOn install
 tasks.matching { it.name == 'runClientBench' }.configureEach { dependsOn installBenchMods }
 
 // Stress runs. Arcadia's mods and configs are copied from its CurseForge instance, which is only
-// read: -Pbitsmith.arcadia=<instance folder> points elsewhere.
+// read: -Pchiseledblocks.arcadia=<instance folder> points elsewhere.
 def installStressMods = tasks.register('installStressMods', Copy) {
     from configurations.benchClientMods
     into 'run-stress/mods'
@@ -564,7 +564,7 @@ def installStressOptiMods = tasks.register('installStressOptiMods', Copy) {
     from configurations.stressOptiMods
     into 'run-stress-opti/mods'
 }
-def arcadiaInstance = providers.gradleProperty('bitsmith.arcadia')
+def arcadiaInstance = providers.gradleProperty('chiseledblocks.arcadia')
         .orElse(providers.systemProperty('user.home').map { "${it}/curseforge/minecraft/Instances/Arcadia Echoes Of Power V2" })
 def installStressArcadia = tasks.register('installStressArcadia', Copy) {
     def iris = file('run-stress-arcadia/config/iris.properties')

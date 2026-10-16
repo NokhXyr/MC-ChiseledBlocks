@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SLS",
+    "L L",
+    "LLL"
+  ],
+  "key": {
+    "S": { "item": "minecraft:string" },
+    "L": { "item": "minecraft:leather" }
+  },
+  "result": { "id": "chiseledblocks:pixel_bag", "count": 1 }
+}

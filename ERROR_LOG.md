@@ -207,3 +207,11 @@
 **Root cause:** Create Numismatics failed to construct: it parses the `log4j2.configurationFile` property as a URI, and a development run passes a plain Windows path. With one mod broken, NeoForge registers no mod resources, so every mod after it lost its assets. Then Starter Kit handed out the pack's kits on first join, on top of the test's inventory.
 **Fix:** the Arcadia run passes the logging configuration as a `file:` URI (the JVM keeps the last value), copies the pack's active resource packs into its options, and leaves Starter Kit's kits out of its copy; the stress run checks that only the chisel is in the inventory.
 **Prevention:** when a modpack fails in a dev run, look for the first `Failed to create mod instance` before the crash: the later errors are consequences.
+
+## [2026-10-16 20:15] — Missing texture cubes on the Create machines after the rename
+
+**Context:** renaming Bitsmith to Chiseled Blocks and bits to pixels with a script (ids, files, texts).
+**Error:** a purple and black missing texture cube drawn over each machine of the Create addon; four core game tests and three admin playtest steps failing; a test resource not found.
+**Root cause:** the script renamed ids written as whole strings (`"bit_slicer"`) but not ids inside longer strings: the machines' moving part paths (`block/bit_slicer/blade`), item ids in game tests (`id("carved/stone")`), the generated pack name (`MOD_ID + "_carved_items"`); a resource folder outside `assets`/`data` (`bitsmith_test`) kept its name; playtests compared against old display names.
+**Fix:** each path and id fixed by hand, after searching every string literal for `bit_`, `carved` and the old mod id; the folder moved; the full test battery and a look at the machines in game.
+**Prevention:** after a scripted rename, search string literals for the old words inside longer strings, not only whole ones, and run every playtest, not only the build.

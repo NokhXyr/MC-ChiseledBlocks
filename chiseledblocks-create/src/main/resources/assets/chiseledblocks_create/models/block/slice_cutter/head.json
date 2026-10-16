@@ -1,0 +1,287 @@
+{
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "chiseledblocks_create:block/line/blade",
+    "blade": "chiseledblocks_create:block/line/blade",
+    "head": "chiseledblocks_create:block/line/hammer",
+    "pole": "chiseledblocks_create:block/line/pole"
+  },
+  "elements": [
+    {
+      "name": "Blade",
+      "from": [
+        3,
+        0,
+        7.5
+      ],
+      "to": [
+        13,
+        3.5,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3,
+            12,
+            13,
+            16
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            3,
+            12,
+            13,
+            16
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            7.5,
+            12.5,
+            8.5,
+            16
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            7.5,
+            12.5,
+            8.5,
+            16
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            3,
+            7.5,
+            13,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            3,
+            7.5,
+            13,
+            8.5
+          ],
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "name": "Edge",
+      "from": [
+        3,
+        -0.5,
+        7.75
+      ],
+      "to": [
+        13,
+        0,
+        8.25
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3,
+            15,
+            13,
+            16
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            3,
+            15,
+            13,
+            16
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            7.75,
+            16,
+            8.25,
+            16
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            7.75,
+            16,
+            8.25,
+            16
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            3,
+            7.75,
+            13,
+            8.25
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            3,
+            7.75,
+            13,
+            8.25
+          ],
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "name": "Holder",
+      "from": [
+        2.5,
+        3.5,
+        6.5
+      ],
+      "to": [
+        13.5,
+        5,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2.5,
+            11,
+            13.5,
+            12.5
+          ],
+          "texture": "#head"
+        },
+        "south": {
+          "uv": [
+            2.5,
+            11,
+            13.5,
+            12.5
+          ],
+          "texture": "#head"
+        },
+        "west": {
+          "uv": [
+            6.5,
+            11,
+            9.5,
+            12.5
+          ],
+          "texture": "#head"
+        },
+        "east": {
+          "uv": [
+            6.5,
+            11,
+            9.5,
+            12.5
+          ],
+          "texture": "#head"
+        },
+        "up": {
+          "uv": [
+            2.5,
+            6.5,
+            13.5,
+            9.5
+          ],
+          "texture": "#head"
+        },
+        "down": {
+          "uv": [
+            2.5,
+            6.5,
+            13.5,
+            9.5
+          ],
+          "texture": "#head"
+        }
+      }
+    },
+    {
+      "name": "Pole",
+      "from": [
+        7,
+        5,
+        7
+      ],
+      "to": [
+        9,
+        13,
+        9
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3,
+            0,
+            5,
+            8
+          ],
+          "texture": "#pole"
+        },
+        "south": {
+          "uv": [
+            3,
+            0,
+            5,
+            8
+          ],
+          "texture": "#pole"
+        },
+        "west": {
+          "uv": [
+            3,
+            0,
+            5,
+            8
+          ],
+          "texture": "#pole"
+        },
+        "east": {
+          "uv": [
+            3,
+            0,
+            5,
+            8
+          ],
+          "texture": "#pole"
+        },
+        "up": {
+          "uv": [
+            7,
+            7,
+            9,
+            9
+          ],
+          "texture": "#pole"
+        },
+        "down": {
+          "uv": [
+            7,
+            7,
+            9,
+            9
+          ],
+          "texture": "#pole"
+        }
+      }
+    }
+  ]
+}

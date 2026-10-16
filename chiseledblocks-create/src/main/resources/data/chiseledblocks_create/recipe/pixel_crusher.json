@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " S ",
+    "IAI",
+    " B "
+  ],
+  "key": {
+    "S": {
+      "item": "create:shaft"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "create:brass_casing"
+    },
+    "B": {
+      "item": "minecraft:iron_block"
+    }
+  },
+  "result": {
+    "id": "chiseledblocks_create:pixel_crusher",
+    "count": 1
+  }
+}

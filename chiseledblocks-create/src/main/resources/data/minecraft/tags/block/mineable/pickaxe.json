@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "chiseledblocks_create:block_slicer",
+    "chiseledblocks_create:slice_cutter",
+    "chiseledblocks_create:pixel_crusher"
+  ]
+}

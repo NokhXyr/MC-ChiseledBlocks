@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "chiseledblocks:item/creative_pixel_bag"
+  }
+}

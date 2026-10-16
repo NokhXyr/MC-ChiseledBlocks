@@ -1,8 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    { "item": "bitsmith:pattern" }
-  ],
-  "result": { "id": "bitsmith:blank_pattern", "count": 1 }
-}

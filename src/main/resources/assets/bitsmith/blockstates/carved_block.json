@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "facing=north": { "model": "bitsmith:block/carved_block" },
-    "facing=east": { "model": "bitsmith:block/carved_block" },
-    "facing=south": { "model": "bitsmith:block/carved_block" },
-    "facing=west": { "model": "bitsmith:block/carved_block" }
-  }
-}

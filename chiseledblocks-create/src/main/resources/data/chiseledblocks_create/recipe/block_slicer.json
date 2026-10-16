@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " S ",
+    "CAC",
+    " X "
+  ],
+  "key": {
+    "S": {
+      "item": "create:shaft"
+    },
+    "C": {
+      "item": "chiseledblocks:iron_chisel"
+    },
+    "A": {
+      "item": "create:andesite_casing"
+    },
+    "X": {
+      "item": "minecraft:stonecutter"
+    }
+  },
+  "result": {
+    "id": "chiseledblocks_create:block_slicer",
+    "count": 1
+  }
+}

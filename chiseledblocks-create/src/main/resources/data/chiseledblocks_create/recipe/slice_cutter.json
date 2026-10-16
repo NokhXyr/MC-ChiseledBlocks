@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " S ",
+    "IAI",
+    " C "
+  ],
+  "key": {
+    "S": {
+      "item": "create:shaft"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "create:copper_casing"
+    },
+    "C": {
+      "item": "chiseledblocks:iron_chisel"
+    }
+  },
+  "result": {
+    "id": "chiseledblocks_create:slice_cutter",
+    "count": 1
+  }
+}

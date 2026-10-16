@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "chiseledblocks_create:block/block_slicer/block"
+    },
+    "facing=east": {
+      "model": "chiseledblocks_create:block/block_slicer/block",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "chiseledblocks_create:block/block_slicer/block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "chiseledblocks_create:block/block_slicer/block",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,147 @@
+/*
+ * Chiseled Blocks
+ * Author: NokhXyr
+ */
+package com.nokhxyr.chiseledblocks.edit;
+
+import com.nokhxyr.chiseledblocks.admin.BlockProfiler;
+import com.nokhxyr.chiseledblocks.block.ChiseledBlockEntity;
+import com.nokhxyr.chiseledblocks.block.Materials;
+import com.nokhxyr.chiseledblocks.core.edit.Symmetry;
+import com.nokhxyr.chiseledblocks.core.voxel.PixelGrid;
+import com.nokhxyr.chiseledblocks.core.voxel.PixelGridBuilder;
+import com.nokhxyr.chiseledblocks.core.voxel.Face;
+import com.nokhxyr.chiseledblocks.item.ChiselItem;
+import com.nokhxyr.chiseledblocks.item.ChiselSettings;
+import com.nokhxyr.chiseledblocks.metrics.Metrics;
+import com.nokhxyr.chiseledblocks.network.GridFullPayload;
+import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksRegistries;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+import java.util.Map;
+import java.util.WeakHashMap;
+
+/** Server side, authoritative handling of chisel strokes. */
+public final class ChiselLogic {
+    /** Most chisel strokes one player may perform in one tick. */
+    private static final int MAX_ACTIONS_PER_TICK = 4;
+    private static final Map<ServerPlayer, long[]> BUDGET = new WeakHashMap<>();
+
+    private ChiselLogic() {
+    }
+
+    public static void chisel(ServerPlayer player, BlockPos pos, int voxel, Face face) {
+        if (!Metrics.ENABLED && !BlockProfiler.active) {
+            doChisel(player, pos, voxel, face);
+            return;
+        }
+        long start = System.nanoTime();
+        doChisel(player, pos, voxel, face);
+        long spent = System.nanoTime() - start;
+        if (Metrics.ENABLED) {
+            Metrics.CHISEL_NANOS.addAndGet(spent);
+            Metrics.CHISEL_STROKES.incrementAndGet();
+        }
+        if (BlockProfiler.active) {
+            BlockProfiler.record(player.serverLevel(), pos, BlockProfiler.Kind.CHISEL, spent);
+        }
+    }
+
+    private static void doChisel(ServerPlayer player, BlockPos pos, int voxel, Face face) {
+        ServerLevel level = player.serverLevel();
+        ItemStack tool = player.getMainHandItem();
+        if (!(tool.getItem() instanceof ChiselItem chisel)
+                || !level.isLoaded(pos)
+                || !player.canInteractWithBlock(pos, 1.0)
+                || !player.mayBuild()
+                || !level.mayInteract(player, pos)
+                || !takeBudget(player, level.getGameTime())) {
+            resync(player, level, pos);
+            return;
+        }
+
+        ChiselSettings settings = ChiselItem.settings(tool);
+        Symmetry symmetry = PlayerSymmetry.of(player);
+        Int2IntOpenHashMap removed = new Int2IntOpenHashMap();
+        BlockState state = level.getBlockState(pos);
+        int soundMaterial;
+        BlockSnapshot before;
+        BlockSnapshot after;
+
+        if (level.getBlockEntity(pos) instanceof ChiseledBlockEntity carved) {
+            before = BlockSnapshot.current(level, pos);
+            int[] count = {0};
+            carved.edit(builder -> count[0] = ChiselOperation.apply(settings, symmetry, voxel, face, builder::get, chisel::canCut,
+                    (index, material) -> {
+                        builder.set(index, PixelGrid.AIR);
+                        removed.addTo(material, 1);
+                    }));
+            if (count[0] == 0) {
+                return;
+            }
+            soundMaterial = removed.keySet().iterator().nextInt();
+            after = BlockSnapshot.current(level, pos);
+        } else {
+            int material = Materials.id(state);
+            if (!Materials.isCarvable(state, level, pos) || !chisel.canCut(material)) {
+                return;
+            }
+            // Convert the plain block. The client receives the new block and its data through
+            // vanilla's block entity sync, already carved.
+            PixelGridBuilder builder = PixelGrid.filled(material).toBuilder();
+            ChiselOperation.apply(settings, symmetry, voxel, face, builder::get, chisel::canCut, (index, m) -> {
+                builder.set(index, PixelGrid.AIR);
+                removed.addTo(m, 1);
+            });
+            PixelGrid carvedGrid = builder.build();
+            level.setBlock(pos, ChiseledBlocksRegistries.CHISELED_BLOCK.get().defaultBlockState(), Block.UPDATE_ALL);
+            if (level.getBlockEntity(pos) instanceof ChiseledBlockEntity carved) {
+                carved.setGrid(carvedGrid);
+            }
+            soundMaterial = material;
+            before = BlockSnapshot.of(state);
+            after = BlockSnapshot.of(carvedGrid);
+        }
+
+        // Creative strokes cost nothing, so undoing them must not move bits either.
+        boolean survival = !player.getAbilities().instabuild;
+        EditHistory.record(player, pos, before, after, survival ? removed : new Int2IntOpenHashMap());
+        if (survival) {
+            PixelInventory.give(player, removed);
+            tool.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
+        }
+        SoundType sound = Materials.state(soundMaterial).getSoundType();
+        level.playSound(null, pos, sound.getHitSound(), SoundSource.BLOCKS, 0.5F, sound.getPitch() * 1.2F);
+    }
+
+    /**
+     * Undoes a client prediction the server refused, by sending the true grid to that player. Fake
+     * players (machines of other mods, bots) have no client to correct and no network channel.
+     */
+    private static void resync(ServerPlayer player, ServerLevel level, BlockPos pos) {
+        if (!player.isFakePlayer()
+                && player.connection.hasChannel(GridFullPayload.TYPE)
+                && level.isLoaded(pos) && level.getBlockEntity(pos) instanceof ChiseledBlockEntity carved) {
+            PacketDistributor.sendToPlayer(player, GridFullPayload.of(pos, carved.getGrid()));
+        }
+    }
+
+    private static boolean takeBudget(ServerPlayer player, long gameTime) {
+        long[] budget = BUDGET.computeIfAbsent(player, p -> new long[2]);
+        if (budget[0] != gameTime) {
+            budget[0] = gameTime;
+            budget[1] = 0;
+        }
+        return budget[1]++ < MAX_ACTIONS_PER_TICK;
+    }
+}

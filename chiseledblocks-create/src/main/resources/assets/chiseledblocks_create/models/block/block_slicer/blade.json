@@ -1,0 +1,112 @@
+{
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "chiseledblocks_create:block/line/saw",
+    "saw": "chiseledblocks_create:block/line/saw",
+    "axle": "chiseledblocks_create:block/line/axle"
+  },
+  "elements": [
+    {
+      "name": "Blade",
+      "from": [
+        0.5,
+        1,
+        0.5
+      ],
+      "to": [
+        15.5,
+        1.5,
+        15.5
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0.5,
+            0.5,
+            15.5,
+            15.5
+          ],
+          "texture": "#saw"
+        },
+        "down": {
+          "uv": [
+            0.5,
+            0.5,
+            15.5,
+            15.5
+          ],
+          "texture": "#saw"
+        }
+      }
+    },
+    {
+      "name": "Hub",
+      "from": [
+        6.5,
+        1.5,
+        6.5
+      ],
+      "to": [
+        9.5,
+        2.5,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            6.5,
+            13.5,
+            9.5,
+            14.5
+          ],
+          "texture": "#axle"
+        },
+        "south": {
+          "uv": [
+            6.5,
+            13.5,
+            9.5,
+            14.5
+          ],
+          "texture": "#axle"
+        },
+        "west": {
+          "uv": [
+            6.5,
+            13.5,
+            9.5,
+            14.5
+          ],
+          "texture": "#axle"
+        },
+        "east": {
+          "uv": [
+            6.5,
+            13.5,
+            9.5,
+            14.5
+          ],
+          "texture": "#axle"
+        },
+        "up": {
+          "uv": [
+            6.5,
+            6.5,
+            9.5,
+            9.5
+          ],
+          "texture": "#axle"
+        },
+        "down": {
+          "uv": [
+            6.5,
+            6.5,
+            9.5,
+            9.5
+          ],
+          "texture": "#axle"
+        }
+      }
+    }
+  ]
+}

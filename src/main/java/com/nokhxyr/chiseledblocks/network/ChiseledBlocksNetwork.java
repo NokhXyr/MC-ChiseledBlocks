@@ -1,0 +1,219 @@
+/*
+ * Chiseled Blocks
+ * Author: NokhXyr
+ */
+package com.nokhxyr.chiseledblocks.network;
+
+import com.nokhxyr.chiseledblocks.ChiseledBlocks;
+import com.nokhxyr.chiseledblocks.admin.AdminService;
+import com.nokhxyr.chiseledblocks.block.ChiseledBlockEntity;
+import com.nokhxyr.chiseledblocks.client.admin.AdminClient;
+import com.nokhxyr.chiseledblocks.core.voxel.PixelGrid;
+import com.nokhxyr.chiseledblocks.core.voxel.PixelGridBuilder;
+import com.nokhxyr.chiseledblocks.core.edit.ChiselMode;
+import com.nokhxyr.chiseledblocks.core.edit.ChiselShape;
+import com.nokhxyr.chiseledblocks.core.edit.PlacementMode;
+import com.nokhxyr.chiseledblocks.edit.ChiselLogic;
+import com.nokhxyr.chiseledblocks.edit.EditHistory;
+import com.nokhxyr.chiseledblocks.edit.PlayerSymmetry;
+import com.nokhxyr.chiseledblocks.edit.ShapePlacement;
+import com.nokhxyr.chiseledblocks.item.BagContents;
+import com.nokhxyr.chiseledblocks.item.PixelBagItem;
+import com.nokhxyr.chiseledblocks.item.ChiselItem;
+import com.nokhxyr.chiseledblocks.item.ChiselSettings;
+import com.nokhxyr.chiseledblocks.item.PatternItem;
+import com.nokhxyr.chiseledblocks.item.PatternMode;
+import com.nokhxyr.chiseledblocks.item.SawItem;
+import com.nokhxyr.chiseledblocks.metrics.Metrics;
+import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+
+import java.util.Map;
+import java.util.WeakHashMap;
+
+public final class ChiseledBlocksNetwork {
+    private static final String VERSION = "7";
+    /** Furthest a player may ask for a grid, in blocks, squared. */
+    private static final double RESYNC_RANGE_SQUARED = 64 * 64;
+    private static final int RESYNCS_PER_TICK = 8;
+    private static final Map<ServerPlayer, long[]> RESYNC_BUDGET = new WeakHashMap<>();
+
+    private ChiseledBlocksNetwork() {
+    }
+
+    public static void register(RegisterPayloadHandlersEvent event) {
+        PayloadRegistrar registrar = event.registrar(ChiseledBlocks.MOD_ID).versioned(VERSION);
+        registrar.playToServer(ChiselPayload.TYPE, ChiselPayload.CODEC, ChiseledBlocksNetwork::onChisel);
+        registrar.playToServer(CyclePayload.TYPE, CyclePayload.CODEC, ChiseledBlocksNetwork::onCycle);
+        registrar.playToServer(ResyncPayload.TYPE, ResyncPayload.CODEC, ChiseledBlocksNetwork::onResync);
+        registrar.playToServer(UndoPayload.TYPE, UndoPayload.CODEC, ChiseledBlocksNetwork::onUndo);
+        registrar.playToServer(ToolOptionPayload.TYPE, ToolOptionPayload.CODEC, ChiseledBlocksNetwork::onToolOption);
+        registrar.playToServer(SymmetryPayload.TYPE, SymmetryPayload.CODEC,
+                (payload, context) -> PlayerSymmetry.setOnServer(context.player(), payload.symmetry()));
+        registrar.playToClient(GridDeltaPayload.TYPE, GridDeltaPayload.CODEC, ChiseledBlocksNetwork::onDelta);
+        registrar.playToClient(GridFullPayload.TYPE, GridFullPayload.CODEC, ChiseledBlocksNetwork::onFull);
+        registrar.playToServer(PlaceShapePayload.TYPE, PlaceShapePayload.CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                ShapePlacement.place(player, PlacementMode.byOrdinal(payload.mode()), payload.start(), payload.end(), payload.axis());
+            }
+        });
+        AdminService.register(registrar);
+        // Client handlers live in a client only class, only reached when a message arrives.
+        registrar.playToClient(AdminPayloads.Open.TYPE, AdminPayloads.Open.CODEC,
+                (payload, context) -> AdminClient.open(payload));
+        registrar.playToClient(AdminPayloads.FindResult.TYPE, AdminPayloads.FindResult.CODEC,
+                (payload, context) -> AdminClient.onFindResult(payload));
+        registrar.playToClient(AdminPayloads.MapResult.TYPE, AdminPayloads.MapResult.CODEC,
+                (payload, context) -> AdminClient.onMapResult(payload));
+        registrar.playToClient(AdminPayloads.PerfState.TYPE, AdminPayloads.PerfState.CODEC,
+                (payload, context) -> AdminClient.onPerfState(payload));
+        registrar.playToClient(AdminPayloads.PerfReport.TYPE, AdminPayloads.PerfReport.CODEC,
+                (payload, context) -> AdminClient.onPerfReport(payload));
+    }
+
+    private static void onChisel(ChiselPayload payload, IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer player) {
+            ChiselLogic.chisel(player, payload.pos(), payload.voxel(), payload.face());
+        }
+    }
+
+    private static void onCycle(CyclePayload payload, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
+        ItemStack held = player.getMainHandItem();
+        if (held.getItem() instanceof ChiselItem) {
+            ChiselSettings current = ChiselItem.settings(held);
+            ChiselSettings next = payload.size() ? current.withNextSize() : current.withNextMode();
+            held.set(ChiseledBlocksComponents.CHISEL_SETTINGS.get(), next);
+            player.displayClientMessage(next.describe(), true);
+        } else if (held.getItem() instanceof SawItem && payload.size()) {
+            int thickness = ChiselShape.nextSize(SawItem.thickness(held));
+            held.set(ChiseledBlocksComponents.SAW_THICKNESS.get(), thickness);
+            player.displayClientMessage(Component.translatable("chiseledblocks.saw.thickness", thickness), true);
+        } else if (held.getItem() instanceof PatternItem && !payload.size()) {
+            PatternMode mode = PatternItem.mode(held).next();
+            held.set(ChiseledBlocksComponents.PATTERN_MODE.get(), mode);
+            player.displayClientMessage(Component.translatable("chiseledblocks.pattern.mode", mode.displayName()), true);
+        } else if (held.getItem() instanceof PixelBagItem bag && !payload.size()) {
+            BagContents next = PixelBagItem.contents(held).selectNext();
+            PixelBagItem.setContents(held, next);
+            BagContents.Entry entry = next.selectedEntry();
+            if (entry != null) {
+                player.displayClientMessage(bag.describeSelection(entry), true);
+            }
+        }
+    }
+
+    private static void onUndo(UndoPayload payload, IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer player) {
+            if (payload.redo()) {
+                EditHistory.redo(player);
+            } else {
+                EditHistory.undo(player);
+            }
+        }
+    }
+
+    private static void onToolOption(ToolOptionPayload payload, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
+        ItemStack held = player.getMainHandItem();
+        switch (payload.option()) {
+            case CHISEL_MODE, CHISEL_SIZE -> {
+                if (held.getItem() instanceof ChiselItem) {
+                    ChiselSettings current = ChiselItem.settings(held);
+                    ChiselSettings next = payload.option() == ToolOptionPayload.Option.CHISEL_MODE
+                            ? new ChiselSettings(ChiselMode.byOrdinal(payload.value()), current.size())
+                            : new ChiselSettings(current.mode(), payload.value());
+                    held.set(ChiseledBlocksComponents.CHISEL_SETTINGS.get(), next);
+                    player.displayClientMessage(next.describe(), true);
+                }
+            }
+            case PATTERN_MODE -> {
+                if (held.getItem() instanceof PatternItem) {
+                    PatternMode mode = PatternMode.byOrdinal(payload.value());
+                    held.set(ChiseledBlocksComponents.PATTERN_MODE.get(), mode);
+                    player.displayClientMessage(Component.translatable("chiseledblocks.pattern.mode", mode.displayName()), true);
+                }
+            }
+            case SAW_THICKNESS -> {
+                if (held.getItem() instanceof SawItem) {
+                    int thickness = ChiselShape.validSize(payload.value());
+                    held.set(ChiseledBlocksComponents.SAW_THICKNESS.get(), thickness);
+                    player.displayClientMessage(Component.translatable("chiseledblocks.saw.thickness", thickness), true);
+                }
+            }
+            case BAG_MATERIAL -> {
+                if (held.getItem() instanceof PixelBagItem bag) {
+                    BagContents contents = PixelBagItem.contents(held);
+                    BagContents next = new BagContents(contents.entries(), payload.value());
+                    PixelBagItem.setContents(held, next);
+                    BagContents.Entry entry = next.selectedEntry();
+                    if (entry != null) {
+                        player.displayClientMessage(bag.describeSelection(entry), true);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void onResync(ResyncPayload payload, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)
+                || player.distanceToSqr(payload.pos().getCenter()) > RESYNC_RANGE_SQUARED
+                || !player.level().isLoaded(payload.pos())
+                || !takeResyncBudget(player)) {
+            return;
+        }
+        if (player.level().getBlockEntity(payload.pos()) instanceof ChiseledBlockEntity carved) {
+            PacketDistributor.sendToPlayer(player, GridFullPayload.of(payload.pos(), carved.getGrid()));
+        }
+    }
+
+    private static void onDelta(GridDeltaPayload payload, IPayloadContext context) {
+        Level level = context.player().level();
+        if (!(level.getBlockEntity(payload.pos()) instanceof ChiseledBlockEntity carved)) {
+            return;
+        }
+        PixelGridBuilder builder = carved.getGrid().toBuilder();
+        int[] indices = payload.indices();
+        int[] materials = payload.materials();
+        for (int i = 0; i < indices.length; i++) {
+            builder.set(indices[i], materials[i]);
+        }
+        PixelGrid result = builder.build();
+        carved.setGrid(result);
+        // A mismatch right after a local prediction is expected: the server has not applied the
+        // later strokes yet. Only a lasting mismatch means a real desync.
+        if (result.hashCode() != payload.expectedHash()
+                && !PredictionTracker.isRecent(payload.pos(), level.getGameTime())) {
+            Metrics.RESYNC_REQUESTS.incrementAndGet();
+            PacketDistributor.sendToServer(new ResyncPayload(payload.pos()));
+        }
+    }
+
+    private static void onFull(GridFullPayload payload, IPayloadContext context) {
+        Level level = context.player().level();
+        if (level.getBlockEntity(payload.pos()) instanceof ChiseledBlockEntity carved) {
+            carved.setGrid(payload.toGrid());
+        }
+    }
+
+    private static boolean takeResyncBudget(ServerPlayer player) {
+        long[] budget = RESYNC_BUDGET.computeIfAbsent(player, p -> new long[2]);
+        long now = player.level().getGameTime();
+        if (budget[0] != now) {
+            budget[0] = now;
+            budget[1] = 0;
+        }
+        return budget[1]++ < RESYNCS_PER_TICK;
+    }
+}

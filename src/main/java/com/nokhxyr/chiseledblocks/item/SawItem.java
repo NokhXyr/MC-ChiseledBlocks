@@ -1,0 +1,131 @@
+/*
+ * Chiseled Blocks
+ * Author: NokhXyr
+ */
+package com.nokhxyr.chiseledblocks.item;
+
+import com.nokhxyr.chiseledblocks.block.ChiseledBlockEntity;
+import com.nokhxyr.chiseledblocks.block.Materials;
+import com.nokhxyr.chiseledblocks.core.edit.ChiselShape;
+import com.nokhxyr.chiseledblocks.core.voxel.PixelGrid;
+import com.nokhxyr.chiseledblocks.core.voxel.PixelGridBuilder;
+import com.nokhxyr.chiseledblocks.edit.BlockSnapshot;
+import com.nokhxyr.chiseledblocks.edit.EditHistory;
+import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksComponents;
+import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksRegistries;
+import com.nokhxyr.chiseledblocks.registry.ChiseledItems;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+
+/**
+ * Right click cuts a slice off the clicked side of a block: the outer layer of the chosen
+ * thickness, measured from the block boundary. The slice is handed over as a carved block item
+ * with its shape; what is left stays in place. B or the tool menu sets the thickness.
+ */
+public class SawItem extends Item {
+
+    public SawItem(Properties properties) {
+        super(properties);
+    }
+
+    public static int thickness(ItemStack stack) {
+        return ChiselShape.validSize(stack.getOrDefault(ChiseledBlocksComponents.SAW_THICKNESS.get(), 1));
+    }
+
+    /** Whether voxel {@code index} lies in the slice cut through {@code face} with this thickness. */
+    public static boolean inSlice(int index, Direction face, int thickness) {
+        int[] p = {index & 15, index >> 8, (index >> 4) & 15};
+        int c = p[face.getAxis().ordinal()];
+        return face.getAxisDirection() == Direction.AxisDirection.POSITIVE ? c >= PixelGrid.SIZE - thickness : c < thickness;
+    }
+
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        if (context.getLevel().isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        if (!(context.getPlayer() instanceof ServerPlayer player) || !(context.getLevel() instanceof ServerLevel level)) {
+            return InteractionResult.FAIL;
+        }
+        BlockPos pos = context.getClickedPos();
+        if (!player.mayBuild() || !level.mayInteract(player, pos)) {
+            return InteractionResult.FAIL;
+        }
+        PixelGrid base = baseAt(level, pos);
+        if (base == null) {
+            return InteractionResult.FAIL;
+        }
+
+        Direction face = context.getClickedFace();
+        int thickness = thickness(context.getItemInHand());
+        ChiselItem cutter = ChiseledBlocksRegistries.IRON_CHISEL.get();
+        PixelGridBuilder rest = base.toBuilder();
+        PixelGridBuilder slice = new PixelGridBuilder();
+        int sliced = 0;
+        int soundMaterial = PixelGrid.AIR;
+        for (int i = 0; i < PixelGrid.VOLUME; i++) {
+            int material = base.get(i);
+            if (material != PixelGrid.AIR && inSlice(i, face, thickness) && cutter.canCut(material)) {
+                slice.set(i, material);
+                rest.set(i, PixelGrid.AIR);
+                sliced++;
+                soundMaterial = material;
+            }
+        }
+        if (sliced == 0) {
+            player.displayClientMessage(Component.translatable("chiseledblocks.saw.nothing"), true);
+            return InteractionResult.FAIL;
+        }
+
+        BlockSnapshot before = BlockSnapshot.current(level, pos);
+        BlockSnapshot after = BlockSnapshot.of(rest.build());
+        after.apply(level, pos);
+
+        ItemStack piece = ChiseledItems.stackFor(ChiseledBlockEntity.INTERNER.intern(slice.build()));
+        if (!player.getInventory().add(piece)) {
+            player.drop(piece, false);
+        }
+
+        boolean survival = !player.getAbilities().instabuild;
+        if (survival) {
+            // The slice left as an item: undoing would duplicate it, so survival cuts are final.
+            context.getItemInHand().hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
+        } else {
+            EditHistory.record(player, pos, before, after, new Int2IntOpenHashMap());
+        }
+        SoundType sound = Materials.state(soundMaterial).getSoundType();
+        level.playSound(null, pos, sound.getBreakSound(), SoundSource.BLOCKS, 0.8F, sound.getPitch() * 0.8F);
+        return InteractionResult.CONSUME;
+    }
+
+    private static @Nullable PixelGrid baseAt(ServerLevel level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof ChiseledBlockEntity carved) {
+            return carved.effectiveGrid();
+        }
+        BlockState state = level.getBlockState(pos);
+        return Materials.isCarvable(state, level, pos) ? PixelGrid.filled(Materials.id(state)) : null;
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(Component.translatable("chiseledblocks.saw.thickness", thickness(stack)).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("chiseledblocks.saw.help").withStyle(ChatFormatting.DARK_GRAY));
+    }
+}

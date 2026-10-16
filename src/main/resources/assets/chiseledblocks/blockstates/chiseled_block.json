@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "chiseledblocks:block/chiseled_block" },
+    "facing=east": { "model": "chiseledblocks:block/chiseled_block" },
+    "facing=south": { "model": "chiseledblocks:block/chiseled_block" },
+    "facing=west": { "model": "chiseledblocks:block/chiseled_block" }
+  }
+}

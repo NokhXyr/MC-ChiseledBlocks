@@ -8,7 +8,7 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-rootProject.name = 'bitsmith'
+rootProject.name = 'chiseledblocks'
 
-// Optional addon: bulk bit production with Create machines. Its own jar, never part of Bitsmith.
-include 'bitsmith-create'
+// Optional addon: bulk bit production with Create machines. Its own jar, never part of Chiseled Blocks.
+include 'chiseledblocks-create'

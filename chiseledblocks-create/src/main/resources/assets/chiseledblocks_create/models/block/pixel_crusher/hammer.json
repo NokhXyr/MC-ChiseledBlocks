@@ -1,0 +1,148 @@
+{
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "chiseledblocks_create:block/line/hammer",
+    "head": "chiseledblocks_create:block/line/hammer",
+    "pole": "chiseledblocks_create:block/line/pole"
+  },
+  "elements": [
+    {
+      "name": "Head",
+      "from": [
+        4,
+        0,
+        4
+      ],
+      "to": [
+        12,
+        3,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            13,
+            12,
+            16
+          ],
+          "texture": "#head"
+        },
+        "south": {
+          "uv": [
+            4,
+            13,
+            12,
+            16
+          ],
+          "texture": "#head"
+        },
+        "west": {
+          "uv": [
+            4,
+            13,
+            12,
+            16
+          ],
+          "texture": "#head"
+        },
+        "east": {
+          "uv": [
+            4,
+            13,
+            12,
+            16
+          ],
+          "texture": "#head"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#head"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#head"
+        }
+      }
+    },
+    {
+      "name": "Pole",
+      "from": [
+        6.5,
+        3,
+        6.5
+      ],
+      "to": [
+        9.5,
+        13,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2,
+            0,
+            5,
+            10
+          ],
+          "texture": "#pole"
+        },
+        "south": {
+          "uv": [
+            2,
+            0,
+            5,
+            10
+          ],
+          "texture": "#pole"
+        },
+        "west": {
+          "uv": [
+            2,
+            0,
+            5,
+            10
+          ],
+          "texture": "#pole"
+        },
+        "east": {
+          "uv": [
+            2,
+            0,
+            5,
+            10
+          ],
+          "texture": "#pole"
+        },
+        "up": {
+          "uv": [
+            6.5,
+            6.5,
+            9.5,
+            9.5
+          ],
+          "texture": "#pole"
+        },
+        "down": {
+          "uv": [
+            6.5,
+            6.5,
+            9.5,
+            9.5
+          ],
+          "texture": "#pole"
+        }
+      }
+    }
+  ]
+}
