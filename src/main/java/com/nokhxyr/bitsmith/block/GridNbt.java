@@ -14,6 +14,10 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.Block;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Disk format of a grid. Runtime state ids change between game sessions and mod sets, so the
  * palette is stored as block states and remapped on load.
@@ -52,6 +56,49 @@ public final class GridNbt {
         if (palette.length == 0) {
             return BitGrid.filled(BitGrid.AIR);
         }
-        return BitGrid.of(BitGrid.decode(palette, tag.getInt("bits"), tag.getLongArray("data")));
+        Saved saved = new Saved(palette, tag.getInt("bits"), tag.getLongArray("data"));
+        BitGrid grid = DECODED.get(saved);
+        if (grid == null) {
+            grid = CarvedBlockEntity.INTERNER.intern(BitGrid.of(BitGrid.decode(palette, saved.bits, saved.data)));
+            if (DECODED.size() >= DECODED_LIMIT) {
+                DECODED.clear();
+            }
+            DECODED.put(saved, grid);
+        }
+        return grid;
+    }
+
+    /**
+     * Grids already read, by their saved form. Builds repeat the same carvings (clones, patterns,
+     * copied walls), and a chunk arriving on the client is read on the render thread: each saved
+     * grid is decoded once. Keys hold runtime ids, like the grids, so the map stays right when ids
+     * change; it is emptied when full rather than evicting one by one.
+     */
+    private static final Map<Saved, BitGrid> DECODED = new ConcurrentHashMap<>();
+    private static final int DECODED_LIMIT = 8192;
+
+    private static final class Saved {
+        private final int[] palette;
+        private final int bits;
+        private final long[] data;
+        private final int hash;
+
+        Saved(int[] palette, int bits, long[] data) {
+            this.palette = palette;
+            this.bits = bits;
+            this.data = data;
+            this.hash = 31 * (31 * Arrays.hashCode(palette) + bits) + Arrays.hashCode(data);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof Saved saved && saved.hash == hash && saved.bits == bits
+                    && Arrays.equals(saved.palette, palette) && Arrays.equals(saved.data, data);
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
     }
 }

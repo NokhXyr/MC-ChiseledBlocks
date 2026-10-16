@@ -137,6 +137,7 @@ and depots, like the mechanical press:
 ./gradlew runGameTestServer  # in game tests, headless
 ./gradlew runClientTest      # plays the mod like a player, screenshots and report
 ./gradlew runClientCompat    # the same with Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
+./gradlew runClientStress    # 16,000 carved blocks under stress, also runClientStressOpti and runClientStressArcadia
 ./gradlew :bitsmith-create:runClientCreate  # plays the Create addon: belt, three machines, 4096 bits, Ponder
 ./gradlew :bitsmith-create:runClientCreatePonderExport  # rebuilds the Ponder scene schematics in game
 ./gradlew runClient    # development client
@@ -311,6 +312,7 @@ travaillent sur les tapis et les dépôts de Create, comme la presse mécanique 
 ./gradlew runGameTestServer  # tests en jeu, sans fenêtre
 ./gradlew runClientTest      # joue le mod comme un joueur, captures et rapport
 ./gradlew runClientCompat    # pareil avec Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
+./gradlew runClientStress    # 16 000 blocs ciselés sous stress, aussi runClientStressOpti et runClientStressArcadia
 ./gradlew :bitsmith-create:runClientCreate  # joue l'addon Create : tapis, trois machines, 4096 bits, Ponder
 ./gradlew :bitsmith-create:runClientCreatePonderExport  # refait en jeu les schémas des scènes Ponder
 ./gradlew runClient    # client de développement

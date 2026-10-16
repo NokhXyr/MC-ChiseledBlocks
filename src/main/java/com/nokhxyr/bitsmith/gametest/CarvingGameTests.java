@@ -8,6 +8,7 @@ import com.mojang.authlib.GameProfile;
 import com.nokhxyr.bitsmith.Bitsmith;
 import com.nokhxyr.bitsmith.block.CarvedBlock;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
+import com.nokhxyr.bitsmith.block.GridNbt;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.compat.cnb.ChiselsAndBitsImport;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
@@ -868,6 +869,20 @@ public final class CarvingGameTests {
 
         helper.assertTrue(loaded.getGrid().equals(grid), "grid content survives a save");
         helper.assertTrue(loaded.getGrid() == carved.getGrid(), "identical grids are shared after load");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void savedGridsAreDecodedOnce(GameTestHelper helper) {
+        var registries = helper.getLevel().registryAccess();
+        BitGrid half = new BitGridBuilder().fill(0, 0, 0, 16, 8, 16, STONE).build();
+        BitGrid quarter = new BitGridBuilder().fill(0, 0, 0, 16, 4, 16, STONE).build();
+        BitGrid first = GridNbt.read(GridNbt.write(half), registries);
+        BitGrid second = GridNbt.read(GridNbt.write(half), registries);
+        BitGrid other = GridNbt.read(GridNbt.write(quarter), registries);
+        helper.assertTrue(first.equals(half), "the grid reads back unchanged");
+        helper.assertTrue(first == second, "the same saved grid gives the same instance");
+        helper.assertTrue(other.equals(quarter) && other != first, "a different grid of the same material reads as itself");
         helper.succeed();
     }
 

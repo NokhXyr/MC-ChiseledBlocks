@@ -47,6 +47,7 @@ All notable changes to Bitsmith are documented here.
 - **Admin panel** — `/bitsmith`, the mod's only command (or a key, unbound by default), opens a panel with three tabs: Search (carved blocks in a radius of blocks or chunks or in every loaded chunk, material with suggestions, results table with material icons), Chunk map (chunks coloured by carved block count, player position and facing, click a chunk to list its blocks) and Performance (Bitsmith's server time per carved block in µs per tick, split into chisel, apply, shape, save and load, over a chosen window; nothing is measured outside a window). Every row has a TP button. Searches read an index of the loaded carved blocks, never the world block by block, and never load a chunk.
 - **Permissions** — The panel uses NeoForge's permission API with the nodes `bitsmith.panel`, `bitsmith.panel.teleport` and `bitsmith.panel.perf`, so LuckPerms (or any permission mod plugged into it) decides; unset nodes fall back to operators. The panel only shows allowed tools and the server checks every request.
 - **Panel playtests** — `./gradlew runClientAdmin` uses the panel with the mouse and keyboard (tabs, typing a material, clicking TP buttons and map cells, a measurement while carving). `./gradlew runServerPerms`, then `./gradlew runClientPerms`, joins a dedicated server running LuckPerms and denies and grants each node from the server console.
+- **Stress runs** — `./gradlew runClientStress`, `runClientStressOpti` and `runClientStressArcadia` play the same heavy scenes (16,000 carved blocks, a carving storm, a storm of 60 large shape placements, chunks loading back in, a flight, a world save) with Bitsmith alone, with the usual optimisation mods and inside the Arcadia modpack, with Spark profiles and optional flight recordings. Results in [docs/benchmarks/2026-10-16-stress.md](docs/benchmarks/2026-10-16-stress.md).
 
 ### Fixed
 
@@ -55,6 +56,7 @@ All notable changes to Bitsmith are documented here.
 - **Empty carved blocks** — A carved block left without a carving (WorldEdit `//set`, damaged data) is removed at the end of the tick instead of staying as an invisible shell.
 - **Radial menu choice** — An option picked by moving and releasing within the same frame is now taken into account.
 - **Carving at the edge of a hole** — Repeated clicks on the edge of a hole kept targeting the bit already removed. The targeted bit is now found by tracing the view ray through the carving.
+- **Freeze when carved chunks load back in** — Every carved block of a chunk arriving on the client decoded its grid on the render thread. Saved grids are now decoded once and shared: coming back to 16,000 carved blocks went from a 656 ms frame to 80 ms, smoother than plain stone.
 - **Dark inner faces** — Faces inside a carved block no longer render almost black with smooth lighting: they now use the light of the block itself instead of ambient occlusion sampled from the solid blocks around.
 
 ### Changed
@@ -103,6 +105,7 @@ All notable changes to Bitsmith are documented here.
 - **Panneau d'administration** — `/bitsmith`, la seule commande du mod (ou une touche, non assignée par défaut), ouvre un panneau à trois onglets : Recherche (blocs ciselés dans un rayon de blocs ou de chunks ou dans tous les chunks chargés, matériau avec suggestions, tableau de résultats avec icônes), Carte des chunks (chunks colorés selon le nombre de blocs ciselés, position et direction du joueur, clic sur un chunk pour lister ses blocs) et Performance (temps serveur de Bitsmith par bloc ciselé en µs par tick, réparti entre ciselage, application, forme, sauvegarde et chargement, sur une fenêtre choisie ; rien n'est mesuré hors fenêtre). Chaque ligne a un bouton TP. Les recherches lisent un index des blocs ciselés chargés, jamais le monde bloc par bloc, et ne chargent jamais de chunk.
 - **Permissions** — Le panneau utilise l'API de permissions de NeoForge avec les nœuds `bitsmith.panel`, `bitsmith.panel.teleport` et `bitsmith.panel.perf`, donc LuckPerms (ou tout mod de permissions branché dessus) décide ; les nœuds non définis reviennent aux opérateurs. Le panneau ne montre que les outils permis et le serveur vérifie chaque demande.
 - **Parties de test du panneau** — `./gradlew runClientAdmin` utilise le panneau à la souris et au clavier (onglets, saisie d'un matériau, clics sur les boutons TP et les cases de la carte, une mesure pendant un ciselage). `./gradlew runServerPerms`, puis `./gradlew runClientPerms`, rejoint un serveur dédié avec LuckPerms et refuse puis accorde chaque nœud depuis la console du serveur.
+- **Tests de stress** — `./gradlew runClientStress`, `runClientStressOpti` et `runClientStressArcadia` jouent les mêmes scènes lourdes (16 000 blocs ciselés, une tempête de ciselage, une tempête de 60 grandes poses de formes, le rechargement des chunks, un survol, une sauvegarde du monde) avec Bitsmith seul, avec les mods d'optimisation habituels et dans le modpack Arcadia, avec des profils Spark et des enregistrements Flight Recorder en option. Résultats dans [docs/benchmarks/2026-10-16-stress.md](docs/benchmarks/2026-10-16-stress.md).
 
 ### Correctifs
 
@@ -111,6 +114,7 @@ All notable changes to Bitsmith are documented here.
 - **Blocs ciselés vides** — Un bloc ciselé resté sans sculpture (`//set` de WorldEdit, données abîmées) est retiré à la fin du tick au lieu de rester une coque invisible.
 - **Choix dans le menu radial** — Une option choisie en bougeant puis en relâchant dans la même image est maintenant prise en compte.
 - **Ciseler au bord d'un trou** — Des clics répétés au bord d'un trou visaient toujours le bit déjà retiré. Le bit visé est désormais trouvé en suivant le rayon du regard à travers la sculpture.
+- **Blocage au rechargement des chunks ciselés** — Chaque bloc ciselé d'un chunk reçu par le client décodait sa grille sur le thread de rendu. Les grilles enregistrées sont maintenant décodées une fois et partagées : revenir vers 16 000 blocs ciselés est passé d'une image de 656 ms à 80 ms, plus fluide que de la simple pierre.
 - **Faces intérieures sombres** — Les faces à l'intérieur d'un bloc ciselé ne sont plus presque noires avec l'éclairage lissé : elles utilisent la lumière du bloc lui-même au lieu de l'occlusion ambiante calculée sur les blocs pleins autour.
 
 ### Modifications

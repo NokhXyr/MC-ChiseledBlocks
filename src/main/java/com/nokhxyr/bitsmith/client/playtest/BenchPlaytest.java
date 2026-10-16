@@ -46,6 +46,15 @@ final class BenchPlaytest {
     }
 
     static void script(ClientPlaytest p) {
+        carveReferences(p);
+        cloneScene(p);
+    }
+
+    /**
+     * Carves the eight reference blocks at (0..7, -60, 0) with the mod's own chisel, sixteen
+     * single bits each, from a creative player flying in front of them. Shared with the stress run.
+     */
+    static void carveReferences(ClientPlaytest p) {
         p.step("set up for " + MOD, () -> {
             p.command("gamerule doDaylightCycle false");
             p.command("gamerule doMobSpawning false");
@@ -84,7 +93,9 @@ final class BenchPlaytest {
             }
             return true;
         });
+    }
 
+    private static void cloneScene(ClientPlaytest p) {
         p.step("clone them into 2000 carved blocks, and build the stone control scene", () -> {
             for (int z = 0; z < 10; z++) {
                 for (int y = 0; y < 5; y++) {

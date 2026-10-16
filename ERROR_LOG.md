@@ -191,3 +191,19 @@
 **Root cause:** real key presses reached the test window, which takes the focus: the player moved and picked up bits (141 found in their inventory), threw some away from the line, and E closed Ponder. The line itself produced every time.
 **Fix:** the count covers a wide area around the line and the players' inventories; diagnostics (belt speed, items on the belt, on the ground, in containers and on players) stay in the report.
 **Prevention:** do not type into the game window while a playtest runs; when a count is short, look for the missing items before blaming the mod.
+
+## [2026-10-16 16:45] — Long freeze when carved chunks load back in
+
+**Context:** stress run (`runClientStress`), 16,000 carved blocks, the player teleports far away then comes back.
+**Error:** worst frame 656 ms and 1 % low 60 fps while the chunks came back (stone control: 129 ms, 127 fps).
+**Root cause:** a Java Flight Recorder recording of that moment showed 54 % of the render thread in `CarvedBlockEntity.loadAdditional`: every block entity of every chunk received decoded its grid (`BitGrid.decode` then `BitGrid.of`) on the render thread, even though the 16,000 blocks only hold 8 distinct grids.
+**Fix:** `GridNbt.read` keeps the grids it has read, by their saved form (palette ids, bits, data), in a bounded concurrent map; an identical saved grid is decoded once and returns the same interned instance. Worst frame 80 ms, 1 % low 115 fps, as smooth as stone.
+**Prevention:** profile the client render thread when chunks load, not only the server; anything a block entity does on load runs there for every block of every chunk.
+
+## [2026-10-16 17:15] — The Arcadia modpack would not start in a development run
+
+**Context:** `runClientStressArcadia`, the 450 mods and configs of Arcadia Echoes Of Power V2 copied into a development client.
+**Error:** first FTB Quests crashed (`NoSuchElementException` in `QuestShape.reload`, "theme file is missing"), then Cumulus (`Cannot get config value before config is loaded`); the log showed "Removed resource pack mod_resources ... doesn't seem to exist anymore" and "Cowardly refusing to send event ... to a broken mod state".
+**Root cause:** Create Numismatics failed to construct: it parses the `log4j2.configurationFile` property as a URI, and a development run passes a plain Windows path. With one mod broken, NeoForge registers no mod resources, so every mod after it lost its assets. Then Starter Kit handed out the pack's kits on first join, on top of the test's inventory.
+**Fix:** the Arcadia run passes the logging configuration as a `file:` URI (the JVM keeps the last value), copies the pack's active resource packs into its options, and leaves Starter Kit's kits out of its copy; the stress run checks that only the chisel is in the inventory.
+**Prevention:** when a modpack fails in a dev run, look for the first `Failed to create mod instance` before the crash: the later errors are consequences.

@@ -38,6 +38,8 @@ repositories {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
+def stressHeap = providers.gradleProperty('bitsmith.stress.xmx').getOrElse('8G')
+
 neoForge {
     version = project.neo_version
 
@@ -102,6 +104,47 @@ neoForge {
             systemProperty "bitsmith.playtest", "bench"
             systemProperty "bitsmith.bench.mod", "bitsmith"
             systemProperty "bitsmith.metrics", "true"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        // Stress runs: the same heavy scenes with Bitsmith alone, with the usual optimisation
+        // mods, and inside the Arcadia modpack. Same memory for all three (8G, -Pbitsmith.stress.xmx=12G).
+        clientStress {
+            client()
+            gameDirectory = project.file("run-stress")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "stress"
+            systemProperty "bitsmith.stress.config", "alone"
+            systemProperty "bitsmith.stress.jfr", providers.gradleProperty("bitsmith.stress.jfr").getOrElse("false")
+            systemProperty "bitsmith.metrics", "true"
+            jvmArguments.addAll "-Xms2G", "-Xmx" + stressHeap
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        clientStressOpti {
+            client()
+            gameDirectory = project.file("run-stress-opti")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "stress"
+            systemProperty "bitsmith.stress.config", "opti"
+            systemProperty "bitsmith.stress.jfr", providers.gradleProperty("bitsmith.stress.jfr").getOrElse("false")
+            systemProperty "bitsmith.metrics", "true"
+            jvmArguments.addAll "-Xms2G", "-Xmx" + stressHeap
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        clientStressArcadia {
+            client()
+            gameDirectory = project.file("run-stress-arcadia")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "stress"
+            systemProperty "bitsmith.stress.config", "arcadia"
+            systemProperty "bitsmith.stress.jfr", providers.gradleProperty("bitsmith.stress.jfr").getOrElse("false")
+            systemProperty "bitsmith.metrics", "true"
+            // A launcher passes the logging configuration as a URI; some mods of the pack parse it
+            // as one (Create Numismatics fails to load on the plain Windows path of a dev run).
+            systemProperty "log4j2.configurationFile", project.file("build/moddev/clientStressArcadiaLog4j2.xml").toURI().toString()
+            jvmArguments.addAll "-Xms2G", "-Xmx" + stressHeap
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
@@ -196,6 +239,12 @@ configurations {
         canBeResolved = true
         transitive = false
     }
+    // The usual optimisation mods, for the "opti" stress run.
+    stressOptiMods {
+        canBeConsumed = false
+        canBeResolved = true
+        transitive = false
+    }
     // LuckPerms for the permission test client only.
     permsClientMods {
         canBeConsumed = false
@@ -236,6 +285,12 @@ dependencies {
     compatClientMods "maven.modrinth:mezzconfig:${mezzconfig_version}"
     compatClientMods "maven.modrinth:jade:${jade_version}"
     benchClientMods "maven.modrinth:spark:${spark_version}"
+    stressOptiMods "maven.modrinth:sodium:${sodium_version}"
+    stressOptiMods "maven.modrinth:lithium:${lithium_version}"
+    stressOptiMods "maven.modrinth:modernfix:${modernfix_version}"
+    stressOptiMods "maven.modrinth:ferrite-core:${ferritecore_version}"
+    stressOptiMods "maven.modrinth:immediatelyfast:${immediatelyfast_version}"
+    stressOptiMods "maven.modrinth:entityculling:${entityculling_version}"
     permsClientMods "maven.modrinth:luckperms:${luckperms_version}"
     compatShaderpacks "maven.modrinth:complementary-reimagined:${complementary_version}@zip"
 
@@ -313,7 +368,8 @@ idea {
 
 // Options for the playtest client: muted, never paused when unfocused, no first launch screens.
 def writePlaytestOptions = tasks.register('writePlaytestOptions') {
-    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate', 'run-bench', 'run-bench-cnb', 'run-soak', 'run-admin', 'run-perms']
+    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate', 'run-bench', 'run-bench-cnb', 'run-soak', 'run-admin', 'run-perms',
+                 'run-stress', 'run-stress-opti', 'run-stress-arcadia']
             .collect { file("$it/options.txt") }
     outputs.files(files)
     doLast {
@@ -340,7 +396,8 @@ def writePlaytestOptions = tasks.register('writePlaytestOptions') {
     }
 }
 tasks.matching { it.name in ['runClientTest', 'runClientCompat', 'runClientCnbSource', 'runClientCnbMigrate',
-                             'runClientBench', 'runClientBenchCnb', 'runClientSoak', 'runClientAdmin', 'runClientPerms'] }.configureEach {
+                             'runClientBench', 'runClientBenchCnb', 'runClientSoak', 'runClientAdmin', 'runClientPerms',
+                             'runClientStress', 'runClientStressOpti', 'runClientStressArcadia'] }.configureEach {
     dependsOn writePlaytestOptions
 }
 
@@ -481,11 +538,59 @@ def writePermsServerFiles = tasks.register('writePermsServerFiles') {
 }
 tasks.matching { it.name == 'runServerPerms' }.configureEach { dependsOn installPermsMods, writePermsServerFiles }
 tasks.matching { it.name == 'runClientBench' }.configureEach { dependsOn installBenchMods }
+
+// Stress runs. Arcadia's mods and configs are copied from its CurseForge instance, which is only
+// read: -Pbitsmith.arcadia=<instance folder> points elsewhere.
+def installStressMods = tasks.register('installStressMods', Copy) {
+    from configurations.benchClientMods
+    into 'run-stress/mods'
+}
+def installStressOptiMods = tasks.register('installStressOptiMods', Copy) {
+    from configurations.benchClientMods
+    from configurations.stressOptiMods
+    into 'run-stress-opti/mods'
+}
+def arcadiaInstance = providers.gradleProperty('bitsmith.arcadia')
+        .orElse(providers.systemProperty('user.home').map { "${it}/curseforge/minecraft/Instances/Arcadia Echoes Of Power V2" })
+def installStressArcadia = tasks.register('installStressArcadia', Copy) {
+    def iris = file('run-stress-arcadia/config/iris.properties')
+    def options = file('run-stress-arcadia/options.txt')
+    def arcadiaOptions = arcadiaInstance.map { new File("${it}/options.txt") }
+    mustRunAfter writePlaytestOptions
+    def kits = file('run-stress-arcadia/config/starterkit/kits')
+    ['mods', 'config', 'defaultconfigs', 'kubejs', 'resourcepacks'].each { folder ->
+        from(arcadiaInstance.map { "${it}/${folder}" }) {
+            into folder
+            // Starter Kit gives the pack's kit (or a choice of kits) on first join, on top of the
+            // test's inventory: no kit in the stress run.
+            exclude 'starterkit/kits/**'
+        }
+    }
+    into 'run-stress-arcadia'
+    doLast {
+        kits.deleteDir()
+        // The pack's active resource packs (some mods need theirs loaded); every other option stays
+        // the same as in the other two runs.
+        def source = arcadiaOptions.get()
+        if (source.exists() && options.exists()) {
+            def packs = source.readLines().findAll { it.startsWith('resourcePacks:') || it.startsWith('incompatibleResourcePacks:') }
+            def kept = options.readLines().findAll { !it.startsWith('resourcePacks:') && !it.startsWith('incompatibleResourcePacks:') }
+            options.text = (kept + packs).join('\n') + '\n'
+        }
+        // Shaders off: the three runs measure the same rendering.
+        def text = iris.exists() ? iris.text.replaceAll(/(?m)^enableShaders=.*$/, '') : ''
+        iris.text = text.trim() + (text.trim() ? '\n' : '') + 'enableShaders=false\n'
+    }
+}
+tasks.matching { it.name == 'runClientStress' }.configureEach { dependsOn installStressMods }
+tasks.matching { it.name == 'runClientStressOpti' }.configureEach { dependsOn installStressOptiMods }
+tasks.matching { it.name == 'runClientStressArcadia' }.configureEach { dependsOn writePlaytestOptions, installStressArcadia }
 tasks.matching { it.name == 'runClientBenchCnb' }.configureEach { dependsOn installBenchCnbMods }
 
 // Spark's background profiler would run during the measurements: off in the performance runs.
 def writeBenchConfig = tasks.register('writeBenchConfig') {
-    def configs = ['run-bench', 'run-bench-cnb'].collect { file("$it/config/spark/config.json") }
+    mustRunAfter installStressArcadia
+    def configs = ['run-bench', 'run-bench-cnb', 'run-stress', 'run-stress-opti', 'run-stress-arcadia'].collect { file("$it/config/spark/config.json") }
     outputs.files(configs)
     doLast {
         configs.each { config ->
@@ -494,6 +599,6 @@ def writeBenchConfig = tasks.register('writeBenchConfig') {
         }
     }
 }
-tasks.matching { it.name in ['runClientBench', 'runClientBenchCnb'] }.configureEach {
+tasks.matching { it.name in ['runClientBench', 'runClientBenchCnb', 'runClientStress', 'runClientStressOpti', 'runClientStressArcadia'] }.configureEach {
     dependsOn writeBenchConfig
 }

@@ -82,6 +82,7 @@ public final class ClientPlaytest {
     /** Hard stop: generous for the long runs (bench, soak), 6 minutes for the others. */
     private static final int TIMEOUT_TICKS = 20 * switch (System.getProperty("bitsmith.playtest", "main")) {
         case "bench" -> 900;
+        case "stress" -> 1800;
         case "soak" -> Integer.getInteger("bitsmith.soak.minutes", 10) * 75 + 300;
         case "create" -> 600;
         default -> 360;
@@ -123,6 +124,7 @@ public final class ClientPlaytest {
             case "cnbSource" -> ChiselsAndBitsPlaytest.sourceScript(this);
             case "cnbMigrate" -> ChiselsAndBitsPlaytest.migrateScript(this);
             case "bench" -> BenchPlaytest.script(this);
+            case "stress" -> StressPlaytest.script(this);
             case "soak" -> SoakPlaytest.script(this);
             case "admin" -> AdminPlaytest.script(this);
             case "perms" -> PermsPlaytest.script(this);

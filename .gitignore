@@ -21,6 +21,9 @@ run-cnb/
 run-cnb-migrate/
 run-bench/
 run-bench-cnb/
+run-stress/
+run-stress-opti/
+run-stress-arcadia/
 run-soak/
 run-admin/
 run-perms/
