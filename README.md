@@ -4,7 +4,7 @@ Chisel any block into pixels (1/16 of a block), mix materials inside one block, 
 without losing frames. Chiseled Blocks is a NeoForge mod for Minecraft 1.21.1, built from the ground up
 for performance and stability.
 
-Inspired by [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Pixels). Chiseled Blocks is an
+Inspired by [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Chiseled Blocks is an
 independent implementation: it contains no code or assets from Chisels & Bits.
 
 > Status: release candidate in progress (milestone M6, measured in [docs/benchmarks/](docs/benchmarks/)). Chiseling, pixels, pixel bag, survival rules, undo, patterns, the advanced tools and the Chisels & Bits world import work; compatibility is checked with Sodium, Iris, ModernFix, Create, WorldEdit and KubeJS.
@@ -171,7 +171,7 @@ Ciselez n'importe quel bloc en pixels de 1/16, mélangez plusieurs matériaux da
 copiez et réimprimez vos sculptures, sans perdre de FPS. Chiseled Blocks est un mod NeoForge pour
 Minecraft 1.21.1, conçu dès le départ pour la performance et la stabilité.
 
-Inspiré de [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Pixels). Chiseled Blocks est une
+Inspiré de [Chisels & Bits](https://github.com/ChiselsAndBits/Chisels-and-Bits). Chiseled Blocks est une
 implémentation indépendante : il ne contient aucun code ni aucune ressource de Chisels & Bits.
 
 > État : release candidate en cours (jalon M6, mesuré dans [docs/benchmarks/](docs/benchmarks/)). Le ciselage, les pixels, le sac à pixels, les règles de survie, l'annulation, les patterns, les outils avancés et l'import des mondes Chisels & Bits fonctionnent ; la compatibilité est vérifiée avec Sodium, Iris, ModernFix, Create, WorldEdit et KubeJS.
