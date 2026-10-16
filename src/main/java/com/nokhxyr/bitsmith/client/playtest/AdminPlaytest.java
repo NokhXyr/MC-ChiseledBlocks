@@ -11,15 +11,22 @@ import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.network.AdminPayloads;
+import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -150,6 +157,44 @@ final class AdminPlaytest {
         }, 5, () -> p.that("refusal received", last(p, "bitsmith.perf.none") != null));
 
         adminPerfScript(p);
+        itemScript(p);
+    }
+
+    // The carved block item: its name and tooltip tell what it is made of
+
+    private static void itemScript(ClientPlaytest p) {
+        p.step("a carved block item in the hotbar", () -> {
+            p.command("gamemode survival");
+            server().submit(() -> {
+                var player = server().getPlayerList().getPlayers().get(0);
+                ItemStack stack = new ItemStack(BitsmithRegistries.CARVED_BLOCK_ITEM.get());
+                stack.set(BitsmithComponents.GRID.get(), new BitGridBuilder()
+                        .fill(0, 0, 0, 16, 8, 16, Materials.id(Blocks.AMETHYST_BLOCK.defaultBlockState()))
+                        .fill(4, 8, 4, 12, 16, 12, Materials.id(Blocks.STONE.defaultBlockState()))
+                        .build());
+                player.getInventory().setItem(1, stack);
+            }).join();
+            p.hotbar(1);
+        }, 10, () -> p.that("held item named " + p.held().getHoverName().getString(),
+                p.held().getHoverName().getString().equals("Carved Block of Amethyst +1")));
+        p.step("open the inventory", () -> p.tap(GLFW.GLFW_KEY_E), 10,
+                () -> p.that("inventory open", Minecraft.getInstance().screen instanceof InventoryScreen));
+        p.shot("hover the carved block", () -> {
+            if (Minecraft.getInstance().screen instanceof InventoryScreen screen) {
+                Slot slot = screen.getMenu().slots.get(InventoryMenu.USE_ROW_SLOT_START + 1);
+                p.cursorAt(screen.getGuiLeft() + slot.x + 8, screen.getGuiTop() + slot.y + 8);
+            }
+        }, 10, () -> {
+            List<Component> lines = p.held().getTooltipLines(Item.TooltipContext.EMPTY, Minecraft.getInstance().player,
+                    TooltipFlag.NORMAL);
+            p.note("tooltip: " + lines.stream().map(Component::getString).toList());
+            return p.eq("tooltip lines", lines.size(), 4) && p.that("main material first",
+                    lines.get(1).getString().contains("Block of Amethyst, 50 % (2048 bits)"));
+        }, "item_tooltip");
+        p.step("close the inventory", () -> {
+            p.tap(GLFW.GLFW_KEY_ESCAPE);
+            p.command("gamemode creative");
+        }, 10, () -> p.that("closed", Minecraft.getInstance().screen == null));
     }
 
     // The admin screen, used with the mouse and keyboard

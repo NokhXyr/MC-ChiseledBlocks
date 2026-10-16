@@ -45,7 +45,7 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 | Turn a carved block | Wrench, right click: quarter turn around the clicked face (sneak: mirror) |
 | Cut a slice | Saw, right click a face: the slice comes off as a carved block; `B` or tool menu sets 1, 2, 4, 8 bits |
 | Measure | Tape measure, right click two bits; sneak and right click in the air to clear |
-| Keep a carving | Break the carved block: it drops with its carving, place it back anywhere |
+| Keep a carving | Break the carved block: it drops with its carving, place it back anywhere. The item is named after its main material and its tooltip lists the materials and their bits |
 
 Keys can be changed in Options, Controls, under Bitsmith. The bag's tooltip lists its contents,
 the selected material is highlighted.
@@ -166,7 +166,7 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 | Tourner un bloc ciselé | Clé, clic droit : quart de tour autour de la face visée (accroupi : miroir) |
 | Découper une tranche | Scie, clic droit sur une face : la tranche sort comme bloc ciselé ; `B` ou le menu règle 1, 2, 4, 8 bits |
 | Mesurer | Mètre ruban, clic droit sur deux bits ; accroupi + clic droit dans le vide pour effacer |
-| Garder une sculpture | Casser le bloc ciselé : il tombe avec sa sculpture, à reposer où l'on veut |
+| Garder une sculpture | Casser le bloc ciselé : il tombe avec sa sculpture, à reposer où l'on veut. L'objet porte le nom de son matériau principal et son infobulle liste les matériaux et leurs bits |
 
 Les touches se changent dans Options, Commandes, rubrique Bitsmith. L'infobulle du sac liste son
 contenu, le matériau sélectionné est en surbrillance.

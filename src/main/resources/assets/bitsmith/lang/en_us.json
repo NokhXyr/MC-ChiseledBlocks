@@ -1,6 +1,11 @@
 {
   "itemGroup.bitsmith": "Bitsmith",
   "block.bitsmith.carved_block": "Carved Block",
+  "block.bitsmith.carved_block.named": "Carved %s",
+  "block.bitsmith.carved_block.mixed": "Carved %s +%s",
+  "bitsmith.carved.material": "%s, %s %% (%s bits)",
+  "bitsmith.carved.more": "and %s more materials",
+  "bitsmith.carved.volume": "%s / %s bits filled (%s %%)",
   "item.bitsmith.iron_chisel": "Iron Chisel",
   "item.bitsmith.bit": "Bit",
   "item.bitsmith.bit.named": "%s Bit",
