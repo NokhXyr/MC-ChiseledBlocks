@@ -1,0 +1,74 @@
+{
+  "name": "Chiseled Blocks",
+  "slug": "chiseled-blocks",
+  "kind": "minecraft-mod",
+  "tagline": "Chisel any block, pixel by pixel",
+  "concept": {
+    "en": "A stone block with a stair cut into its edge, and the blue pixel that left it: the mod carves any block down to the pixel.",
+    "fr": "Un bloc de pierre avec un escalier taillé dans son arête, et le pixel bleu qui en est sorti : le mod sculpte n'importe quel bloc jusqu'au pixel."
+  },
+  "palette": {
+    "primary": "#3a8fe0",
+    "secondary": "#8a8f96",
+    "night": "#1b2130",
+    "ink": "#14161c",
+    "paper": "#f4f1ea"
+  },
+
+  "mark": "mark.svg",
+  "mark_reverse": "mark-reverse.svg",
+  "mark_mono": "mark-mono.svg",
+  "mark_small": "mark-small.svg",
+
+  "wordmark": "wordmark.svg",
+  "wordmark_reverse": null,
+  "tagline_font": { "font": "JetBrains Mono", "weight": 700, "tracking": 160, "case": "upper" },
+
+  "lockup": {
+    "icon_padding": 0.06,
+    "horizontal": { "gap": 0.22, "wordmark": 0.34, "tagline": 0.1, "tagline_gap": 0.12 },
+    "stacked": { "gap": 0.16, "wordmark": 0.26, "max_width": 2.6, "tagline": 0.08, "tagline_gap": 0.1 }
+  },
+  "icon": { "background": "night", "knockout": false, "mark_on_background": null,
+            "app_scale": 0.7, "radius": 0.22, "maskable_scale": 0.52, "avatar_scale": 0.66 },
+  "banner": { "background": "#141821", "light": "#3a8fe0", "pattern": "mark", "pattern_opacity": 0.05,
+              "texture": null, "grain": 0.3, "vignette": 0.35, "shadow": 45, "tagline": true,
+              "colorway": "reverse", "logo_fill": 0.78 },
+  "banners": null,
+  "minecraft": { "logo_layout": "horizontal", "logo_colorway": "reverse", "logo_width": 600, "icon_scale": 0.9 },
+  "ui_font": "Inter",
+
+  "rationale": {
+    "en": [
+      "Five of the eight chiseling mods on Modrinth show a diagonal chisel. Chiseled Blocks shows no tool at all: it shows the block after the cut.",
+      "The stair cut into the top edge changes the silhouette itself, so the idea still reads in one color and at small sizes.",
+      "The one blue pixel is the unit of the mod: the bits of older mods are pixels here, and this one is leaving the block.",
+      "Drawn as game pixel art, four pixels to a side in 2:1 isometric view, lit from the top left like the game's own items; the front view of the same block is the small mark.",
+      "The wordmark is a blocky pixel title in the same stone: the dot of its i is the blue pixel and its C ends in the same stair."
+    ],
+    "fr": [
+      "Cinq des huit mods de ciselage sur Modrinth montrent un ciseau en diagonale. Chiseled Blocks ne montre aucun outil : il montre le bloc après la coupe.",
+      "L'escalier taillé dans l'arête du haut change la silhouette elle-même : l'idée se lit encore en une couleur et en petit.",
+      "Le pixel bleu est l'unité du mod : les bits des anciens mods sont ici des pixels, et celui-ci quitte le bloc.",
+      "Dessiné en pixel art du jeu, quatre pixels de côté en vue isométrique 2:1, éclairé depuis le haut à gauche comme les objets du jeu ; la vue de face du même bloc est le petit logo.",
+      "Le nom est un titre en pixels taillé dans la même pierre : le point de son i est le pixel bleu et son C se termine par le même escalier."
+    ]
+  },
+  "palette_notes": {
+    "primary": { "en": "The blue of the mod's tools, tool menu and admin panel: the pixel and the accent.", "fr": "Le bleu des outils, du menu de l'outil et du panneau d'administration du mod : le pixel et l'accent." },
+    "secondary": { "en": "The stone of the reference blocks the mod carves in its tests and benchmarks.", "fr": "La pierre des blocs de référence que le mod sculpte dans ses tests et ses mesures." },
+    "night": { "en": "A blue tinted dark for icons and banners, behind the stone.", "fr": "Un sombre teinté de bleu pour les icônes et les bannières, derrière la pierre." },
+    "ink": { "en": "The outline of the pixel art, near black leaning blue.", "fr": "Le contour du pixel art, un quasi-noir tirant sur le bleu." },
+    "paper": { "en": "A warm off white, like the patterns' blueprint paper.", "fr": "Un blanc cassé chaud, comme le papier des patterns." }
+  },
+  "type_note": {
+    "en": "A blocky pixel title built on the mark's grid, letters redrawn where they carry the idea (the stepped C, the blue dot of the i); the tagline in JetBrains Mono, a monospace that echoes the grid.",
+    "fr": "Un titre en pixels construit sur la grille du logo, avec des lettres redessinées là où elles portent l'idée (le C en escalier, le point bleu du i) ; le slogan en JetBrains Mono, une chasse fixe qui rappelle la grille."
+  },
+  "color_sources": [
+    "../../src/main/resources/assets/chiseledblocks/textures/item/iron_chisel.png",
+    "../../src/main/resources/assets/chiseledblocks/textures/item/wrench.png",
+    "../../src/main/resources/assets/chiseledblocks/textures/item/pattern.png"
+  ],
+  "grid": 16
+}
