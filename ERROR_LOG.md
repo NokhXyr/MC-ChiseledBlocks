@@ -103,3 +103,11 @@
 **Root cause:** NeoForge calls `BlockEntity.onLoad()` from `Level.tickBlockEntities` (pending fresh block entities), so after `setBlock` the block entity is only indexed at the next level tick, not during the call.
 **Fix:** the test checks the index one tick after placing. The index itself is correct: searches run from commands, never in the same call as a placement.
 **Prevention:** anything registered from `onLoad()` is visible one tick after the block is placed; tests and code that need it at once must wait a tick or register explicitly.
+
+## [2026-10-16 02:30] — Push rejected after a commit message fix ran twice
+
+**Context:** removing a forbidden attribution line from a pushed commit with `git commit --amend` and `git push --force-with-lease`.
+**Error:** `! [rejected] main -> main (non-fast-forward)` on the next push.
+**Root cause:** the amend command was run a second time after a new commit had been made on top, so it rewrote the newest commit's message (the admin panel) with the older one. The remote kept the right history; the local branch had a twin commit with the same tree and the wrong message.
+**Fix:** checked the two commits had the same tree (`git diff --quiet`), then moved the only unpushed commit onto the remote branch with `git rebase --onto origin/main <twin> main`. No force push needed.
+**Prevention:** an amend command handed over for manual use is valid once, for the commit it names; say so when giving it. Never put attribution lines in commit messages in the first place.
