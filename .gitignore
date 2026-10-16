@@ -55,6 +55,8 @@ run-*/
 __pycache__/
 images/*
 !images/tools/
+chiseledblocks-create/images/*
+!chiseledblocks-create/images/tools/
 
 # Footage: recordings and heavy videos stay local
 media/

@@ -174,7 +174,8 @@ def badge(label, message, theme, icon=None, alt=False, kind=None, height=30, fam
     label_w = text_width(label, size, family, "SemiBold", track) if label else 0
     msg_w = text_width(message, size, family, "Bold", track) if message else 0
     left = pad + ic + (gap + label_w if label else 0) + (gap if message else pad)
-    w = left + (msg_w + pad if message else 0)
+    # The message is drawn one gap inside the light part (the translate below): count that gap too.
+    w = left + (gap + msg_w + pad if message else 0)
     r = h / 2 if shape == "pill" else h * 0.16
     outline = _shape_path(shape, 1, 1, w - 2, h - 2, r - 1)
     uid = f"b{abs(hash((label, message, alt))) % 10**8}"

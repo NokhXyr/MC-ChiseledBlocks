@@ -1,7 +1,7 @@
 <div align="center" style="text-align:center">
 <p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/hero.gif" alt="Chiseled Blocks: a colonnade carved pixel by pixel, a player chiseling a block in front of it / Chiseled Blocks : une colonnade taillée pixel par pixel, un joueur cisèle un bloc devant elle" width="800"></p>
 <p><a href="https://github.com/NokhXyr/MC-Issues/issues"><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/badge-support.png" alt="Support: Get help" width="112"></a></p>
-<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/badge-minecraft.png" alt="Minecraft: 1.21.1"> <img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/badge-loaders.png" alt="Loader: NeoForge"> <img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/badge-side.png" alt="Side: Client and server" width="175"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/badge-minecraft.png" alt="Minecraft: 1.21.1" width="168"> <img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/badge-loaders.png" alt="Loader: NeoForge"> <img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/badge-side.png" alt="Side: Client and server" width="182"></p>
 </div>
 
 <div align="center" style="text-align:center">
@@ -29,19 +29,16 @@
 </div>
 
 <div align="center" style="text-align:center">
-<h3><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/title-create-en.gif" alt="Create Addon" width="800"></h3>
-<p>Chiseled Blocks: Create, a separate download, turns whole blocks into pixels on a belt.</p>
-<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/create.gif" alt="A stone block cut into slices, rods and pixels by three machines over a Create belt" width="800"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/icons/slicer.png" alt="" width="32"> <span style="color:#3a8fe0;font-size:18px"><strong>Block Slicer:</strong></span> cuts a block into 16 slices.</p>
-<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/icons/cutter.png" alt="" width="32"> <span style="color:#3a8fe0;font-size:18px"><strong>Slice Cutter:</strong></span> cuts a slice into 16 rods.</p>
-<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/icons/crusher.png" alt="" width="32"> <span style="color:#3a8fe0;font-size:18px"><strong>Pixel Crusher:</strong></span> crushes a rod into 16 pixels.</p>
-</div>
-
-<div align="center" style="text-align:center">
 <h3><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/title-start-en.gif" alt="Getting Started" width="800"></h3>
 <p><span style="color:#3a8fe0;font-size:20px"><strong>1.</strong></span> Craft an iron chisel and left click a block to carve it.</p>
 <p><span style="color:#3a8fe0;font-size:20px"><strong>2.</strong></span> Hold <code>Left&nbsp;Alt</code> for the tool menu: mode, size, mirror, undo.</p>
 <p><span style="color:#3a8fe0;font-size:20px"><strong>3.</strong></span> Keep a pixel bag in your inventory and right click with it to place pixels.</p>
+</div>
+
+<div align="center" style="text-align:center">
+<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/divider.gif" alt="" width="800"></p>
+<h3><span style="font-size:24px;color:#e5e5e5"><strong>Create Addon</strong></span></h3>
+<p><strong>Chiseled Blocks: Create</strong>, a separate download, cuts whole blocks into pixels with Create machines.</p>
 </div>
 
 <p>&nbsp;</p>
@@ -69,18 +66,16 @@
 </div>
 
 <div align="center" style="text-align:center">
-<h3><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/title-create-fr.gif" alt="Extension Create" width="800"></h3>
-<p>Chiseled Blocks: Create, un téléchargement à part, change des blocs entiers en pixels sur un tapis.</p>
-<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/icons/slicer.png" alt="" width="32"> <span style="color:#3a8fe0;font-size:18px"><strong>Block Slicer&nbsp;:</strong></span> coupe un bloc en 16 tranches.</p>
-<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/icons/cutter.png" alt="" width="32"> <span style="color:#3a8fe0;font-size:18px"><strong>Slice Cutter&nbsp;:</strong></span> coupe une tranche en 16 baguettes.</p>
-<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/icons/crusher.png" alt="" width="32"> <span style="color:#3a8fe0;font-size:18px"><strong>Pixel Crusher&nbsp;:</strong></span> broie une baguette en 16 pixels.</p>
-</div>
-
-<div align="center" style="text-align:center">
 <h3><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/title-start-fr.gif" alt="Premiers Pas" width="800"></h3>
 <p><span style="color:#3a8fe0;font-size:20px"><strong>1.</strong></span> Fabriquez un ciseau en fer et faites un clic gauche sur un bloc pour le tailler.</p>
 <p><span style="color:#3a8fe0;font-size:20px"><strong>2.</strong></span> Maintenez <code>Alt&nbsp;gauche</code> pour le menu de l'outil&nbsp;: mode, taille, miroir, annulation.</p>
 <p><span style="color:#3a8fe0;font-size:20px"><strong>3.</strong></span> Gardez un sac à pixels dans l'inventaire et faites un clic droit avec pour poser des pixels.</p>
+</div>
+
+<div align="center" style="text-align:center">
+<p><img src="https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/divider.gif" alt="" width="800"></p>
+<h3><span style="font-size:24px;color:#e5e5e5"><strong>Extension Create</strong></span></h3>
+<p><strong>Chiseled Blocks: Create</strong>, un téléchargement à part, découpe des blocs entiers en pixels avec des machines Create.</p>
 </div>
 
 <div align="center" style="text-align:center">

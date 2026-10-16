@@ -64,6 +64,14 @@ filmed afterwards with the camera moves of the shot plans. `footage/build_scene.
 that datapack and an actor, not by real clicks. Recordings, exports and frames stay local
 (`run-capture/`, ignored), and the `replay` run is added to `build.gradle` only for a recording.
 
+## The Create addon's page
+
+Chiseled Blocks: Create has its own CurseForge page, `chiseledblocks-create/curseforge_page.md`. Its
+description, theme and banner script are in `chiseledblocks-create/images/tools/` and are built with
+the scripts of this folder, given that `page.toml`; its logo is `chiseledblocks-create/Branding/`, its
+pictures are hosted in NokhXyr/MC-Images under `MC-ChiseledBlocks-Create/`, and its footage comes from
+`footage/create-line.json`.
+
 ## Credits
 
 Author: NokhXyr
@@ -137,6 +145,14 @@ datapack ; `footage/colonnade.json` et `footage/create-line.json` sont les plans
 est mise en scène par ce datapack et un acteur, pas par de vrais clics. Les enregistrements, exports
 et images restent en local (`run-capture/`, ignoré), et le run `replay` n'est ajouté à
 `build.gradle` que le temps d'un enregistrement.
+
+## La page de l'extension Create
+
+Chiseled Blocks: Create a sa propre page CurseForge, `chiseledblocks-create/curseforge_page.md`. Sa
+description, son thème et son script de bannières sont dans `chiseledblocks-create/images/tools/` et se
+construisent avec les scripts de ce dossier, en leur donnant ce `page.toml` ; son logo est
+`chiseledblocks-create/Branding/`, ses images sont hébergées dans NokhXyr/MC-Images sous
+`MC-ChiseledBlocks-Create/`, et ses séquences viennent de `footage/create-line.json`.
 
 ## Credits
 

@@ -45,9 +45,6 @@ chisel = "src/main/resources/assets/chiseledblocks/textures/item/iron_chisel.png
 bag = "src/main/resources/assets/chiseledblocks/textures/item/pixel_bag.png"
 pattern = "src/main/resources/assets/chiseledblocks/textures/item/pattern.png"
 wrench = "src/main/resources/assets/chiseledblocks/textures/item/wrench.png"
-slicer = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/slicer_side.png"
-cutter = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/cutter_side.png"
-crusher = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/crusher_side.png"
 
 [[section]]
 id = "features"
@@ -121,40 +118,6 @@ icon = "bolt"
   text.fr = "testé avec Sodium, Iris, ModernFix, WorldEdit et KubeJS."
 
 [[section]]
-id = "create"
-title.en = "Create Addon"
-title.fr = "Extension Create"
-icon = "cube"
-lead.en = "Chiseled Blocks: Create, a separate download, turns whole blocks into pixels on a belt."
-lead.fr = "Chiseled Blocks: Create, un téléchargement à part, change des blocs entiers en pixels sur un tapis."
-
-  [[section.banner]]
-  file = "create.gif"
-  alt.en = "A stone block cut into slices, rods and pixels by three machines over a Create belt"
-  alt.fr = "Un bloc de pierre coupé en tranches, baguettes et pixels par trois machines au-dessus d'un tapis Create"
-
-  [[section.item]]
-  icon = "slicer"
-  name.en = "Block Slicer"
-  name.fr = "Block Slicer"
-  text.en = "cuts a block into 16 slices."
-  text.fr = "coupe un bloc en 16 tranches."
-
-  [[section.item]]
-  icon = "cutter"
-  name.en = "Slice Cutter"
-  name.fr = "Slice Cutter"
-  text.en = "cuts a slice into 16 rods."
-  text.fr = "coupe une tranche en 16 baguettes."
-
-  [[section.item]]
-  icon = "crusher"
-  name.en = "Pixel Crusher"
-  name.fr = "Pixel Crusher"
-  text.en = "crushes a rod into 16 pixels."
-  text.fr = "broie une baguette en 16 pixels."
-
-[[section]]
 id = "start"
 title.en = "Getting Started"
 title.fr = "Premiers Pas"
@@ -172,5 +135,13 @@ layout = "steps"
   [[section.item]]
   text.en = "Keep a pixel bag in your inventory and right click with it to place pixels."
   text.fr = "Gardez un sac à pixels dans l'inventaire et faites un clic droit avec pour poser des pixels."
+
+# The Create addon is its own CurseForge project: add its address here (url, and a badge) once it
+# is published.
+[[extra]]
+title.en = "Create Addon"
+title.fr = "Extension Create"
+text.en = "<strong>Chiseled Blocks: Create</strong>, a separate download, cuts whole blocks into pixels with Create machines."
+text.fr = "<strong>Chiseled Blocks: Create</strong>, un téléchargement à part, découpe des blocs entiers en pixels avec des machines Create."
 
 [footer]

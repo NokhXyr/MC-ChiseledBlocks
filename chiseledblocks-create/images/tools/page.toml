@@ -1,0 +1,127 @@
+# The CurseForge page of Chiseled Blocks: Create. Built with the tools of the main page:
+#
+#   python images/tools/export_icons.py chiseledblocks-create/images/tools/page.toml
+#   python images/tools/titles.py chiseledblocks-create/images/tools/page.toml
+#   python images/tools/build_page.py chiseledblocks-create/images/tools/page.toml
+#
+# Author: NokhXyr
+
+[page]
+languages = ["en", "fr"]
+images_base = "https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks-Create/"
+images_dir = ".."
+out = "../../curseforge_page.md"
+root = "../../.."
+theme = "theme.json"
+author = "NokhXyr"
+license = "All Rights Reserved"
+
+[mod]
+name = "Chiseled Blocks: Create"
+
+[hero]
+file = "hero.gif"
+alt.en = "Chiseled Blocks: Create: the Block Slicer, Slice Cutter and Pixel Crusher over a Create belt"
+alt.fr = "Chiseled Blocks: Create : la Block Slicer, le Slice Cutter et le Pixel Crusher au-dessus d'un tapis Create"
+
+[links]
+support = "https://github.com/NokhXyr/MC-Issues/issues"
+
+[badges]
+minecraft = { value = ["1.21.1"], label = "NeoForge" }
+side = "Client and server"
+[[badges.extra]]
+label = "Requires"
+message = "Chiseled Blocks + Create"
+icon = "puzzle"
+
+[intro]
+pitch.en = "<strong>Chiseled Blocks: Create</strong> adds three Create machines that cut whole blocks into Chiseled Blocks pixels, on a belt or a depot."
+pitch.fr = "<strong>Chiseled Blocks: Create</strong> ajoute trois machines Create qui découpent des blocs entiers en pixels de Chiseled Blocks, sur un tapis ou un dépôt."
+tagline.en = "Blocks to pixels, on a belt."
+tagline.fr = "Des blocs aux pixels, sur un tapis."
+
+[icons]
+slicer = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/slicer_side.png"
+cutter = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/cutter_side.png"
+crusher = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/crusher_side.png"
+
+[[section]]
+id = "line"
+title.en = "The Pixel Line"
+title.fr = "La Ligne à Pixels"
+icon = "cube"
+
+  [[section.banner]]
+  file = "line.gif"
+  alt.en = "Stone blocks go along a Create belt under three machines and come out as slices, rods and pixels"
+  alt.fr = "Des blocs de pierre passent sur un tapis Create sous trois machines et ressortent en tranches, baguettes et pixels"
+
+  [[section.item]]
+  icon = "slicer"
+  name.en = "Block Slicer"
+  name.fr = "Block Slicer"
+  text.en = "cuts a block into 16 slices."
+  text.fr = "coupe un bloc en 16 tranches."
+
+  [[section.item]]
+  icon = "cutter"
+  name.en = "Slice Cutter"
+  name.fr = "Slice Cutter"
+  text.en = "cuts a slice into 16 rods."
+  text.fr = "coupe une tranche en 16 baguettes."
+
+  [[section.item]]
+  icon = "crusher"
+  name.en = "Pixel Crusher"
+  name.fr = "Pixel Crusher"
+  text.en = "crushes a rod into 16 pixels: 4096 pixels per block."
+  text.fr = "broie une baguette en 16 pixels : 4096 pixels par bloc."
+
+[[section]]
+id = "how"
+title.en = "How It Works"
+title.fr = "Fonctionnement"
+icon = "settings"
+
+  [[section.item]]
+  icon = "bolt"
+  name.en = "Speed"
+  name.fr = "Vitesse"
+  text.en = "as fast as the shaft turns: 2 seconds per cut at 16 rpm."
+  text.fr = "aussi vite que tourne l'arbre : 2 secondes par coupe à 16 tr/min."
+
+  [[section.item]]
+  icon = "stack-2"
+  name.en = "One belt"
+  name.fr = "Un seul tapis"
+  text.en = "each machine takes only its own input; a stopped machine lets items pass."
+  text.fr = "chaque machine ne prend que son entrée ; arrêtée, elle laisse passer les objets."
+
+  [[section.item]]
+  icon = "book"
+  name.en = "Ponder and JEI"
+  name.fr = "Ponder et JEI"
+  text.en = "two Ponder scenes and the recipes in JEI."
+  text.fr = "deux scènes Ponder et les recettes dans JEI."
+
+[[section]]
+id = "start"
+title.en = "Getting Started"
+title.fr = "Premiers Pas"
+icon = "rocket"
+layout = "steps"
+
+  [[section.item]]
+  text.en = "Install Chiseled Blocks and Create 6.0.10 or newer."
+  text.fr = "Installez Chiseled Blocks et Create 6.0.10 ou plus récent."
+
+  [[section.item]]
+  text.en = "Place each machine two blocks above a belt or a depot, one block of air between."
+  text.fr = "Placez chaque machine deux blocs au-dessus d'un tapis ou d'un dépôt, avec un bloc d'air entre les deux."
+
+  [[section.item]]
+  text.en = "Turn it with a shaft through its sides and send blocks along the belt."
+  text.fr = "Faites-la tourner avec un arbre par ses côtés et envoyez des blocs sur le tapis."
+
+[footer]
