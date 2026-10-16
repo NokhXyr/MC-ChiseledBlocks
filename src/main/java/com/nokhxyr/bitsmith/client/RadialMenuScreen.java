@@ -7,6 +7,7 @@ package com.nokhxyr.bitsmith.client;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
 import com.nokhxyr.bitsmith.core.edit.ChiselShape;
+import com.nokhxyr.bitsmith.core.edit.PlacementMode;
 import com.nokhxyr.bitsmith.core.edit.Symmetry;
 import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
 import com.nokhxyr.bitsmith.item.BagContents;
@@ -36,17 +37,21 @@ import org.joml.Matrix4f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
 
 /**
  * The tool menu, shown while the menu key is held with a Bitsmith tool in hand. One wheel of
- * choices around the tool, square buttons on the sides (undo and redo on the left, the mirror on
- * the right), and a slider below for the chisel size.
+ * choices around the tool, square buttons on the sides (undo and redo on the left, the mirror and
+ * the page arrows on the right) and a row below: the chisel size slider, or the placement modes
+ * of a bag. A bag's materials are shown twelve per page.
  *
  * <p>Point at a wedge and release the key to pick it, or click it: a click keeps the menu open.
  * Choices are applied by the server, like the V and B keys.
  */
 public final class RadialMenuScreen extends Screen {
+    /** Wedges per page of the wheel. */
+    public static final int PAGE = 12;
     private static final float INNER = 26;
     private static final float OUTER = 60;
     /** Icons sit at this distance from the centre. */
@@ -54,10 +59,12 @@ public final class RadialMenuScreen extends Screen {
     private static final float GAP = 0.02F;
     private static final int BUTTON = 24;
     private static final int BUTTON_STEP = 34;
+    private static final int ROW_STEP = 28;
     private static final float COLUMN_OFFSET = 88;
     private static final int SLIDER_W = 90;
     private static final int SLIDER_H = 14;
-    private static final float SLIDER_OFFSET = 74;
+    /** Top of the row below the wheel. */
+    private static final float ROW_OFFSET = 74;
     /** Ticks of the opening animation. */
     private static final float OPENING = 6;
 
@@ -73,14 +80,23 @@ public final class RadialMenuScreen extends Screen {
     private record Option(Component label, RadialIcons.Icon icon, Runnable action) {
     }
 
-    /** One square button on a side. */
-    private record SideButton(String id, Component label, RadialIcons.Icon icon, boolean toggled, Runnable action) {
+    /** One square button around the wheel. */
+    private record SideButton(String id, Component label, RadialIcons.Icon icon, BooleanSupplier toggled, Runnable action) {
     }
 
+    /** Where the buttons go: a column on each side, and a row below the wheel. */
+    private enum Place { LEFT, RIGHT, BOTTOM }
+
+    private final List<Option> all = new ArrayList<>();
     private final List<Option> options = new ArrayList<>();
     private final List<SideButton> left = new ArrayList<>();
     private final List<SideButton> right = new ArrayList<>();
+    private final List<SideButton> bottom = new ArrayList<>();
     private ItemStack held = ItemStack.EMPTY;
+    private int page;
+    /** Index in {@link #all} of the current choice, or -1. */
+    private int currentAll = -1;
+    /** Index on the shown page of the current choice, or -1. */
     private int current = -1;
     private @Nullable Component emptyHint;
     private @Nullable SizeSlider slider;
@@ -105,82 +121,101 @@ public final class RadialMenuScreen extends Screen {
         if (held.getItem() instanceof ChiselItem) {
             ChiselSettings settings = ChiselItem.settings(held);
             for (ChiselMode mode : ChiselMode.values()) {
-                screen.options.add(new Option(Component.translatable("bitsmith.mode." + mode.name().toLowerCase(Locale.ROOT)),
+                screen.all.add(new Option(Component.translatable("bitsmith.mode." + mode.name().toLowerCase(Locale.ROOT)),
                         RadialIcons.mode(mode), () -> send(ToolOptionPayload.Option.CHISEL_MODE, mode.ordinal())));
             }
-            screen.current = settings.mode().ordinal();
+            screen.currentAll = settings.mode().ordinal();
             screen.slider(ChiselShape.SIZES, settings.size(), "bitsmith.radial.size",
                     size -> send(ToolOptionPayload.Option.CHISEL_SIZE, size));
             screen.undoButtons();
             screen.mirrorButton();
-            return screen;
-        }
-        if (held.getItem() instanceof PatternItem) {
+        } else if (held.getItem() instanceof PatternItem) {
             for (PatternMode mode : PatternMode.values()) {
-                screen.options.add(new Option(mode.displayName(), RadialIcons.pattern(mode),
+                screen.all.add(new Option(mode.displayName(), RadialIcons.pattern(mode),
                         () -> send(ToolOptionPayload.Option.PATTERN_MODE, mode.ordinal())));
             }
-            screen.current = PatternItem.mode(held).ordinal();
+            screen.currentAll = PatternItem.mode(held).ordinal();
             screen.undoButtons();
-            return screen;
-        }
-        if (held.getItem() instanceof BitBagItem bag) {
+        } else if (held.getItem() instanceof BitBagItem bag) {
             BagContents contents = BitBagItem.contents(held);
             for (int i = 0; i < contents.entries().size(); i++) {
                 BagContents.Entry entry = contents.entries().get(i);
                 int index = i;
-                screen.options.add(new Option(bag.describeEntry(entry), RadialIcons.item(BitItem.of(entry.material(), 1)),
+                screen.all.add(new Option(bag.describeEntry(entry), RadialIcons.item(BitItem.of(entry.material(), 1)),
                         () -> send(ToolOptionPayload.Option.BAG_MATERIAL, index)));
             }
-            screen.current = contents.isEmpty() ? -1 : contents.selected();
             if (contents.isEmpty()) {
                 screen.emptyHint = Component.translatable("bitsmith.bag.empty");
+            } else {
+                screen.currentAll = contents.selected();
+                screen.page = contents.selected() / PAGE;
             }
             screen.undoButtons();
             screen.mirrorButton();
-            return screen;
-        }
-        if (held.getItem() instanceof SawItem) {
+            screen.pageButtons();
+            screen.placementRow();
+        } else if (held.getItem() instanceof SawItem) {
             int thickness = SawItem.thickness(held);
             for (int size : ChiselShape.SIZES) {
-                screen.options.add(new Option(Component.translatable("bitsmith.saw.thickness", size), RadialIcons.slice(size),
+                screen.all.add(new Option(Component.translatable("bitsmith.saw.thickness", size), RadialIcons.slice(size),
                         () -> send(ToolOptionPayload.Option.SAW_THICKNESS, size)));
                 if (size == thickness) {
-                    screen.current = screen.options.size() - 1;
+                    screen.currentAll = screen.all.size() - 1;
                 }
             }
             screen.undoButtons();
-            return screen;
-        }
-        if (held.getItem() instanceof BitItem) {
-            for (Symmetry symmetry : Symmetry.values()) {
-                screen.options.add(new Option(Component.translatable("bitsmith.symmetry.set", SymmetryControl.name(symmetry)),
-                        RadialIcons.text(SymmetryControl.name(symmetry)), () -> SymmetryControl.set(symmetry)));
+        } else if (held.getItem() instanceof BitItem) {
+            // Loose bits: the wheel holds the placement modes.
+            for (PlacementMode mode : PlacementMode.values()) {
+                screen.all.add(new Option(PlacementControl.name(mode), RadialIcons.placement(mode),
+                        () -> PlacementControl.set(mode)));
             }
-            screen.current = PlayerSymmetry.client().ordinal();
+            screen.currentAll = PlacementControl.mode().ordinal();
             screen.undoButtons();
-            return screen;
+            screen.mirrorButton();
+        } else {
+            return null;
         }
-        return null;
+        screen.showPage();
+        return screen;
     }
 
     private void undoButtons() {
-        left.add(new SideButton("undo", Component.translatable("bitsmith.radial.undo"), RadialIcons.undo(false), false,
+        left.add(new SideButton("undo", Component.translatable("bitsmith.radial.undo"), RadialIcons.undo(false), () -> false,
                 () -> PacketDistributor.sendToServer(new UndoPayload(false))));
-        left.add(new SideButton("redo", Component.translatable("bitsmith.radial.redo"), RadialIcons.undo(true), false,
+        left.add(new SideButton("redo", Component.translatable("bitsmith.radial.redo"), RadialIcons.undo(true), () -> false,
                 () -> PacketDistributor.sendToServer(new UndoPayload(true))));
     }
 
     /** One button showing the mirror; each click moves to the next setting. */
     private void mirrorButton() {
         Symmetry symmetry = PlayerSymmetry.client();
-        right.add(new SideButton("mirror", Component.translatable("bitsmith.symmetry.set", SymmetryControl.name(symmetry)),
-                RadialIcons.text(SymmetryControl.name(symmetry)), symmetry != Symmetry.NONE, () -> {
-                    Symmetry[] all = Symmetry.values();
-                    SymmetryControl.set(all[(PlayerSymmetry.client().ordinal() + 1) % all.length]);
-                    right.clear();
+        SideButton button = new SideButton("mirror", Component.translatable("bitsmith.symmetry.set", SymmetryControl.name(symmetry)),
+                RadialIcons.text(SymmetryControl.name(symmetry)), () -> PlayerSymmetry.client() != Symmetry.NONE, () -> {
+                    Symmetry[] values = Symmetry.values();
+                    SymmetryControl.set(values[(PlayerSymmetry.client().ordinal() + 1) % values.length]);
+                    right.removeIf(each -> each.id().equals("mirror"));
                     mirrorButton();
-                }));
+                });
+        right.add(0, button);
+    }
+
+    private void pageButtons() {
+        if (pageCount() <= 1) {
+            return;
+        }
+        right.add(new SideButton("page.prev", Component.translatable("bitsmith.radial.page.previous"), RadialIcons.arrow(false),
+                () -> false, () -> turnPage(-1)));
+        right.add(new SideButton("page.next", Component.translatable("bitsmith.radial.page.next"), RadialIcons.arrow(true),
+                () -> false, () -> turnPage(1)));
+    }
+
+    /** A bag's placement modes, as a row of buttons under the wheel. */
+    private void placementRow() {
+        for (PlacementMode mode : PlacementMode.values()) {
+            bottom.add(new SideButton("place." + mode.name().toLowerCase(Locale.ROOT), PlacementControl.name(mode),
+                    RadialIcons.placement(mode), () -> PlacementControl.mode() == mode, () -> PlacementControl.set(mode)));
+        }
     }
 
     private void slider(int[] values, int currentValue, String labelKey, IntConsumer action) {
@@ -199,16 +234,42 @@ public final class RadialMenuScreen extends Screen {
         PacketDistributor.sendToServer(new ToolOptionPayload(option, value));
     }
 
+    // Pages
+
+    private int pageCount() {
+        return Math.max(1, (all.size() + PAGE - 1) / PAGE);
+    }
+
+    /** The page shown, from 0, for the playtest. */
+    public int page() {
+        return page;
+    }
+
+    private void turnPage(int by) {
+        page = Math.floorMod(page + by, pageCount());
+        showPage();
+    }
+
+    private void showPage() {
+        page = Mth.clamp(page, 0, pageCount() - 1);
+        options.clear();
+        options.addAll(all.subList(Math.min(all.size(), page * PAGE), Math.min(all.size(), (page + 1) * PAGE)));
+        int onPage = currentAll - page * PAGE;
+        current = onPage >= 0 && onPage < options.size() ? onPage : -1;
+    }
+
+    // Layout, in GUI units, without the opening animation
+
     @Override
     protected void init() {
         super.init();
-        // Wheel, side columns, labels and slider must fit, at any GUI scale.
-        float halfWidth = COLUMN_OFFSET + BUTTON / 2.0F + 8;
-        float halfHeight = SLIDER_OFFSET + SLIDER_H + 4;
+        // Wheel, buttons, labels and the row below must fit, at any GUI scale.
+        float halfWidth = Math.max(COLUMN_OFFSET + BUTTON / 2.0F + 8, bottom.size() * ROW_STEP / 2.0F + 8);
+        float halfHeight = ROW_OFFSET + BUTTON + 4;
         menuScale = Math.min(1.0F, Math.min((width / 2.0F - 8) / halfWidth, (height / 2.0F - 8) / halfHeight));
         if (sliderValues != null) {
             int sx = Math.round(width / 2.0F - SLIDER_W * menuScale / 2);
-            int sy = Math.round(height / 2.0F + SLIDER_OFFSET * menuScale);
+            int sy = Math.round(height / 2.0F + ROW_OFFSET * menuScale);
             slider = new SizeSlider(sx, sy, Math.round(SLIDER_W * menuScale), SLIDER_H);
             addWidget(slider);
         }
@@ -229,8 +290,6 @@ public final class RadialMenuScreen extends Screen {
         // Nothing: the world stays fully visible around the wheel.
     }
 
-    // Layout, in GUI units, without the opening animation
-
     private float cx() {
         return width / 2.0F;
     }
@@ -239,16 +298,31 @@ public final class RadialMenuScreen extends Screen {
         return height / 2.0F;
     }
 
-    /** Top left corner and size of a side button. */
-    private int[] buttonAt(boolean leftSide, int index, int count) {
-        float column = leftSide ? -COLUMN_OFFSET : COLUMN_OFFSET;
-        float top = -(count * BUTTON_STEP - (BUTTON_STEP - BUTTON)) / 2.0F;
-        float x = cx() + (column - BUTTON / 2.0F) * menuScale;
-        float y = cy() + (top + index * BUTTON_STEP) * menuScale;
-        return new int[]{Math.round(x), Math.round(y), Math.round(BUTTON * menuScale)};
+    private List<SideButton> buttons(Place place) {
+        return switch (place) {
+            case LEFT -> left;
+            case RIGHT -> right;
+            case BOTTOM -> bottom;
+        };
     }
 
-    /** Centre of a named button or of a wedge ({@code "option.N"}), for the playtest. */
+    /** Top left corner and size of a button. */
+    private int[] boxOf(Place place, int index, int count) {
+        float x;
+        float y;
+        if (place == Place.BOTTOM) {
+            float rowWidth = count * ROW_STEP - (ROW_STEP - BUTTON);
+            x = -rowWidth / 2.0F + index * ROW_STEP;
+            y = ROW_OFFSET;
+        } else {
+            float column = place == Place.LEFT ? -COLUMN_OFFSET : COLUMN_OFFSET;
+            x = column - BUTTON / 2.0F;
+            y = -(count * BUTTON_STEP - (BUTTON_STEP - BUTTON)) / 2.0F + index * BUTTON_STEP;
+        }
+        return new int[]{Math.round(cx() + x * menuScale), Math.round(cy() + y * menuScale), Math.round(BUTTON * menuScale)};
+    }
+
+    /** Centre of a named button or of a wedge of the shown page ({@code "option.N"}), for the playtest. */
     public int @Nullable [] locate(String id) {
         if (id.startsWith("option.")) {
             int index = Integer.parseInt(id.substring(7));
@@ -259,11 +333,11 @@ public final class RadialMenuScreen extends Screen {
             return new int[]{Math.round(cx() + Mth.cos(angle) * ICON_RADIUS * menuScale),
                     Math.round(cy() + Mth.sin(angle) * ICON_RADIUS * menuScale)};
         }
-        for (int side = 0; side < 2; side++) {
-            List<SideButton> column = side == 0 ? left : right;
-            for (int i = 0; i < column.size(); i++) {
-                if (column.get(i).id().equals(id)) {
-                    int[] box = buttonAt(side == 0, i, column.size());
+        for (Place place : Place.values()) {
+            List<SideButton> list = buttons(place);
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).id().equals(id)) {
+                    int[] box = boxOf(place, i, list.size());
                     return new int[]{box[0] + box[2] / 2, box[1] + box[2] / 2};
                 }
             }
@@ -303,6 +377,10 @@ public final class RadialMenuScreen extends Screen {
         graphics.pose().scale(1.8F, 1.8F, 1);
         graphics.renderItem(held, -8, -8);
         graphics.pose().popPose();
+        if (pageCount() > 1) {
+            Component pageLabel = Component.translatable("bitsmith.radial.page", page + 1, pageCount());
+            graphics.drawCenteredString(font, pageLabel, (int) cx, (int) (cy + OUTER + 3), 0xFFDDDDDD);
+        }
         renderHoveredLabel(graphics, cx, cy);
         graphics.pose().popPose();
 
@@ -370,19 +448,19 @@ public final class RadialMenuScreen extends Screen {
     }
 
     private void renderButtons(GuiGraphics graphics, float eased) {
-        // While the cursor is on the wheel, the side buttons step back.
+        // While the cursor is on the wheel, the buttons step back.
         float alpha = eased * (hovered >= 0 ? 0.45F : 1.0F);
-        for (int side = 0; side < 2; side++) {
-            List<SideButton> column = side == 0 ? left : right;
-            for (int i = 0; i < column.size(); i++) {
-                SideButton button = column.get(i);
-                int[] box = buttonAt(side == 0, i, column.size());
+        for (Place place : Place.values()) {
+            List<SideButton> list = buttons(place);
+            for (int i = 0; i < list.size(); i++) {
+                SideButton button = list.get(i);
+                int[] box = boxOf(place, i, list.size());
                 // Slides out from the centre while opening.
                 int x = Math.round(cx() + (box[0] - cx()) * eased);
-                int y = box[1];
+                int y = Math.round(cy() + (box[1] - cy()) * eased);
                 int size = box[2];
                 boolean hover = button == hoveredButton;
-                int background = hover ? 0xA0FFFFFF : button.toggled() ? 0x9040A040 : 0x90000000;
+                int background = hover ? 0xA0FFFFFF : button.toggled().getAsBoolean() ? 0x9040A040 : 0x90000000;
                 graphics.fill(x, y, x + size, y + size, withAlpha(background, alpha));
                 graphics.fill(x, y, x + size, y + 1, withAlpha(0x60FFFFFF, alpha));
                 graphics.fill(x, y + size - 1, x + size, y + size, withAlpha(0x60000000, alpha));
@@ -432,12 +510,12 @@ public final class RadialMenuScreen extends Screen {
     private void hoverAt(double mouseX, double mouseY) {
         hovered = -1;
         hoveredButton = null;
-        for (int side = 0; side < 2; side++) {
-            List<SideButton> column = side == 0 ? left : right;
-            for (int i = 0; i < column.size(); i++) {
-                int[] box = buttonAt(side == 0, i, column.size());
+        for (Place place : Place.values()) {
+            List<SideButton> list = buttons(place);
+            for (int i = 0; i < list.size(); i++) {
+                int[] box = boxOf(place, i, list.size());
                 if (mouseX >= box[0] && mouseX < box[0] + box[2] && mouseY >= box[1] && mouseY < box[1] + box[2]) {
-                    hoveredButton = column.get(i);
+                    hoveredButton = list.get(i);
                     return;
                 }
             }
@@ -471,6 +549,7 @@ public final class RadialMenuScreen extends Screen {
     private void pick(int index) {
         options.get(index).action().run();
         current = index;
+        currentAll = page * PAGE + index;
     }
 
     private static void clickSound() {
@@ -491,6 +570,15 @@ public final class RadialMenuScreen extends Screen {
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (pageCount() > 1 && scrollY != 0) {
+            turnPage(scrollY < 0 ? 1 : -1);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override

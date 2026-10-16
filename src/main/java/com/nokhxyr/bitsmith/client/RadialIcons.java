@@ -5,6 +5,7 @@
 package com.nokhxyr.bitsmith.client;
 
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
+import com.nokhxyr.bitsmith.core.edit.PlacementMode;
 import com.nokhxyr.bitsmith.item.PatternMode;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -84,6 +85,47 @@ final class RadialIcons {
             outline(g, x + 1, y + 1, 14, 14, dark(c));
             int height = Math.max(1, Math.round(bits * 14 / 16f));
             block(g, x + 1, y + 15 - height, 14, height, c);
+        };
+    }
+
+    static Icon placement(PlacementMode mode) {
+        return switch (mode) {
+            case SINGLE -> (g, font, x, y, c) -> block(g, x + 6, y + 6, 4, 4, c);
+            case DRAW -> (g, font, x, y, c) -> {
+                // A brush stroke: a wavy trail of bits.
+                int[] heights = {9, 8, 7, 7, 8, 9, 10, 10, 9, 8, 7, 6};
+                for (int i = 0; i < heights.length; i++) {
+                    g.fill(x + 2 + i, y + heights[i] - 1, x + 3 + i, y + heights[i] + 2, i % 3 == 0 ? light(c) : c);
+                }
+            };
+            case LINE -> (g, font, x, y, c) -> {
+                for (int i = 0; i < 6; i++) {
+                    block(g, x + 1 + i * 2, y + 12 - i * 2, 3, 3, c);
+                }
+            };
+            case PLANE -> (g, font, x, y, c) -> {
+                for (int row = 0; row < 6; row++) {
+                    g.fill(x + 5 - row, y + 5 + row, x + 15 - row, y + 6 + row, row == 0 ? light(c) : c);
+                }
+                g.fill(x, y + 11, x + 10, y + 12, dark(c));
+            };
+            case BOX -> (g, font, x, y, c) -> {
+                // A cube seen from a corner: top, left and right faces.
+                for (int row = 0; row < 4; row++) {
+                    g.fill(x + 7 - row * 2, y + 2 + row, x + 9 + row * 2, y + 3 + row, light(c));
+                }
+                g.fill(x + 1, y + 6, x + 8, y + 14, c);
+                g.fill(x + 8, y + 6, x + 15, y + 14, dark(c));
+            };
+        };
+    }
+
+    static Icon arrow(boolean next) {
+        return (g, font, x, y, c) -> {
+            for (int i = 0; i < 5; i++) {
+                int column = next ? x + 5 + i : x + 10 - i;
+                g.fill(column, y + 3 + i, column + 1, y + 13 - i, c);
+            }
         };
     }
 

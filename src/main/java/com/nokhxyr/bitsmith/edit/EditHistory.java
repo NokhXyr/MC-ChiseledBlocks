@@ -19,6 +19,7 @@ import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,14 +35,20 @@ public final class EditHistory {
     private static final double MAX_DISTANCE_SQUARED = 64 * 64;
     private static final Map<UUID, EditHistory> HISTORIES = new HashMap<>();
 
+    /** What one block held before and after an action. */
+    public record Change(BlockPos pos, BlockSnapshot before, BlockSnapshot after) {
+    }
+
     /**
-     * One action on one block.
+     * One action, on one block or on several (a line or a box of bits) undone together.
      *
      * @param bitsGained bits the player received from the action, by material id; negative when
      *                   the action consumed bits
      */
-    public record Entry(ResourceKey<Level> dimension, BlockPos pos, BlockSnapshot before, BlockSnapshot after,
-                       Int2IntMap bitsGained) {
+    public record Entry(ResourceKey<Level> dimension, List<Change> changes, Int2IntMap bitsGained) {
+        public BlockPos pos() {
+            return changes.get(0).pos();
+        }
     }
 
     private final Deque<Entry> undo = new ArrayDeque<>();
@@ -58,16 +65,21 @@ public final class EditHistory {
         HISTORIES.clear();
     }
 
-    /** Records a finished action. A new action makes the redo history obsolete. */
+    /** Records a finished action on one block. A new action makes the redo history obsolete. */
     public static void record(ServerPlayer player, BlockPos pos, BlockSnapshot before, BlockSnapshot after,
                               Int2IntMap bitsGained) {
-        if (before.equals(after)) {
+        record(player, List.of(new Change(pos.immutable(), before, after)), bitsGained);
+    }
+
+    /** Records a finished action on several blocks, undone and redone as one. */
+    public static void record(ServerPlayer player, List<Change> changes, Int2IntMap bitsGained) {
+        List<Change> real = changes.stream().filter(change -> !change.before().equals(change.after())).toList();
+        if (real.isEmpty()) {
             return;
         }
         EditHistory history = of(player);
         history.redo.clear();
-        history.undo.push(new Entry(player.level().dimension(), pos.immutable(), before, after,
-                new Int2IntOpenHashMap(bitsGained)));
+        history.undo.push(new Entry(player.level().dimension(), real, new Int2IntOpenHashMap(bitsGained)));
         while (history.undo.size() > MAX_ENTRIES) {
             history.undo.removeLast();
         }
@@ -108,12 +120,15 @@ public final class EditHistory {
             return;
         }
 
-        BlockSnapshot expected = undoing ? entry.after() : entry.before();
-        BlockSnapshot target = undoing ? entry.before() : entry.after();
-        if (!BlockSnapshot.current(level, entry.pos()).equals(expected)) {
-            from.pop();
-            player.displayClientMessage(Component.translatable("bitsmith." + key + ".changed"), true);
-            return;
+        // Every block must still hold what the action left there, or nothing is touched.
+        for (Change change : entry.changes()) {
+            BlockSnapshot expected = undoing ? change.after() : change.before();
+            if (!level.isLoaded(change.pos()) || !level.mayInteract(player, change.pos())
+                    || !BlockSnapshot.current(level, change.pos()).equals(expected)) {
+                from.pop();
+                player.displayClientMessage(Component.translatable("bitsmith." + key + ".changed"), true);
+                return;
+            }
         }
 
         // Undo gives back what the action took and takes back what it gave; redo the opposite.
@@ -139,7 +154,9 @@ public final class EditHistory {
             }
         }
 
-        target.apply(level, entry.pos());
+        for (Change change : entry.changes()) {
+            (undoing ? change.before() : change.after()).apply(level, change.pos());
+        }
         to.push(from.pop());
         player.displayClientMessage(Component.translatable("bitsmith." + key + ".done", from.size()), true);
     }

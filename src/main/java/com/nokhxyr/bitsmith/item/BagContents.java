@@ -20,7 +20,7 @@ import java.util.List;
  * {@link #MAX_PER_TYPE} bits, plus the material selected for placing.
  */
 public record BagContents(List<Entry> entries, int selected) {
-    public static final int MAX_TYPES = 16;
+    public static final int MAX_TYPES = 64;
     /** Eight full blocks of one material. */
     public static final int MAX_PER_TYPE = 8 * 4096;
     public static final BagContents EMPTY = new BagContents(List.of(), 0);

@@ -26,6 +26,8 @@ import java.util.List;
  * stack of the selected material.
  */
 public class BitBagItem extends Item {
+    /** Materials listed in the tooltip; the menu shows them all, page by page. */
+    protected static final int TOOLTIP_LINES = 12;
 
     public BitBagItem(Properties properties) {
         super(properties.stacksTo(1));
@@ -90,9 +92,14 @@ public class BitBagItem extends Item {
             return;
         }
         BagContents.Entry selected = contents.selectedEntry();
-        for (BagContents.Entry entry : contents.entries()) {
+        int shown = Math.min(TOOLTIP_LINES, contents.entries().size());
+        for (int i = 0; i < shown; i++) {
+            BagContents.Entry entry = contents.entries().get(i);
             Component line = Component.translatable("bitsmith.bag.entry", entry.material().getBlock().getName(), entry.count());
             tooltip.add(line.copy().withStyle(entry == selected ? ChatFormatting.YELLOW : ChatFormatting.GRAY));
+        }
+        if (contents.entries().size() > shown) {
+            tooltip.add(Component.translatable("bitsmith.bag.more", contents.entries().size() - shown).withStyle(ChatFormatting.DARK_GRAY));
         }
         tooltip.add(Component.translatable("bitsmith.bag.keys").withStyle(ChatFormatting.DARK_GRAY));
     }

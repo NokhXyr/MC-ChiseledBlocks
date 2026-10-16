@@ -145,5 +145,19 @@
   "bitsmith.admin.kind.load": "Load",
   "bitsmith.admin.hint.search": "TP teleports you on top of the block. Searches only read loaded chunks.",
   "bitsmith.admin.hint.map": "Each square is a chunk of 16 x 16 blocks, north at the top.",
-  "bitsmith.admin.hint.perf": "Server time per tick spent by Bitsmith on each block. 1000 µs/t is 2 % of a tick."
+  "bitsmith.admin.hint.perf": "Server time per tick spent by Bitsmith on each block. 1000 µs/t is 2 % of a tick.",
+  "bitsmith.bag.more": "and %s more materials (see the tool menu)",
+  "bitsmith.radial.page": "Page %s / %s",
+  "bitsmith.radial.page.previous": "Previous page",
+  "bitsmith.radial.page.next": "Next page",
+  "bitsmith.place.mode": "Placing: %s",
+  "bitsmith.place.single": "Single bit",
+  "bitsmith.place.draw": "Draw",
+  "bitsmith.place.line": "Line",
+  "bitsmith.place.plane": "Plane",
+  "bitsmith.place.box": "Box",
+  "bitsmith.place.started": "%s: start set, right click the end (right click in the air to cancel)",
+  "bitsmith.place.cleared": "Start cleared",
+  "bitsmith.place.too_big": "Too large: at most %s bits and 8 blocks per side",
+  "bitsmith.place.missing": "%s %s bits missing (%s needed)"
 }

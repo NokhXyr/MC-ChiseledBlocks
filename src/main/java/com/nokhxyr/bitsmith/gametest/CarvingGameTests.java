@@ -11,6 +11,7 @@ import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.compat.cnb.ChiselsAndBitsImport;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
+import com.nokhxyr.bitsmith.core.edit.PlacementMode;
 import com.nokhxyr.bitsmith.core.edit.Symmetry;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
@@ -19,6 +20,7 @@ import com.nokhxyr.bitsmith.edit.BitInventory;
 import com.nokhxyr.bitsmith.edit.ChiselLogic;
 import com.nokhxyr.bitsmith.edit.EditHistory;
 import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
+import com.nokhxyr.bitsmith.edit.ShapePlacement;
 import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
@@ -280,6 +282,88 @@ public final class CarvingGameTests {
                 .anyMatch(recipe -> recipe.value().getResultItem(helper.getLevel().registryAccess())
                         .is(BitsmithRegistries.CREATIVE_BIT_BAG.get()));
         helper.assertFalse(craftable, "no recipe makes the creative bit bag");
+        helper.succeed();
+    }
+
+    // Placement modes
+
+    /** World bit coordinates of a bit of a block given relative to the test. */
+    private static int[] bitOf(GameTestHelper helper, BlockPos relative, int x, int y, int z) {
+        BlockPos pos = helper.absolutePos(relative);
+        return new int[]{pos.getX() * 16 + x, pos.getY() * 16 + y, pos.getZ() * 16 + z};
+    }
+
+    private static int filledAt(GameTestHelper helper, BlockPos relative) {
+        return helper.getLevel().getBlockEntity(helper.absolutePos(relative)) instanceof CarvedBlockEntity carved
+                ? carved.getGrid().filledCount() : 0;
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void lineCrossesBlocksAndUndoesAsOne(GameTestHelper helper) {
+        ServerPlayer player = creative(helper, 1.5);
+        player.setItemInHand(InteractionHand.MAIN_HAND, BitItem.of(Blocks.STONE.defaultBlockState(), 1));
+        // From the first bit of TARGET to the last bit of the block two further along x.
+        ShapePlacement.place(player, PlacementMode.LINE, bitOf(helper, TARGET, 0, 3, 8),
+                bitOf(helper, TARGET.east(2), 15, 3, 8), 1);
+        int total = filledAt(helper, TARGET) + filledAt(helper, TARGET.east()) + filledAt(helper, TARGET.east(2));
+        helper.assertTrue(total == 48, "a 48 bit line over three blocks: " + total);
+        helper.assertTrue(EditHistory.of(player).undoSize() == 1, "one action for the three blocks");
+
+        EditHistory.undo(player);
+        helper.assertBlockPresent(Blocks.AIR, TARGET);
+        helper.assertBlockPresent(Blocks.AIR, TARGET.east());
+        helper.assertBlockPresent(Blocks.AIR, TARGET.east(2));
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void planeStaysOnTheFirstLayer(GameTestHelper helper) {
+        ServerPlayer player = creative(helper, 1.5);
+        player.setItemInHand(InteractionHand.MAIN_HAND, BitItem.of(Blocks.OAK_PLANKS.defaultBlockState(), 1));
+        ShapePlacement.place(player, PlacementMode.PLANE, bitOf(helper, TARGET, 0, 0, 0), bitOf(helper, TARGET, 15, 9, 15), 1);
+        CarvedBlockEntity carved = helper.getBlockEntity(TARGET);
+        helper.assertTrue(carved.getGrid().filledCount() == 256, "a full 16 x 16 layer: " + carved.getGrid().filledCount());
+        helper.assertTrue(carved.getGrid().get(4, 0, 4) != BitGrid.AIR && carved.getGrid().get(4, 1, 4) == BitGrid.AIR,
+                "only the bottom layer");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void survivalBoxNeedsEnoughBits(GameTestHelper helper) {
+        ServerPlayer player = survival(helper);
+        BlockState stone = Blocks.STONE.defaultBlockState();
+        player.setItemInHand(InteractionHand.MAIN_HAND, BitItem.of(stone, 20));
+        int[] from = bitOf(helper, TARGET, 0, 0, 0);
+        int[] to = bitOf(helper, TARGET, 2, 2, 2);
+        ShapePlacement.place(player, PlacementMode.BOX, from, to, 1);
+        helper.assertBlockPresent(Blocks.AIR, TARGET);
+        helper.assertTrue(bitsInInventory(player, stone) == 20, "nothing spent when 27 bits are needed and 20 held");
+
+        player.setItemInHand(InteractionHand.MAIN_HAND, BitItem.of(stone, 64));
+        helper.runAfterDelay(1, () -> {
+            ShapePlacement.place(player, PlacementMode.BOX, from, to, 1);
+            helper.assertTrue(filledAt(helper, TARGET) == 27, "a 3 x 3 x 3 box placed");
+            helper.assertTrue(bitsInInventory(player, stone) == 37, "27 bits spent");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void bitBagHoldsSixtyFourMaterials(GameTestHelper helper) {
+        BagContents contents = BagContents.EMPTY;
+        int added = 0;
+        for (Block block : BuiltInRegistries.BLOCK) {
+            BlockState state = block.defaultBlockState();
+            if (added == 64) {
+                helper.assertTrue(contents.room(state, 10) == 0 || contents.count(state) > 0, "no room for a 65th material");
+                break;
+            }
+            if (Materials.isValidMaterial(state) && contents.count(state) == 0) {
+                contents = contents.add(state, 10);
+                added++;
+            }
+        }
+        helper.assertTrue(contents.entries().size() == 64, "64 materials held: " + contents.entries().size());
         helper.succeed();
     }
 

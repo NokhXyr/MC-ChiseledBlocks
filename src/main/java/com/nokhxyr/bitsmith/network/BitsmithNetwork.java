@@ -12,9 +12,11 @@ import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
 import com.nokhxyr.bitsmith.core.edit.ChiselShape;
+import com.nokhxyr.bitsmith.core.edit.PlacementMode;
 import com.nokhxyr.bitsmith.edit.ChiselLogic;
 import com.nokhxyr.bitsmith.edit.EditHistory;
 import com.nokhxyr.bitsmith.edit.PlayerSymmetry;
+import com.nokhxyr.bitsmith.edit.ShapePlacement;
 import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
@@ -37,7 +39,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 public final class BitsmithNetwork {
-    private static final String VERSION = "6";
+    private static final String VERSION = "7";
     /** Furthest a player may ask for a grid, in blocks, squared. */
     private static final double RESYNC_RANGE_SQUARED = 64 * 64;
     private static final int RESYNCS_PER_TICK = 8;
@@ -57,6 +59,11 @@ public final class BitsmithNetwork {
                 (payload, context) -> PlayerSymmetry.setOnServer(context.player(), payload.symmetry()));
         registrar.playToClient(GridDeltaPayload.TYPE, GridDeltaPayload.CODEC, BitsmithNetwork::onDelta);
         registrar.playToClient(GridFullPayload.TYPE, GridFullPayload.CODEC, BitsmithNetwork::onFull);
+        registrar.playToServer(PlaceShapePayload.TYPE, PlaceShapePayload.CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                ShapePlacement.place(player, PlacementMode.byOrdinal(payload.mode()), payload.start(), payload.end(), payload.axis());
+            }
+        });
         AdminService.register(registrar);
         // Client handlers live in a client only class, only reached when a message arrives.
         registrar.playToClient(AdminPayloads.Open.TYPE, AdminPayloads.Open.CODEC,

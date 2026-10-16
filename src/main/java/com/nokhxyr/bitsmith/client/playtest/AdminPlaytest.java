@@ -6,12 +6,15 @@ package com.nokhxyr.bitsmith.client.playtest;
 
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.client.admin.AdminClient;
+import com.nokhxyr.bitsmith.client.PlacementControl;
 import com.nokhxyr.bitsmith.client.RadialMenuScreen;
 import com.nokhxyr.bitsmith.client.admin.AdminScreen;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
+import com.nokhxyr.bitsmith.core.edit.PlacementMode;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.item.BitBagItem;
+import com.nokhxyr.bitsmith.item.CreativeBitBagItem;
 import com.nokhxyr.bitsmith.network.AdminPayloads;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
@@ -94,6 +97,118 @@ final class AdminPlaytest {
         itemScript(p);
         materialItemScript(p);
         creativeBagScript(p);
+        placementScript(p);
+    }
+
+    private static RadialMenuScreen radial() {
+        return Minecraft.getInstance().screen instanceof RadialMenuScreen screen ? screen : null;
+    }
+
+    /** Clicks a named part of the open tool menu. */
+    private static boolean clickRadial(ClientPlaytest p, String id) {
+        RadialMenuScreen screen = radial();
+        int[] point = screen == null ? null : screen.locate(id);
+        if (point == null) {
+            return p.that(id + " not in the tool menu", false);
+        }
+        p.cursorAt(point[0], point[1]);
+        p.mouseClick();
+        return true;
+    }
+
+    private static int filledRow(ClientPlaytest p, int fromX, int toX, int y, int z) {
+        int total = 0;
+        for (int x = fromX; x <= toX; x++) {
+            total += Math.max(0, p.filled(new BlockPos(x, y, z)));
+        }
+        return total;
+    }
+
+    /** Placement modes and bag pages, with the creative bag in hand. */
+    private static void placementScript(ClientPlaytest p) {
+        p.step("stand next to an empty strip of grass", () -> {
+            p.command("tp @s -2.5 -60 2.5 0 50");
+            p.hotbar(0);
+        }, 20, () -> p.at(-2.5, -60, 2.5));
+
+        // Line: chosen in the tool menu, then two right clicks.
+        p.step("open the tool menu", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, true), 8, () -> p.that("open", radial() != null));
+        p.shot("click Line in the row of placement modes", () -> clickRadial(p, "place.line"), 6,
+                () -> p.that("mode " + PlacementControl.mode(), PlacementControl.mode() == PlacementMode.LINE), "radial_placement_modes");
+        p.step("release the menu key", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, false), 5, () -> p.that("closed", radial() == null));
+        p.step("right click sets the start", () -> {
+            p.lookAtFace(new BlockPos(-4, -61, 4), Direction.UP);
+            p.use();
+        }, 5, () -> p.that("start set", PlacementControl.start() != null));
+        p.shot("the outline follows to the end", () -> p.lookAtFace(new BlockPos(-2, -61, 4), Direction.UP), 5,
+                () -> true, "placement_line_preview");
+        // Two blocks between the centres of the end faces: 33 bits, one more if a point falls on an edge.
+        p.step("right click places the line", p::use, 10, () -> {
+            int bits = filledRow(p, -4, -2, -60, 4);
+            return p.that("bits in the line " + bits, bits >= 33 && bits <= 35);
+        });
+        p.step("tool menu", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, true), 8, () -> p.that("open", radial() != null));
+        p.step("the undo button takes the whole line back", () -> clickRadial(p, "undo"), 10,
+                () -> p.eq("bits left", filledRow(p, -4, -2, -60, 4), 0));
+        p.step("close", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, false), 5, () -> radial() == null);
+
+        // Box, flat on the ground: two corners.
+        p.step("tool menu: Box", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, true), 8, () -> p.that("open", radial() != null));
+        p.step("click Box", () -> clickRadial(p, "place.box"), 5,
+                () -> p.that("mode " + PlacementControl.mode(), PlacementControl.mode() == PlacementMode.BOX));
+        p.step("close", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, false), 5, () -> radial() == null);
+        p.step("first corner", () -> {
+            p.lookAtFace(new BlockPos(-4, -61, 5), Direction.UP);
+            p.use();
+        }, 5, () -> p.that("start set", PlacementControl.start() != null));
+        p.step("second corner", () -> {
+            p.lookAtFace(new BlockPos(-3, -61, 6), Direction.UP);
+            p.use();
+        }, 10, () -> p.eq("bits in the box", filledRow(p, -4, -3, -60, 5) + filledRow(p, -4, -3, -60, 6), 17 * 17));
+        p.shot("the box on the grass", () -> p.look(new Vec3(-3.5, -60, 5.5)), 6, () -> true, "placement_box");
+
+        // Draw: hold the use key and sweep along a row.
+        p.step("tool menu: Draw", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, true), 8, () -> p.that("open", radial() != null));
+        p.step("click Draw", () -> clickRadial(p, "place.draw"), 5,
+                () -> p.that("mode " + PlacementControl.mode(), PlacementControl.mode() == PlacementMode.DRAW));
+        p.step("close", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, false), 5, () -> radial() == null);
+        p.step("closer to the row to draw on", () -> p.command("tp @s -1.5 -60 4.5 0 50"), 20, () -> p.at(-1.5, -60, 4.5));
+        p.step("press and hold the use key on the grass", () -> {
+            p.look(new Vec3(-2.45, -61, 6.5));
+            KeyMapping.set(Minecraft.getInstance().options.keyUse.getKey(), true);
+            p.use();
+        }, 3, () -> true);
+        for (int i = 1; i <= 10; i++) {
+            double x = -2.45 + i * 0.2;
+            p.step("sweep " + i, () -> p.look(new Vec3(x, -61, 6.5)), 2, () -> true);
+        }
+        p.step("release the use key", () -> KeyMapping.set(Minecraft.getInstance().options.keyUse.getKey(), false), 10,
+                () -> p.that("bits drawn " + filledRow(p, -3, 0, -60, 6), filledRow(p, -3, 0, -60, 6) >= 20));
+        p.step("back to single bits", () -> PlacementControl.set(PlacementMode.SINGLE), 2, () -> true);
+
+        // Bag pages: twenty materials, twelve per page.
+        p.step("a creative bag with twenty materials", () -> server().submit(() -> {
+            var player = server().getPlayerList().getPlayers().get(0);
+            ItemStack bag = new ItemStack(BitsmithRegistries.CREATIVE_BIT_BAG.get());
+            int added = 0;
+            for (Block block : BuiltInRegistries.BLOCK) {
+                if (added < 20 && Materials.isValidMaterial(block.defaultBlockState()) && block.asItem() != net.minecraft.world.item.Items.AIR) {
+                    CreativeBitBagItem.remember(bag, block.defaultBlockState());
+                    added++;
+                }
+            }
+            player.getInventory().setItem(0, bag);
+        }).join(), 10, () -> p.eq("materials", BitBagItem.contents(p.held()).entries().size(), 20));
+        p.step("open the bag's menu", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, true), 8,
+                () -> p.that("page 1", radial() != null && radial().page() == 0));
+        p.shot("next page", () -> clickRadial(p, "page.next"), 6,
+                () -> p.that("page " + (radial() == null ? -1 : radial().page() + 1), radial() != null && radial().page() == 1),
+                "radial_bag_page2");
+        p.step("click the first material of page 2", () -> clickRadial(p, "option.0"), 10, () -> {
+            var selected = BitBagItem.contents(p.held()).selected();
+            return p.eq("selected material", selected, 12);
+        });
+        p.step("close", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, false), 5, () -> radial() == null);
     }
 
     /** The creative bit bag in survival: pick a material, place without running out, its menu. */

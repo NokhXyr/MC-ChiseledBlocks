@@ -111,7 +111,7 @@ public final class BitPlacement {
     }
 
     /** The grid bits can be added to at {@code pos}: a carving, or an empty grid for a replaceable block. */
-    private static BitGrid baseAt(ServerLevel level, BlockPos pos) {
+    static BitGrid baseAt(ServerLevel level, BlockPos pos) {
         BlockSnapshot current = BlockSnapshot.current(level, pos);
         if (current.grid() != null) {
             return current.grid();
@@ -120,7 +120,7 @@ public final class BitPlacement {
         return state.canBeReplaced() && state.getFluidState().isEmpty() ? BitGrid.filled(BitGrid.AIR) : null;
     }
 
-    private static boolean blockedByEntity(ServerLevel level, BlockPos pos, int voxel) {
+    static boolean blockedByEntity(ServerLevel level, BlockPos pos, int voxel) {
         int x = voxel & 15;
         int z = (voxel >> 4) & 15;
         int y = voxel >> 8;

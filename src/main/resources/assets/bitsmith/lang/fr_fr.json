@@ -145,5 +145,19 @@
   "bitsmith.admin.kind.load": "Charg.",
   "bitsmith.admin.hint.search": "TP te téléporte sur le bloc. Les recherches ne lisent que les chunks chargés.",
   "bitsmith.admin.hint.map": "Chaque case est un chunk de 16 x 16 blocs, nord en haut.",
-  "bitsmith.admin.hint.perf": "Temps serveur par tick consacré par Bitsmith à chaque bloc. 1000 µs/t font 2 % d'un tick."
+  "bitsmith.admin.hint.perf": "Temps serveur par tick consacré par Bitsmith à chaque bloc. 1000 µs/t font 2 % d'un tick.",
+  "bitsmith.bag.more": "et %s autres matériaux (voir le menu de l'outil)",
+  "bitsmith.radial.page": "Page %s / %s",
+  "bitsmith.radial.page.previous": "Page précédente",
+  "bitsmith.radial.page.next": "Page suivante",
+  "bitsmith.place.mode": "Pose : %s",
+  "bitsmith.place.single": "Bit seul",
+  "bitsmith.place.draw": "Dessin",
+  "bitsmith.place.line": "Ligne",
+  "bitsmith.place.plane": "Plan",
+  "bitsmith.place.box": "Boîte",
+  "bitsmith.place.started": "%s : départ fixé, clic droit sur l'arrivée (clic droit dans le vide pour annuler)",
+  "bitsmith.place.cleared": "Départ annulé",
+  "bitsmith.place.too_big": "Trop grand : %s bits maximum et 8 blocs par côté",
+  "bitsmith.place.missing": "Il manque %s bits de %s (%s nécessaires)"
 }
