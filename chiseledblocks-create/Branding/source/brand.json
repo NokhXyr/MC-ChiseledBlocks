@@ -1,0 +1,123 @@
+{
+  "name": "Chiseled Blocks: Create",
+  "slug": "chiseled-blocks-create",
+  "kind": "minecraft-mod",
+  "tagline": "Blocks to pixels, on a belt",
+  "concept": {
+    "en": "The carved stone block of Chiseled Blocks, with its blue pixel, riding on a brass cog: the same block, now cut by Create's machines.",
+    "fr": "Le bloc de pierre taillé de Chiseled Blocks, avec son pixel bleu, posé sur une roue dentée en laiton : le même bloc, cette fois coupé par les machines de Create."
+  },
+  "palette": {
+    "primary": "#d19a3a",
+    "secondary": "#3a8fe0",
+    "night": "#1b2130",
+    "ink": "#14161c",
+    "paper": "#f4f1ea"
+  },
+  "mark": "mark.svg",
+  "mark_reverse": "mark-reverse.svg",
+  "mark_mono": "mark-mono.svg",
+  "mark_small": "mark-small.svg",
+  "wordmark": "wordmark.svg",
+  "wordmark_reverse": null,
+  "tagline_font": {
+    "font": "JetBrains Mono",
+    "weight": 700,
+    "tracking": 160,
+    "case": "upper"
+  },
+  "lockup": {
+    "icon_padding": 0.06,
+    "horizontal": {
+      "gap": 0.22,
+      "wordmark": 0.34,
+      "tagline": 0.1,
+      "tagline_gap": 0.12
+    },
+    "stacked": {
+      "gap": 0.16,
+      "wordmark": 0.26,
+      "max_width": 2.6,
+      "tagline": 0.08,
+      "tagline_gap": 0.1
+    }
+  },
+  "icon": {
+    "background": "night",
+    "knockout": false,
+    "mark_on_background": null,
+    "app_scale": 0.7,
+    "radius": 0.22,
+    "maskable_scale": 0.52,
+    "avatar_scale": 0.66
+  },
+  "banner": {
+    "background": "#141821",
+    "light": "#d19a3a",
+    "pattern": "mark",
+    "pattern_opacity": 0.05,
+    "texture": null,
+    "grain": 0.3,
+    "vignette": 0.35,
+    "shadow": 45,
+    "tagline": true,
+    "colorway": "reverse",
+    "logo_fill": 0.78
+  },
+  "banners": null,
+  "minecraft": {
+    "logo_layout": "horizontal",
+    "logo_colorway": "reverse",
+    "logo_width": 600,
+    "icon_scale": 0.9
+  },
+  "ui_font": "Inter",
+  "rationale": {
+    "en": [
+      "An addon should be recognised as part of its mod at a glance: the block, its stair and its blue pixel are kept exactly as in the Chiseled Blocks mark.",
+      "What changes is what the block stands on: a brass cog, the material of Create's gears and machines, lying flat in the same isometric view like a turntable.",
+      "The cog sits under the block, so the stair and the blue pixel keep their outline against the background, in color and in one color.",
+      "The small mark shows the cog edge on, as a toothed brass band under the front view of the block, which still reads at 16 px.",
+      "The wordmark is the Chiseled Blocks title with Create under it in brass, aligned to its right edge."
+    ],
+    "fr": [
+      "Un addon doit se reconnaître d'un coup d'oeil comme une partie de son mod : le bloc, son escalier et son pixel bleu sont gardés tels quels depuis le logo de Chiseled Blocks.",
+      "Ce qui change, c'est ce sur quoi le bloc repose : une roue dentée en laiton, la matière des engrenages et des machines de Create, couchée dans la même vue isométrique comme un plateau tournant.",
+      "La roue est sous le bloc : l'escalier et le pixel bleu gardent leur contour sur le fond, en couleur comme en une seule couleur.",
+      "Le petit logo montre la roue par la tranche, une bande de laiton dentée sous la vue de face du bloc, encore lisible à 16 px.",
+      "Le nom est le titre de Chiseled Blocks avec Create dessous en laiton, aligné sur son bord droit."
+    ]
+  },
+  "palette_notes": {
+    "primary": {
+      "en": "Brass, the metal of Create's gears and of the addon's machines: the accent of the addon.",
+      "fr": "Le laiton, le métal des engrenages de Create et des machines de l'addon : l'accent de l'addon."
+    },
+    "secondary": {
+      "en": "The blue of Chiseled Blocks, kept for the pixel: the link to the main mod.",
+      "fr": "Le bleu de Chiseled Blocks, gardé pour le pixel : le lien avec le mod principal."
+    },
+    "night": {
+      "en": "A blue tinted dark for icons and banners, behind the stone.",
+      "fr": "Un sombre teinté de bleu pour les icônes et les bannières, derrière la pierre."
+    },
+    "ink": {
+      "en": "The outline of the pixel art, near black leaning blue.",
+      "fr": "Le contour du pixel art, un quasi-noir tirant sur le bleu."
+    },
+    "paper": {
+      "en": "A warm off white, like the patterns' blueprint paper.",
+      "fr": "Un blanc cassé chaud, comme le papier des patterns."
+    }
+  },
+  "type_note": {
+    "en": "The pixel title of Chiseled Blocks, unchanged, with Create set under it in the same blocky letters, in brass; the tagline in JetBrains Mono like the main mod.",
+    "fr": "Le titre en pixels de Chiseled Blocks, inchangé, avec Create dessous dans les mêmes lettres, en laiton ; le slogan en JetBrains Mono comme le mod principal."
+  },
+  "color_sources": [
+    "../../src/main/resources/assets/chiseledblocks_create/textures/block/line/slicer_side.png",
+    "../../src/main/resources/assets/chiseledblocks_create/textures/block/line/crusher_side.png",
+    "../../../Branding/minecraft/icon-128.png"
+  ],
+  "grid": 16
+}
