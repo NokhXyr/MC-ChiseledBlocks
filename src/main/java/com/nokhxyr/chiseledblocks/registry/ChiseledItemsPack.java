@@ -49,12 +49,12 @@ public final class ChiseledItemsPack implements PackResources {
         this.type = type;
         this.files = files;
         this.meta = ("{\"pack\":{\"pack_format\":" + SharedConstants.getCurrentVersion().getPackVersion(type)
-                + ",\"description\":\"Chiseled Blocks carved block items\"}}").getBytes(StandardCharsets.UTF_8);
+                + ",\"description\":\"Chiseled Blocks chiseled block items\"}}").getBytes(StandardCharsets.UTF_8);
     }
 
     public static void onAddPackFinders(AddPackFindersEvent event) {
         PackType type = event.getPackType();
-        PackLocationInfo location = new PackLocationInfo(ID, Component.literal("Chiseled Blocks carved block items"),
+        PackLocationInfo location = new PackLocationInfo(ID, Component.literal("Chiseled Blocks chiseled block items"),
                 PackSource.BUILT_IN, Optional.empty());
         Map<ResourceLocation, byte[]> files = type == PackType.CLIENT_RESOURCES ? models() : tags();
         Pack.ResourcesSupplier resources = new Pack.ResourcesSupplier() {
