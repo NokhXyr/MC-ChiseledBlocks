@@ -127,6 +127,7 @@ public final class ClientPlaytest {
             case "admin" -> AdminPlaytest.script(this);
             case "perms" -> PermsPlaytest.script(this);
             case "create" -> CreateAddonPlaytest.script(this);
+            case "createPonderExport" -> CreateAddonPlaytest.exportScript(this);
             default -> script();
         }
     }

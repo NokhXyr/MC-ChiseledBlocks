@@ -7,5 +7,19 @@
   "item.bitsmith_create.bit_rod": "Bit Rod",
   "item.bitsmith_create.bit_rod.named": "%s Rod",
   "bitsmith_create.jei.cut": "1 item, %s pieces",
-  "bitsmith_create.jei.line": "The bit line, on a Create belt or a depot: the Bit Slicer cuts a block into 16 slices, the Bit Cutter a slice into 16 rods, the Bit Crusher a rod into 16 bits. 4096 bits per block. Place each machine two blocks above the belt, with one block of air between them, and turn it with a shaft: it works as fast as the shaft turns (2 seconds per cut at 16 rpm), stopped it lets items pass."
+  "bitsmith_create.jei.line": "The bit line, on a Create belt or a depot: the Bit Slicer cuts a block into 16 slices, the Bit Cutter a slice into 16 rods, the Bit Crusher a rod into 16 bits. 4096 bits per block. Place each machine two blocks above the belt, with one block of air between them, and turn it with a shaft: it works as fast as the shaft turns (2 seconds per cut at 16 rpm), stopped it lets items pass.",
+  "bitsmith_create.ponder.tag.bit_line": "Bit Line",
+  "bitsmith_create.ponder.tag.bit_line.description": "Machines that cut whole blocks into bits",
+  "bitsmith_create.ponder.bit_line.header": "Cutting blocks into bits on a belt",
+  "bitsmith_create.ponder.bit_line.text_1": "The three machines go two blocks above a belt or a depot, with one block of air between them",
+  "bitsmith_create.ponder.bit_line.text_2": "A shaft through their sides turns them: the faster it turns, the faster they cut",
+  "bitsmith_create.ponder.bit_line.text_3": "The Bit Slicer cuts a block into 16 slices",
+  "bitsmith_create.ponder.bit_line.text_4": "The Bit Cutter cuts each slice into 16 rods",
+  "bitsmith_create.ponder.bit_line.text_5": "The Bit Crusher crushes each rod into 16 bits",
+  "bitsmith_create.ponder.bit_line.text_6": "4096 bits come out of every block. Each machine only takes its own input, so one belt carries the whole line",
+  "bitsmith_create.ponder.bit_depot.header": "Using a bit line machine on a depot",
+  "bitsmith_create.ponder.bit_depot.text_1": "Each machine also works on a depot two blocks below it",
+  "bitsmith_create.ponder.bit_depot.text_2": "The pieces stay on the depot, ready for the next machine or a funnel",
+  "bitsmith_create.ponder.bit_depot.text_3": "Twice the speed, twice as fast: 2 seconds per cut at 16 rpm",
+  "bitsmith_create.ponder.bit_depot.text_4": "Stopped, a machine leaves items alone and lets them pass along a belt"
 }

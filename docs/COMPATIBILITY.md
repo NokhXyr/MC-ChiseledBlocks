@@ -21,7 +21,7 @@ with its dynamic model loading turned on, and Iris with a shader pack enabled.
 | ImmediatelyFast | 1.6.14 | Works | Loaded with the full playtest (radial menu, outlines, item rendering) |
 | Entity Culling | 1.11.2 | Works | Loaded with the full playtest |
 | WorldEdit | 7.3.8 | Works, one limit | `//copy`, `//paste` and `//rotate` keep and turn carvings; `//set bitsmith:carved_block` leaves no empty ghost block. `//flip` does not mirror carvings (see below) |
-| Create | 6.0.10 | Works | A mechanical piston moves a carved block: it renders with its carving on the contraption and is placed back unchanged. Bulk bit production with Create is a separate addon (Bitsmith: Create): a belt laid with the belt connector carries one stone block under its Bit Slicer, Bit Cutter and Bit Crusher, and 4096 stone bits come out at the end |
+| Create | 6.0.10 | Works | A mechanical piston moves a carved block: it renders with its carving on the contraption and is placed back unchanged. Bulk bit production with Create is a separate addon (Bitsmith: Create): a belt laid with the belt connector carries one stone block under its Bit Slicer, Bit Cutter and Bit Crusher, and 4096 stone bits come out at the end; the addon's Ponder scenes open on each machine and play the line |
 | KubeJS | 2101.7.2 | Works | Recipes can use Bitsmith items, including bits with their material component |
 | AE2 | 19.2.18 | Works | A carved block, a stack of bits and a filled bit bag go into a 1k storage cell, the cell is saved and reopened, and they come back identical |
 | Refined Storage | 2.0.9 | Works | The same three items go through its storage and its save codec and come back identical |
@@ -75,7 +75,7 @@ Iris avec un shader actif.
 | ImmediatelyFast | 1.6.14 | Fonctionne | Chargé avec toute la partie de test (menu radial, contours, rendu des items) |
 | Entity Culling | 1.11.2 | Fonctionne | Chargé avec toute la partie de test |
 | WorldEdit | 7.3.8 | Fonctionne, une limite | `//copy`, `//paste` et `//rotate` gardent et tournent les sculptures ; `//set bitsmith:carved_block` ne laisse pas de bloc fantôme vide. `//flip` ne retourne pas les sculptures en miroir (voir plus bas) |
-| Create | 6.0.10 | Fonctionne | Un piston mécanique déplace un bloc ciselé : il s'affiche avec sa sculpture sur la contraption et est reposé intact. La production de bits en masse avec Create est un addon séparé (Bitsmith: Create) : un tapis posé avec le connecteur de tapis passe un bloc de pierre sous sa Trancheuse, sa Découpeuse et sa Concasseuse à bits, et 4096 bits de pierre sortent au bout |
+| Create | 6.0.10 | Fonctionne | Un piston mécanique déplace un bloc ciselé : il s'affiche avec sa sculpture sur la contraption et est reposé intact. La production de bits en masse avec Create est un addon séparé (Bitsmith: Create) : un tapis posé avec le connecteur de tapis passe un bloc de pierre sous sa Trancheuse, sa Découpeuse et sa Concasseuse à bits, et 4096 bits de pierre sortent au bout ; les scènes Ponder de l'addon s'ouvrent sur chaque machine et jouent la chaîne |
 | KubeJS | 2101.7.2 | Fonctionne | Les recettes peuvent utiliser les items Bitsmith, y compris les bits avec leur matériau |
 | AE2 | 19.2.18 | Fonctionne | Un bloc ciselé, une pile de bits et un sac rempli entrent dans une cellule de stockage 1k, la cellule est sauvegardée puis rouverte, et ils ressortent identiques |
 | Refined Storage | 2.0.9 | Fonctionne | Les trois mêmes objets passent par son stockage et son format de sauvegarde et ressortent identiques |

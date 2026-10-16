@@ -11,6 +11,7 @@ import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackH
 import com.simibubi.create.content.kinetics.belt.behaviour.TransportedItemStackHandlerBehaviour.TransportedResult;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+import net.createmod.catnip.levelWrappers.SchematicLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -63,6 +64,11 @@ public final class LineMachineBlockEntity extends KineticBlockEntity {
         return Math.min(1, (progress + partialTicks * Math.abs(getSpeed()) / 16f) / WORK);
     }
 
+    /** A schematic level: Ponder's scenes, where the machines cut like in a world but stay silent. */
+    private boolean inSchematic() {
+        return level instanceof SchematicLevel;
+    }
+
     private ProcessingResult onItemEnters(TransportedItemStack transported, TransportedItemStackHandlerBehaviour handler) {
         if (stage().materialOf(transported.stack) == null || getSpeed() == 0) {
             return ProcessingResult.PASS;
@@ -85,21 +91,65 @@ public final class LineMachineBlockEntity extends KineticBlockEntity {
         if (progress < WORK) {
             return ProcessingResult.HOLD;
         }
+        handler.handleProcessingOnItem(transported, TransportedResult.convertTo(piecesOf(transported, material)));
+        running = false;
+        progress = 0;
+        if (level != null && !level.isClientSide) {
+            sendData();
+        }
+        if (level != null && !inSchematic()) {
+            level.playSound(null, worldPosition, stage() == LineStage.CRUSHER ? SoundEvents.ANVIL_LAND : SoundEvents.UI_STONECUTTER_TAKE_RESULT,
+                    SoundSource.BLOCKS, stage() == LineStage.CRUSHER ? 0.15F : 0.5F, 1.4F);
+        }
+        return ProcessingResult.PASS;
+    }
+
+    /** The pieces an item is cut into, each going on from where the item was. */
+    private List<TransportedItemStack> piecesOf(TransportedItemStack transported, BlockState material) {
         List<TransportedItemStack> outputs = new ArrayList<>();
         for (ItemStack piece : stage().outputs(material, transported.stack.getCount())) {
             TransportedItemStack output = transported.copy();
             output.stack = piece;
             outputs.add(output);
         }
-        handler.handleProcessingOnItem(transported, TransportedResult.convertTo(outputs));
+        return outputs;
+    }
+
+    /** Ponder: whether this machine's input lies under it, at the centre of a belt or a depot. */
+    private boolean inputBelow() {
+        TransportedItemStackHandlerBehaviour handler = BlockEntityBehaviour.get(level, worldPosition.below(2), TransportedItemStackHandlerBehaviour.TYPE);
+        if (handler == null) {
+            return false;
+        }
+        boolean[] found = {false};
+        handler.handleCenteredProcessingOnAllItems(.25f, transported -> {
+            found[0] |= stage().materialOf(transported.stack) != null;
+            return TransportedResult.doNothing();
+        });
+        return found[0];
+    }
+
+    /**
+     * Ponder: a belt in a scene tells the machine when an item arrives but never asks again while
+     * it is held, and a depot does not tell it at all, so the machine runs the cut itself on what
+     * lies under it, and lets it go.
+     */
+    private void finishCutInSchematic() {
         running = false;
         progress = 0;
-        sendData();
-        if (level != null) {
-            level.playSound(null, worldPosition, stage() == LineStage.CRUSHER ? SoundEvents.ANVIL_LAND : SoundEvents.UI_STONECUTTER_TAKE_RESULT,
-                    SoundSource.BLOCKS, stage() == LineStage.CRUSHER ? 0.15F : 0.5F, 1.4F);
+        TransportedItemStackHandlerBehaviour handler = BlockEntityBehaviour.get(level, worldPosition.below(2), TransportedItemStackHandlerBehaviour.TYPE);
+        if (handler == null) {
+            return;
         }
-        return ProcessingResult.PASS;
+        handler.handleCenteredProcessingOnAllItems(.75f, transported -> {
+            BlockState material = stage().materialOf(transported.stack);
+            if (material == null) {
+                return TransportedResult.doNothing();
+            }
+            List<TransportedItemStack> pieces = piecesOf(transported, material);
+            pieces.forEach(piece -> piece.locked = false);
+            return TransportedResult.convertTo(pieces);
+        });
     }
 
     private void start() {
@@ -115,6 +165,11 @@ public final class LineMachineBlockEntity extends KineticBlockEntity {
         super.tick();
         if (running) {
             progress += Math.abs(getSpeed()) / 16f;
+            if (progress >= WORK && inSchematic()) {
+                finishCutInSchematic();
+            }
+        } else if (inSchematic() && getSpeed() != 0 && inputBelow()) {
+            start();
         }
     }
 

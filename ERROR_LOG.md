@@ -175,3 +175,19 @@
 **Root cause:** coplanar faces facing the same way: the undersides of the core and the corner posts at y 2, and the stretched pole drawn over the tool's own pole.
 **Fix:** posts end at y 1.75 (a height no other part uses), the extension starts at the top of the tool's pole (13/16). A script now lists overlapping coplanar faces in every model, alone and combined with the tool at rest: none left.
 **Prevention:** run the overlap check after every model change.
+
+## [2026-10-16 15:30] — Line machines idle in Ponder scenes
+
+**Context:** Ponder scenes for the bit line, first scripted (cut animation plus item swap timed on the belt speed), then with the machines processing by themselves.
+**Error:** the stone ran past the slicer before the scripted cut; with real processing, the slicer showed `running true, progress 48.0` (past the 32 a cut needs) and the item stayed held forever; on a depot the machine never started.
+**Root cause:** in a Ponder scene a belt calls `whenItemEnters` but never `whileItemHeld`, and a depot calls neither; the belt speed formula used for the timing did not match the scene either.
+**Fix:** in a schematic level the machine runs the cut itself: it starts when its input lies at the centre below it and converts it through `handleCenteredProcessingOnAllItems` when the cut ends. The scenes only turn shafts and put items down.
+**Prevention:** read the block entity state inside the Ponder level (playtest `PonderCheck.blockEntity`) before tuning scene timings.
+
+## [2026-10-16 16:00] — Create playtest failing now and then
+
+**Context:** `runClientCreate` counting the bits that come out of the belt line.
+**Error:** `stone bits out = 387` (twice), then `1974`, expected 4096; another run had Ponder replaced by the creative inventory.
+**Root cause:** real key presses reached the test window, which takes the focus: the player moved and picked up bits (141 found in their inventory), threw some away from the line, and E closed Ponder. The line itself produced every time.
+**Fix:** the count covers a wide area around the line and the players' inventories; diagnostics (belt speed, items on the belt, on the ground, in containers and on players) stay in the report.
+**Prevention:** do not type into the game window while a playtest runs; when a count is short, look for the missing items before blaming the mod.

@@ -70,6 +70,17 @@ neoForge {
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
+        // Builds the Ponder scenes in a world as a player would and saves them as schematics
+        // into src/main/resources/assets/bitsmith_create/ponder.
+        clientCreatePonderExport {
+            client()
+            gameDirectory = rootProject.file("run-create")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "createPonderExport"
+            systemProperty "bitsmith.ponderExport", file("src/main/resources/assets/${addon_mod_id}/ponder").absolutePath
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
         gameTestServer {
             type = "gameTestServer"
             gameDirectory = rootProject.file("run-create-gametest")
@@ -106,7 +117,7 @@ dependencies {
         from configurations.createRuntime
         into rootProject.file("${gameDir}/mods")
     }
-    tasks.matching { it.name in ['runClientCreate', 'runGameTestServer'] }.configureEach { dependsOn install }
+    tasks.matching { it.name in ['runClientCreate', 'runClientCreatePonderExport', 'runGameTestServer'] }.configureEach { dependsOn install }
 }
 
 // Muted, never paused, no first launch screens, like Bitsmith's playtest clients.
@@ -122,7 +133,7 @@ def writeCreateOptions = tasks.register('writeCreateOptions') {
         }
     }
 }
-tasks.matching { it.name == 'runClientCreate' }.configureEach { dependsOn writeCreateOptions }
+tasks.matching { it.name in ['runClientCreate', 'runClientCreatePonderExport'] }.configureEach { dependsOn writeCreateOptions }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [

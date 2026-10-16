@@ -12,8 +12,10 @@ import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.create.BitPieceItem;
 import com.nokhxyr.bitsmith.create.BitsmithCreate;
+import com.nokhxyr.bitsmith.create.client.ponder.BitsmithPonderPlugin;
 import com.simibubi.create.content.kinetics.base.SingleAxisRotatingVisual;
 import dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer;
+import net.createmod.ponder.foundation.PonderIndex;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +29,7 @@ import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Client side of the addon: machine renderers, and slices and rods drawn in 3D in their material. */
+/** Client side of the addon: machine renderers, Ponder scenes, and slices and rods drawn in 3D in their material. */
 public final class CreateClient {
     private static final Map<BlockState, BitGrid> SLICES = new ConcurrentHashMap<>();
     private static final Map<BlockState, BitGrid> RODS = new ConcurrentHashMap<>();
@@ -37,6 +39,7 @@ public final class CreateClient {
 
     public static void register(IEventBus modEventBus) {
         LinePartials.init();
+        PonderIndex.addPlugin(new BitsmithPonderPlugin());
         modEventBus.addListener(CreateClient::onRenderers);
         modEventBus.addListener(CreateClient::onClientSetup);
         modEventBus.addListener(CreateClient::onModifyBakingResult);

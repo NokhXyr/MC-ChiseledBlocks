@@ -119,7 +119,9 @@ and depots, like the mechanical press:
 - recipes: the slicer from a shaft, two iron chisels, an andesite casing and a stonecutter; the
   cutter from a shaft, two iron ingots, a copper casing and an iron chisel; the crusher from a
   shaft, two iron ingots, a brass casing and an iron block;
-- JEI shows a page per machine and material, and how to build the line on each machine.
+- JEI shows a page per machine and material, and how to build the line on each machine;
+- Ponder (hold W over a machine) plays two scenes: the whole line on a belt, and one machine on
+  a depot with its speed and what it does when stopped; the machines cut in them as in a world.
 
 ## Requirements
 
@@ -135,7 +137,8 @@ and depots, like the mechanical press:
 ./gradlew runGameTestServer  # in game tests, headless
 ./gradlew runClientTest      # plays the mod like a player, screenshots and report
 ./gradlew runClientCompat    # the same with Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
-./gradlew :bitsmith-create:runClientCreate  # plays the Create addon: belt, three machines, 4096 bits
+./gradlew :bitsmith-create:runClientCreate  # plays the Create addon: belt, three machines, 4096 bits, Ponder
+./gradlew :bitsmith-create:runClientCreatePonderExport  # rebuilds the Ponder scene schematics in game
 ./gradlew runClient    # development client
 ```
 
@@ -289,7 +292,10 @@ travaillent sur les tapis et les dépôts de Create, comme la presse mécanique 
   tailleur de pierre ; la découpeuse avec un arbre, deux lingots de fer, un boîtier en cuivre et
   un ciseau en fer ; la concasseuse avec un arbre, deux lingots de fer, un boîtier en laiton et un
   bloc de fer ;
-- JEI montre une page par machine et par matériau, et comment monter la chaîne sur chaque machine.
+- JEI montre une page par machine et par matériau, et comment monter la chaîne sur chaque machine ;
+- Ponder (W maintenu sur une machine) joue deux scènes : toute la chaîne sur un tapis, et une
+  machine sur un dépôt avec sa vitesse et ce qu'elle fait à l'arrêt ; les machines y coupent comme
+  dans un monde.
 
 ## Prérequis
 
@@ -305,7 +311,8 @@ travaillent sur les tapis et les dépôts de Create, comme la presse mécanique 
 ./gradlew runGameTestServer  # tests en jeu, sans fenêtre
 ./gradlew runClientTest      # joue le mod comme un joueur, captures et rapport
 ./gradlew runClientCompat    # pareil avec Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
-./gradlew :bitsmith-create:runClientCreate  # joue l'addon Create : tapis, trois machines, 4096 bits
+./gradlew :bitsmith-create:runClientCreate  # joue l'addon Create : tapis, trois machines, 4096 bits, Ponder
+./gradlew :bitsmith-create:runClientCreatePonderExport  # refait en jeu les schémas des scènes Ponder
 ./gradlew runClient    # client de développement
 ```
 
