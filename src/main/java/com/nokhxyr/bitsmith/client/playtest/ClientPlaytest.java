@@ -98,7 +98,7 @@ public final class ClientPlaytest {
     private static final BlockPos F = new BlockPos(2, -60, 3);
     private static final BlockPos PIT = new BlockPos(5, -61, 4);
 
-    private record Step(String name, Runnable action, int waitTicks, BooleanSupplier check, String screenshot) {
+    private record Step(String name, Runnable action, int waitTicks, BooleanSupplier check, String screenshot, int graceTicks) {
     }
 
     private final Minecraft mc = Minecraft.getInstance();
@@ -272,11 +272,19 @@ public final class ClientPlaytest {
     // The script
 
     void step(String name, Runnable action, int wait, BooleanSupplier check) {
-        steps.add(new Step(name, action, wait, check, null));
+        steps.add(new Step(name, action, wait, check, null, GRACE_TICKS));
+    }
+
+    /**
+     * A step that checks every tick, from right after its action, until the check holds or
+     * {@code maxTicks} have passed: for waits whose length depends on the machine and the mods.
+     */
+    void until(String name, Runnable action, int maxTicks, BooleanSupplier check) {
+        steps.add(new Step(name, action, 0, check, null, maxTicks));
     }
 
     void shot(String name, Runnable action, int wait, BooleanSupplier check, String screenshot) {
-        steps.add(new Step(name, action, wait, check, screenshot));
+        steps.add(new Step(name, action, wait, check, screenshot, GRACE_TICKS));
     }
 
     private void script() {
@@ -788,7 +796,7 @@ public final class ClientPlaytest {
             }
             actionDone = true;
             waitLeft = step.waitTicks();
-            graceLeft = GRACE_TICKS;
+            graceLeft = step.graceTicks();
             return;
         }
 

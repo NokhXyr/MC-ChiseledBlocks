@@ -25,10 +25,10 @@ import java.util.Locale;
  * for Bitsmith, its own counters are recorded during carving.
  */
 final class BenchPlaytest {
-    private static final String MOD = System.getProperty("bitsmith.bench.mod", "bitsmith");
-    private static final boolean CNB = MOD.equals("cnb");
-    private static final String CHISEL = CNB ? "chiselsandbits:chisel_iron" : "bitsmith:iron_chisel";
-    private static final String CARVED = CNB ? "chiselsandbits:chiseled" : "bitsmith:carved_block";
+    static final String MOD = System.getProperty("bitsmith.bench.mod", "bitsmith");
+    static final boolean CNB = MOD.equals("cnb");
+    static final String CHISEL = CNB ? "chiselsandbits:chisel_iron" : "bitsmith:iron_chisel";
+    static final String CARVED = CNB ? "chiselsandbits:chiseled" : "bitsmith:carved_block";
     private static final List<String> MATERIALS = List.of("stone", "oak_planks", "glass", "bricks",
             "cobblestone", "spruce_planks", "white_wool", "sandstone");
     private static final double[] POINTS = {0.2, 0.4, 0.6, 0.8};

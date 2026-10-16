@@ -43,6 +43,8 @@ final class StressPlaytest {
     private static final int PLACEMENTS = 60;
 
     private static volatile BlockProfiler.Report profile;
+    private static long settleStart;
+    private static long windowStart;
 
     private StressPlaytest() {
     }
@@ -99,7 +101,10 @@ final class StressPlaytest {
             StringBuilder others = new StringBuilder();
             for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
                 var stack = inventory.getItem(slot);
-                if (!stack.isEmpty() && !BuiltInRegistries.ITEM.getKey(stack.getItem()).toString().equals("bitsmith:iron_chisel")) {
+                String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+                // Chisels & Bits gives the chiseled bits to the player, even in creative.
+                boolean ownBits = BenchPlaytest.CNB && id.equals("chiselsandbits:block_bit");
+                if (!stack.isEmpty() && !id.equals(BenchPlaytest.CHISEL) && !ownBits) {
                     others.append(stack).append(' ');
                 }
             }
@@ -115,7 +120,7 @@ final class StressPlaytest {
         });
 
         // 16,000 carved blocks: a row of five copies of the references, doubled along z, then up.
-        p.step("clone the references into " + BLOCKS + " carved blocks", () -> {
+        p.until("clone the references into " + BLOCKS + " carved blocks", () -> {
             for (int x = 8; x < SIZE_X; x += 8) {
                 p.command("clone 0 -60 0 7 -60 0 " + x + " -60 0");
             }
@@ -132,11 +137,32 @@ final class StressPlaytest {
                 y += copy;
             }
             p.command("fill 200 -60 0 239 -51 39 minecraft:stone");
-        }, 100, () -> {
+        }, 2400, () -> {
             BlockPos far = new BlockPos(SIZE_X - 1, -60 + SIZE_Y - 1, SIZE_Z - 1);
-            return p.that("far corner " + blockId(far), blockId(far).equals("bitsmith:carved_block"));
+            return p.that("far corner " + blockId(far), blockId(far).equals(BenchPlaytest.CARVED));
         });
-        p.step("let the server and the client settle", () -> p.command("tp @s 20.5 -35 -30.5 0 30"), 300, () -> true);
+        // Wait until the game is playable again (60 fps over a second), however long the mod needs.
+        p.until("the scene is playable", () -> {
+            p.command("tp @s 20.5 -35 -30.5 0 30");
+            settleStart = System.nanoTime();
+            windowStart = settleStart;
+            p.startFrames();
+        }, 6000, () -> {
+            long now = System.nanoTime();
+            if (now - windowStart < 1_000_000_000L) {
+                return false;
+            }
+            ClientPlaytest.FrameStats frames = p.stopFrames();
+            if (frames.averageFps() >= 60) {
+                result(p, String.format(Locale.ROOT, "playable %.1f s after the scene was built (%.0f fps over the last second)",
+                        (now - settleStart) / 1e9, frames.averageFps()));
+                return true;
+            }
+            windowStart = now;
+            p.startFrames();
+            return false;
+        });
+        p.step("let the server and the client settle", () -> { }, 100, () -> true);
         p.step("memory with the scene", System::gc, 40, () -> {
             result(p, "heap in use at rest after a collection, with " + BLOCKS + " carved blocks: " + heapMb() + " MB");
             return true;
@@ -160,7 +186,9 @@ final class StressPlaytest {
         p.step("T2 start counters and the block profiler", () -> {
             Metrics.reset();
             profile = null;
-            server().execute(() -> BlockProfiler.start(WINDOW, report -> profile = report));
+            if (!BenchPlaytest.CNB) {
+                server().execute(() -> BlockProfiler.start(WINDOW, report -> profile = report));
+            }
             p.command("spark profiler start --timeout 25 --save-to-file --thread *");
             startRecording();
             p.startFrames();
@@ -176,9 +204,10 @@ final class StressPlaytest {
         }
         p.step("T2 result", () -> { }, 1, () -> {
             ClientPlaytest.FrameStats frames = p.stopFrames();
-            result(p, "T2 carving storm (a click every 2 ticks, " + Metrics.CHISEL_STROKES.get() + " strokes taken by the server): " + frames + "; " + serverTicks());
+            String strokes = BenchPlaytest.CNB ? "100 clicks" : Metrics.CHISEL_STROKES.get() + " strokes taken by the server";
+            result(p, "T2 carving storm (a click every 2 ticks, " + strokes + "): " + frames + "; " + serverTicks());
             saveRecording(p, "t2");
-            if (Metrics.ENABLED) {
+            if (Metrics.ENABLED && !BenchPlaytest.CNB) {
                 result(p, String.format(Locale.ROOT, "T2 Bitsmith counters: %d strokes, %.1f us per stroke, %.1f us per tick for batched edits, "
                                 + "%d meshes, %.1f us per mesh, %d section rebuilds, %d resyncs",
                         Metrics.CHISEL_STROKES.get(), micros(Metrics.CHISEL_NANOS.get(), Metrics.CHISEL_STROKES.get()),
@@ -189,6 +218,9 @@ final class StressPlaytest {
             return frames.frames() > 0;
         });
         p.step("T2 block profiler report", () -> { }, 40, () -> {
+            if (BenchPlaytest.CNB) {
+                return true;
+            }
             BlockProfiler.Report report = profile;
             if (report == null) {
                 return p.that("the block profiler has not reported", false);
@@ -199,32 +231,9 @@ final class StressPlaytest {
             return true;
         });
 
-        // T3: a storm of large shape placements: a box of 31 x 15 x 31 bits every 2 ticks.
-        p.step("T3 hold stone bits", () -> server().execute(() -> {
-            ServerPlayer player = server().getPlayerList().getPlayers().get(0);
-            player.setItemInHand(InteractionHand.MAIN_HAND, BitItem.of(Blocks.STONE.defaultBlockState(), 64));
-        }), 5, () -> true);
-        p.step("T3 start", () -> {
-            p.command("tp @s 1.5 -57 -24.5 0 20");
-            p.startFrames();
-        }, 5, () -> true);
-        for (int i = 0; i < PLACEMENTS; i++) {
-            int bx = i * 2;
-            p.step("T3 place a box", () -> server().execute(() -> {
-                ServerPlayer player = server().getPlayerList().getPlayers().get(0);
-                player.teleportTo(bx + 1.5, -58, -24.5);
-                int[] start = {bx * 16, -60 * 16, -22 * 16};
-                int[] end = {start[0] + 30, start[1] + 14, start[2] + 30};
-                ShapePlacement.place(player, PlacementMode.BOX, start, end, 0);
-            }), 2, () -> true);
+        if (!BenchPlaytest.CNB) {
+            placementStorm(p);
         }
-        p.step("T3 result", () -> { }, 1, () -> {
-            ClientPlaytest.FrameStats frames = p.stopFrames();
-            BlockPos placed = new BlockPos((PLACEMENTS - 1) * 2, -60, -22);
-            result(p, String.format(Locale.ROOT, "T3 placement storm (%d boxes of 14,415 bits, one every 2 ticks): ", PLACEMENTS)
-                    + frames + "; " + serverTicks());
-            return p.that("last box placed: " + blockId(placed), blockId(placed).equals("bitsmith:carved_block"));
-        });
 
         // T4: come back after the chunks were unloaded: the stone control, then the carved scene,
         // recorded with Java Flight Recorder when -Dbitsmith.stress.jfr=true (it slows the run down).
@@ -310,6 +319,35 @@ final class StressPlaytest {
                 saveRecording(p, "t4");
             }
             return frames.frames() > 0;
+        });
+    }
+
+    /** T3, Bitsmith only (Chisels &amp; Bits has no shape placement): a box of 31 x 15 x 31 bits every 2 ticks. */
+    private static void placementStorm(ClientPlaytest p) {
+        p.step("T3 hold stone bits", () -> server().execute(() -> {
+            ServerPlayer player = server().getPlayerList().getPlayers().get(0);
+            player.setItemInHand(InteractionHand.MAIN_HAND, BitItem.of(Blocks.STONE.defaultBlockState(), 64));
+        }), 5, () -> true);
+        p.step("T3 start", () -> {
+            p.command("tp @s 1.5 -57 -24.5 0 20");
+            p.startFrames();
+        }, 5, () -> true);
+        for (int i = 0; i < PLACEMENTS; i++) {
+            int bx = i * 2;
+            p.step("T3 place a box", () -> server().execute(() -> {
+                ServerPlayer player = server().getPlayerList().getPlayers().get(0);
+                player.teleportTo(bx + 1.5, -58, -24.5);
+                int[] start = {bx * 16, -60 * 16, -22 * 16};
+                int[] end = {start[0] + 30, start[1] + 14, start[2] + 30};
+                ShapePlacement.place(player, PlacementMode.BOX, start, end, 0);
+            }), 2, () -> true);
+        }
+        p.step("T3 result", () -> { }, 1, () -> {
+            ClientPlaytest.FrameStats frames = p.stopFrames();
+            BlockPos placed = new BlockPos((PLACEMENTS - 1) * 2, -60, -22);
+            result(p, String.format(Locale.ROOT, "T3 placement storm (%d boxes of 14,415 bits, one every 2 ticks): ", PLACEMENTS)
+                    + frames + "; " + serverTicks());
+            return p.that("last box placed: " + blockId(placed), blockId(placed).equals("bitsmith:carved_block"));
         });
     }
 

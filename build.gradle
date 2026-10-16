@@ -148,6 +148,20 @@ neoForge {
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
+        // The stress run with Chisels & Bits instead of Bitsmith, for comparison (the same scenes,
+        // without the placement storm, which Chisels & Bits has no equivalent for).
+        clientStressCnb {
+            client()
+            gameDirectory = project.file("run-stress-cnb")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "stress"
+            systemProperty "bitsmith.stress.config", "cnb"
+            systemProperty "bitsmith.bench.mod", "cnb"
+            systemProperty "bitsmith.stress.jfr", providers.gradleProperty("bitsmith.stress.jfr").getOrElse("false")
+            jvmArguments.addAll "-Xms2G", "-Xmx" + stressHeap
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
         clientBenchCnb {
             client()
             gameDirectory = project.file("run-bench-cnb")
@@ -369,7 +383,7 @@ idea {
 // Options for the playtest client: muted, never paused when unfocused, no first launch screens.
 def writePlaytestOptions = tasks.register('writePlaytestOptions') {
     def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate', 'run-bench', 'run-bench-cnb', 'run-soak', 'run-admin', 'run-perms',
-                 'run-stress', 'run-stress-opti', 'run-stress-arcadia']
+                 'run-stress', 'run-stress-opti', 'run-stress-arcadia', 'run-stress-cnb']
             .collect { file("$it/options.txt") }
     outputs.files(files)
     doLast {
@@ -397,7 +411,7 @@ def writePlaytestOptions = tasks.register('writePlaytestOptions') {
 }
 tasks.matching { it.name in ['runClientTest', 'runClientCompat', 'runClientCnbSource', 'runClientCnbMigrate',
                              'runClientBench', 'runClientBenchCnb', 'runClientSoak', 'runClientAdmin', 'runClientPerms',
-                             'runClientStress', 'runClientStressOpti', 'runClientStressArcadia'] }.configureEach {
+                             'runClientStress', 'runClientStressOpti', 'runClientStressArcadia', 'runClientStressCnb'] }.configureEach {
     dependsOn writePlaytestOptions
 }
 
@@ -582,6 +596,14 @@ def installStressArcadia = tasks.register('installStressArcadia', Copy) {
         iris.text = text.trim() + (text.trim() ? '\n' : '') + 'enableShaders=false\n'
     }
 }
+def installStressCnbMods = tasks.register('installStressCnbMods', Copy) {
+    dependsOn installChiselsAndBits, repackSaeculariaCore, installCnbRunMods
+    from configurations.benchClientMods
+    from cnbDownloads.collect { it[0] }
+    from repackSaeculariaCore
+    into 'run-stress-cnb/mods'
+}
+tasks.matching { it.name == 'runClientStressCnb' }.configureEach { dependsOn installStressCnbMods }
 tasks.matching { it.name == 'runClientStress' }.configureEach { dependsOn installStressMods }
 tasks.matching { it.name == 'runClientStressOpti' }.configureEach { dependsOn installStressOptiMods }
 tasks.matching { it.name == 'runClientStressArcadia' }.configureEach { dependsOn writePlaytestOptions, installStressArcadia }
@@ -590,7 +612,7 @@ tasks.matching { it.name == 'runClientBenchCnb' }.configureEach { dependsOn inst
 // Spark's background profiler would run during the measurements: off in the performance runs.
 def writeBenchConfig = tasks.register('writeBenchConfig') {
     mustRunAfter installStressArcadia
-    def configs = ['run-bench', 'run-bench-cnb', 'run-stress', 'run-stress-opti', 'run-stress-arcadia'].collect { file("$it/config/spark/config.json") }
+    def configs = ['run-bench', 'run-bench-cnb', 'run-stress', 'run-stress-opti', 'run-stress-arcadia', 'run-stress-cnb'].collect { file("$it/config/spark/config.json") }
     outputs.files(configs)
     doLast {
         configs.each { config ->
@@ -599,6 +621,6 @@ def writeBenchConfig = tasks.register('writeBenchConfig') {
         }
     }
 }
-tasks.matching { it.name in ['runClientBench', 'runClientBenchCnb', 'runClientStress', 'runClientStressOpti', 'runClientStressArcadia'] }.configureEach {
+tasks.matching { it.name in ['runClientBench', 'runClientBenchCnb', 'runClientStress', 'runClientStressOpti', 'runClientStressArcadia', 'runClientStressCnb'] }.configureEach {
     dependsOn writeBenchConfig
 }
