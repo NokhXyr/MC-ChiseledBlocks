@@ -29,10 +29,10 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 | Action | How |
 |---|---|
 | Carve | Hold the iron chisel and left click a block (hold the button to keep carving) |
-| Tool menu | Hold `Left Alt` with the chisel or the bag: point at an option and release (or click) |
+| Tool menu | Hold `Left Alt` with a Bitsmith tool: a wheel of choices around the tool (point and release, or click to keep it open), undo and redo buttons on the left, the mirror on the right, the chisel size slider below |
 | Change chisel mode | Tool menu, or `V` (single bit, cube, line, plane, sphere) |
 | Change chisel size | Tool menu, or `B` (1, 2, 4, 8 bits) |
-| Undo / redo | `Ctrl+Z` / `Ctrl+Y`, or the centre of the tool menu (last 64 actions) |
+| Undo / redo | `Ctrl+Z` / `Ctrl+Y`, or the buttons on the left of the tool menu (last 64 actions) |
 | Place a bit | Hold bits and right click a face |
 | Fill the bit bag | Keep the bag anywhere in the inventory while carving: bits go into it first |
 | Place from the bag | Hold the bag and right click a face; the tool menu or `V` picks the material |
@@ -168,10 +168,10 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 | Action | Comment |
 |---|---|
 | Ciseler | Ciseau en fer en main, clic gauche sur un bloc (maintenir pour continuer) |
-| Menu de l'outil | `Alt gauche` maintenu avec le ciseau ou le sac : pointer une option et relâcher (ou cliquer) |
+| Menu de l'outil | `Alt gauche` maintenu avec un outil Bitsmith : une roue de choix autour de l'outil (pointer et relâcher, ou cliquer pour le garder ouvert), boutons annuler et rétablir à gauche, le miroir à droite, le curseur de taille du ciseau en dessous |
 | Changer le mode du ciseau | Menu de l'outil, ou `V` (bit seul, cube, ligne, plan, sphère) |
 | Changer la taille du ciseau | Menu de l'outil, ou `B` (1, 2, 4, 8 bits) |
-| Annuler / rétablir | `Ctrl+Z` / `Ctrl+Y`, ou le centre du menu de l'outil (64 dernières actions) |
+| Annuler / rétablir | `Ctrl+Z` / `Ctrl+Y`, ou les boutons à gauche du menu de l'outil (64 dernières actions) |
 | Poser un bit | Bits en main, clic droit sur une face |
 | Remplir le sac à bits | Garder le sac n'importe où dans l'inventaire en ciselant : les bits y vont en premier |
 | Poser depuis le sac | Sac en main, clic droit sur une face ; le menu de l'outil ou `V` choisit le matériau |

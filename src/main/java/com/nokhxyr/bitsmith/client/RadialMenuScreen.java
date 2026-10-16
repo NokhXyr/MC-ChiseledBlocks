@@ -5,7 +5,6 @@
 package com.nokhxyr.bitsmith.client;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.nokhxyr.bitsmith.client.admin.UiKit;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
 import com.nokhxyr.bitsmith.core.edit.ChiselShape;
 import com.nokhxyr.bitsmith.core.edit.Symmetry;
@@ -20,10 +19,14 @@ import com.nokhxyr.bitsmith.item.PatternMode;
 import com.nokhxyr.bitsmith.item.SawItem;
 import com.nokhxyr.bitsmith.network.ToolOptionPayload;
 import com.nokhxyr.bitsmith.network.UndoPayload;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -33,35 +36,63 @@ import org.joml.Matrix4f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.IntConsumer;
 
 /**
- * Radial menu shown while the menu key is held with a Bitsmith tool in hand. Point at an option
- * and release the key (or click) to pick it. The centre holds undo (left half) and redo (right
- * half). Options are applied by the server, like the V and B keys.
+ * The tool menu, shown while the menu key is held with a Bitsmith tool in hand. One wheel of
+ * choices around the tool, square buttons on the sides (undo and redo on the left, the mirror on
+ * the right), and a slider below for the chisel size.
+ *
+ * <p>Point at a wedge and release the key to pick it, or click it: a click keeps the menu open.
+ * Choices are applied by the server, like the V and B keys.
  */
 public final class RadialMenuScreen extends Screen {
-    private static final float CENTER_RADIUS = 24;
-    private static final float GAP = 0.03F;
-    /** Same palette as the admin panel. */
-    private static final int SCRIM = 0x50080A0D;
-    private static final int BACKDROP = 0xC0101318;
-    private static final int IDLE = 0xF0222832;
-    private static final int SELECTED = UiKit.mix(UiKit.ACCENT, UiKit.PANEL, 0.62F);
+    private static final float INNER = 26;
+    private static final float OUTER = 60;
+    /** Icons sit at this distance from the centre. */
+    private static final float ICON_RADIUS = 43;
+    private static final float GAP = 0.02F;
+    private static final int BUTTON = 24;
+    private static final int BUTTON_STEP = 34;
+    private static final float COLUMN_OFFSET = 88;
+    private static final int SLIDER_W = 90;
+    private static final int SLIDER_H = 14;
+    private static final float SLIDER_OFFSET = 74;
+    /** Ticks of the opening animation. */
+    private static final float OPENING = 6;
 
-    /** One choice in a ring. */
-    private record Slot(Component label, @Nullable ItemStack icon, boolean selected, Runnable action) {
+    private static final int WEDGE_DARK = 0x66404040;
+    private static final int WEDGE_LIGHT = 0x66595959;
+    private static final int WEDGE_CURRENT_DARK = 0x6640FF40;
+    private static final int WEDGE_CURRENT_LIGHT = 0x6659FF59;
+    private static final int WEDGE_HOVER = 0x66FFFFFF;
+    private static final int ICON = 0xFFFFFFFF;
+    private static final int ICON_CURRENT = 0xFF66FF66;
+
+    /** One wedge of the wheel. */
+    private record Option(Component label, RadialIcons.Icon icon, Runnable action) {
     }
 
-    private record Ring(float inner, float outer, List<Slot> slots) {
+    /** One square button on a side. */
+    private record SideButton(String id, Component label, RadialIcons.Icon icon, boolean toggled, Runnable action) {
     }
 
-    private final List<Ring> rings = new ArrayList<>();
-    /** The tool the menu belongs to, shown above it when nothing is pointed at. */
-    private Component toolName = Component.empty();
-    /** Shrinks the whole menu when it would not fit the screen (large GUI scales). */
+    private final List<Option> options = new ArrayList<>();
+    private final List<SideButton> left = new ArrayList<>();
+    private final List<SideButton> right = new ArrayList<>();
+    private ItemStack held = ItemStack.EMPTY;
+    private int current = -1;
+    private @Nullable Component emptyHint;
+    private @Nullable SizeSlider slider;
+    private int @Nullable [] sliderValues;
+    private int sliderIndex;
+    private @Nullable IntConsumer sliderAction;
+    private Component sliderLabel = Component.empty();
+
     private float menuScale = 1.0F;
-    private @Nullable Slot hovered;
-    private int hoveredCenter;
+    private int ticksOpen;
+    private int hovered = -1;
+    private @Nullable SideButton hoveredButton;
 
     private RadialMenuScreen() {
         super(Component.translatable("bitsmith.radial.title"));
@@ -70,75 +101,98 @@ public final class RadialMenuScreen extends Screen {
     /** Builds the menu for the tool in hand, or returns null when it has no options. */
     public static @Nullable RadialMenuScreen forItem(ItemStack held) {
         RadialMenuScreen screen = new RadialMenuScreen();
-        screen.toolName = held.getHoverName();
+        screen.held = held.copy();
         if (held.getItem() instanceof ChiselItem) {
             ChiselSettings settings = ChiselItem.settings(held);
-            List<Slot> sizes = new ArrayList<>();
-            for (int size : ChiselShape.SIZES) {
-                sizes.add(new Slot(Component.literal(Integer.toString(size)), null, settings.size() == size,
-                        () -> send(ToolOptionPayload.Option.CHISEL_SIZE, size)));
-            }
-            List<Slot> modes = new ArrayList<>();
             for (ChiselMode mode : ChiselMode.values()) {
-                modes.add(new Slot(Component.translatable("bitsmith.mode." + mode.name().toLowerCase(Locale.ROOT)), null,
-                        settings.mode() == mode, () -> send(ToolOptionPayload.Option.CHISEL_MODE, mode.ordinal())));
+                screen.options.add(new Option(Component.translatable("bitsmith.mode." + mode.name().toLowerCase(Locale.ROOT)),
+                        RadialIcons.mode(mode), () -> send(ToolOptionPayload.Option.CHISEL_MODE, mode.ordinal())));
             }
-            screen.rings.add(new Ring(30, 58, sizes));
-            screen.rings.add(new Ring(62, 112, modes));
-            screen.rings.add(new Ring(116, 150, symmetrySlots()));
+            screen.current = settings.mode().ordinal();
+            screen.slider(ChiselShape.SIZES, settings.size(), "bitsmith.radial.size",
+                    size -> send(ToolOptionPayload.Option.CHISEL_SIZE, size));
+            screen.undoButtons();
+            screen.mirrorButton();
             return screen;
         }
         if (held.getItem() instanceof PatternItem) {
-            PatternMode current = PatternItem.mode(held);
-            List<Slot> modes = new ArrayList<>();
             for (PatternMode mode : PatternMode.values()) {
-                modes.add(new Slot(mode.displayName(), null, mode == current,
+                screen.options.add(new Option(mode.displayName(), RadialIcons.pattern(mode),
                         () -> send(ToolOptionPayload.Option.PATTERN_MODE, mode.ordinal())));
             }
-            screen.rings.add(new Ring(36, 96, modes));
+            screen.current = PatternItem.mode(held).ordinal();
+            screen.undoButtons();
             return screen;
         }
         if (held.getItem() instanceof BitBagItem bag) {
             BagContents contents = BitBagItem.contents(held);
-            List<Slot> materials = new ArrayList<>();
             for (int i = 0; i < contents.entries().size(); i++) {
                 BagContents.Entry entry = contents.entries().get(i);
                 int index = i;
-                materials.add(new Slot(bag.describeEntry(entry),
-                        BitItem.of(entry.material(), 1), i == contents.selected(),
+                screen.options.add(new Option(bag.describeEntry(entry), RadialIcons.item(BitItem.of(entry.material(), 1)),
                         () -> send(ToolOptionPayload.Option.BAG_MATERIAL, index)));
             }
-            if (!materials.isEmpty()) {
-                screen.rings.add(new Ring(36, 104, materials));
+            screen.current = contents.isEmpty() ? -1 : contents.selected();
+            if (contents.isEmpty()) {
+                screen.emptyHint = Component.translatable("bitsmith.bag.empty");
             }
-            screen.rings.add(new Ring(108, 142, symmetrySlots()));
+            screen.undoButtons();
+            screen.mirrorButton();
             return screen;
         }
         if (held.getItem() instanceof SawItem) {
-            int current = SawItem.thickness(held);
-            List<Slot> sizes = new ArrayList<>();
+            int thickness = SawItem.thickness(held);
             for (int size : ChiselShape.SIZES) {
-                sizes.add(new Slot(Component.translatable("bitsmith.saw.thickness", size), null, size == current,
+                screen.options.add(new Option(Component.translatable("bitsmith.saw.thickness", size), RadialIcons.slice(size),
                         () -> send(ToolOptionPayload.Option.SAW_THICKNESS, size)));
+                if (size == thickness) {
+                    screen.current = screen.options.size() - 1;
+                }
             }
-            screen.rings.add(new Ring(36, 96, sizes));
+            screen.undoButtons();
             return screen;
         }
         if (held.getItem() instanceof BitItem) {
-            screen.rings.add(new Ring(36, 96, symmetrySlots()));
+            for (Symmetry symmetry : Symmetry.values()) {
+                screen.options.add(new Option(Component.translatable("bitsmith.symmetry.set", SymmetryControl.name(symmetry)),
+                        RadialIcons.text(SymmetryControl.name(symmetry)), () -> SymmetryControl.set(symmetry)));
+            }
+            screen.current = PlayerSymmetry.client().ordinal();
+            screen.undoButtons();
             return screen;
         }
         return null;
     }
 
-    /** The mirror choices, shared by every tool that carves or places bits. */
-    private static List<Slot> symmetrySlots() {
-        List<Slot> slots = new ArrayList<>();
-        for (Symmetry symmetry : Symmetry.values()) {
-            slots.add(new Slot(SymmetryControl.name(symmetry), null, PlayerSymmetry.client() == symmetry,
-                    () -> SymmetryControl.set(symmetry)));
+    private void undoButtons() {
+        left.add(new SideButton("undo", Component.translatable("bitsmith.radial.undo"), RadialIcons.undo(false), false,
+                () -> PacketDistributor.sendToServer(new UndoPayload(false))));
+        left.add(new SideButton("redo", Component.translatable("bitsmith.radial.redo"), RadialIcons.undo(true), false,
+                () -> PacketDistributor.sendToServer(new UndoPayload(true))));
+    }
+
+    /** One button showing the mirror; each click moves to the next setting. */
+    private void mirrorButton() {
+        Symmetry symmetry = PlayerSymmetry.client();
+        right.add(new SideButton("mirror", Component.translatable("bitsmith.symmetry.set", SymmetryControl.name(symmetry)),
+                RadialIcons.text(SymmetryControl.name(symmetry)), symmetry != Symmetry.NONE, () -> {
+                    Symmetry[] all = Symmetry.values();
+                    SymmetryControl.set(all[(PlayerSymmetry.client().ordinal() + 1) % all.length]);
+                    right.clear();
+                    mirrorButton();
+                }));
+    }
+
+    private void slider(int[] values, int currentValue, String labelKey, IntConsumer action) {
+        sliderValues = values;
+        sliderAction = action;
+        sliderLabel = Component.translatable(labelKey);
+        sliderIndex = 0;
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] == currentValue) {
+                sliderIndex = i;
+            }
         }
-        return slots;
     }
 
     private static void send(ToolOptionPayload.Option option, int value) {
@@ -148,9 +202,21 @@ public final class RadialMenuScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        // Room for the menu plus its caption above it.
-        float available = Math.min(width, height) / 2.0F - 16;
-        menuScale = Math.min(1.0F, available / (outerRadius() + 14));
+        // Wheel, side columns, labels and slider must fit, at any GUI scale.
+        float halfWidth = COLUMN_OFFSET + BUTTON / 2.0F + 8;
+        float halfHeight = SLIDER_OFFSET + SLIDER_H + 4;
+        menuScale = Math.min(1.0F, Math.min((width / 2.0F - 8) / halfWidth, (height / 2.0F - 8) / halfHeight));
+        if (sliderValues != null) {
+            int sx = Math.round(width / 2.0F - SLIDER_W * menuScale / 2);
+            int sy = Math.round(height / 2.0F + SLIDER_OFFSET * menuScale);
+            slider = new SizeSlider(sx, sy, Math.round(SLIDER_W * menuScale), SLIDER_H);
+            addWidget(slider);
+        }
+    }
+
+    @Override
+    public void tick() {
+        ticksOpen++;
     }
 
     @Override
@@ -160,152 +226,178 @@ public final class RadialMenuScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // No blur, only a light shade: the world stays visible behind the menu.
-        graphics.fill(0, 0, width, height, SCRIM);
+        // Nothing: the world stays fully visible around the wheel.
     }
+
+    // Layout, in GUI units, without the opening animation
+
+    private float cx() {
+        return width / 2.0F;
+    }
+
+    private float cy() {
+        return height / 2.0F;
+    }
+
+    /** Top left corner and size of a side button. */
+    private int[] buttonAt(boolean leftSide, int index, int count) {
+        float column = leftSide ? -COLUMN_OFFSET : COLUMN_OFFSET;
+        float top = -(count * BUTTON_STEP - (BUTTON_STEP - BUTTON)) / 2.0F;
+        float x = cx() + (column - BUTTON / 2.0F) * menuScale;
+        float y = cy() + (top + index * BUTTON_STEP) * menuScale;
+        return new int[]{Math.round(x), Math.round(y), Math.round(BUTTON * menuScale)};
+    }
+
+    /** Centre of a named button or of a wedge ({@code "option.N"}), for the playtest. */
+    public int @Nullable [] locate(String id) {
+        if (id.startsWith("option.")) {
+            int index = Integer.parseInt(id.substring(7));
+            if (index < 0 || index >= options.size()) {
+                return null;
+            }
+            float angle = wedgeMiddle(index);
+            return new int[]{Math.round(cx() + Mth.cos(angle) * ICON_RADIUS * menuScale),
+                    Math.round(cy() + Mth.sin(angle) * ICON_RADIUS * menuScale)};
+        }
+        for (int side = 0; side < 2; side++) {
+            List<SideButton> column = side == 0 ? left : right;
+            for (int i = 0; i < column.size(); i++) {
+                if (column.get(i).id().equals(id)) {
+                    int[] box = buttonAt(side == 0, i, column.size());
+                    return new int[]{box[0] + box[2] / 2, box[1] + box[2] / 2};
+                }
+            }
+        }
+        return null;
+    }
+
+    private float wedgeStep() {
+        return Mth.TWO_PI / Math.max(1, options.size());
+    }
+
+    /** Wedges start at the top and run clockwise. */
+    private float wedgeMiddle(int index) {
+        // A single choice fills the whole wheel: its icon goes at the top.
+        return options.size() == 1 ? -Mth.HALF_PI : -Mth.HALF_PI + (index + 0.5F) * wedgeStep();
+    }
+
+    // Drawing
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        float cx = width / 2.0F;
-        float cy = height / 2.0F;
         hoverAt(mouseX, mouseY);
-        renderBackground(graphics, mouseX, mouseY, partialTick);
+        float opened = Mth.clamp((ticksOpen + partialTick) / OPENING, 0, 1);
+        float eased = 1 - (1 - opened) * (1 - opened);
+        float cx = cx();
+        float cy = cy();
+        float scale = menuScale * (0.6F + 0.4F * eased);
+
         graphics.pose().pushPose();
         graphics.pose().translate(cx, cy, 0);
-        graphics.pose().scale(menuScale, menuScale, 1);
+        graphics.pose().scale(scale, scale, 1);
         graphics.pose().translate(-cx, -cy, 0);
+        renderWheel(graphics, cx, cy, ticksOpen + partialTick);
+        renderIcons(graphics, cx, cy, eased);
+        graphics.pose().pushPose();
+        graphics.pose().translate(cx, cy, 0);
+        graphics.pose().scale(1.8F, 1.8F, 1);
+        graphics.renderItem(held, -8, -8);
+        graphics.pose().popPose();
+        renderHoveredLabel(graphics, cx, cy);
+        graphics.pose().popPose();
 
+        renderButtons(graphics, eased);
+        if (slider != null) {
+            slider.setAlpha(eased);
+            slider.render(graphics, mouseX, mouseY, partialTick);
+        }
+        if (hoveredButton != null) {
+            graphics.renderTooltip(font, hoveredButton.label(), mouseX, mouseY);
+        }
+    }
+
+    private void renderWheel(GuiGraphics graphics, float cx, float cy, float time) {
         Matrix4f matrix = graphics.pose().last().pose();
         VertexConsumer buffer = graphics.bufferSource().getBuffer(RenderType.gui());
-
-        // A dark disc behind the rings, so they read on any background.
-        sector(buffer, matrix, cx, cy, 0, outerRadius() + 4, -Mth.HALF_PI, Mth.PI * 1.5F, BACKDROP);
-        // Centre: undo on the left half, redo on the right.
-        bordered(buffer, matrix, cx, cy, 0, CENTER_RADIUS, Mth.HALF_PI + GAP, Mth.PI * 1.5F - GAP,
-                hoveredCenter < 0 ? UiKit.ACCENT : IDLE);
-        bordered(buffer, matrix, cx, cy, 0, CENTER_RADIUS, -Mth.HALF_PI + GAP, Mth.HALF_PI - GAP,
-                hoveredCenter > 0 ? UiKit.ACCENT : IDLE);
-
-        for (Ring ring : rings) {
-            float step = Mth.TWO_PI / ring.slots().size();
-            for (int i = 0; i < ring.slots().size(); i++) {
-                Slot slot = ring.slots().get(i);
-                boolean hover = slot == hovered;
-                float from = -Mth.HALF_PI + i * step + GAP;
-                float to = from + step - 2 * GAP;
-                int fill = hover ? UiKit.SURFACE_HOVER : slot.selected() ? SELECTED : IDLE;
-                bordered(buffer, matrix, cx, cy, ring.inner(), ring.outer(), from, to, fill);
-                if (hover || slot.selected()) {
-                    // An accent edge on the outside, like the panel's active tab.
-                    float inset = 1.0F / ring.outer();
-                    sector(buffer, matrix, cx, cy, ring.outer() - 3, ring.outer() - 1, from + inset, to - inset,
-                            hover ? UiKit.ACCENT_HOVER : UiKit.ACCENT);
-                }
-            }
+        int count = Math.max(1, options.size());
+        float step = wedgeStep();
+        for (int i = 0; i < count; i++) {
+            // Each wedge grows out from the centre a little after the previous one.
+            float grow = Mth.clamp((time - i * 0.5F) / 3.0F, 0, 1);
+            float outer = INNER + (OUTER - INNER) * grow;
+            boolean light = i % 2 == 0;
+            int colour = options.isEmpty() ? WEDGE_DARK
+                    : i == hovered ? WEDGE_HOVER
+                    : i == current ? (light ? WEDGE_CURRENT_LIGHT : WEDGE_CURRENT_DARK)
+                    : light ? WEDGE_LIGHT : WEDGE_DARK;
+            float gap = count > 1 ? GAP : 0;
+            sector(buffer, matrix, cx, cy, INNER, outer, -Mth.HALF_PI + i * step + gap, -Mth.HALF_PI + (i + 1) * step - gap, colour);
         }
         graphics.flush();
+    }
 
-        UiKit.centred(graphics, font, Component.literal("<"), (int) (cx - CENTER_RADIUS / 2), (int) cy - 4,
-                hoveredCenter < 0 ? UiKit.ON_ACCENT : UiKit.MUTED);
-        UiKit.centred(graphics, font, Component.literal(">"), (int) (cx + CENTER_RADIUS / 2), (int) cy - 4,
-                hoveredCenter > 0 ? UiKit.ON_ACCENT : UiKit.MUTED);
-        for (Ring ring : rings) {
-            float step = Mth.TWO_PI / ring.slots().size();
-            float middle = (ring.inner() + ring.outer()) / 2;
-            for (int i = 0; i < ring.slots().size(); i++) {
-                Slot slot = ring.slots().get(i);
-                float mid = -Mth.HALF_PI + (i + 0.5F) * step;
-                int x = (int) (cx + Mth.cos(mid) * middle);
-                int y = (int) (cy + Mth.sin(mid) * middle);
-                if (slot.icon() != null) {
-                    graphics.renderItem(slot.icon(), x - 8, y - 8);
-                } else {
-                    UiKit.centred(graphics, font, slot.label(), x, y - 4,
-                            slot == hovered || slot.selected() ? UiKit.TEXT : UiKit.MUTED);
-                }
+    private void renderIcons(GuiGraphics graphics, float cx, float cy, float eased) {
+        if (options.isEmpty()) {
+            if (emptyHint != null) {
+                graphics.drawCenteredString(font, emptyHint, (int) cx, (int) (cy + OUTER + 6), 0xFFFFFFFF);
             }
-        }
-
-        Component caption = hoveredCenter < 0 ? Component.translatable("bitsmith.radial.undo")
-                : hoveredCenter > 0 ? Component.translatable("bitsmith.radial.redo")
-                : hovered != null ? hovered.label() : null;
-        // Above the menu: below it the caption would collide with the action bar message.
-        caption(graphics, caption != null ? caption : toolName, caption != null, (int) cx, (int) (cy - outerRadius() - 22));
-        graphics.pose().popPose();
-    }
-
-    /** A label in a small panel, with the accent bar on its left like the panel's tooltips. */
-    private void caption(GuiGraphics graphics, Component text, boolean active, int centreX, int y) {
-        int w = font.width(text) + 18;
-        int x = centreX - w / 2;
-        UiKit.box(graphics, x - 1, y - 1, w + 2, 18, UiKit.BORDER);
-        UiKit.box(graphics, x, y, w, 16, UiKit.HEADER);
-        graphics.fill(x, y + 1, x + 2, y + 15, active ? UiKit.ACCENT : UiKit.FAINT);
-        UiKit.centred(graphics, font, text, centreX + 1, y + 4, active ? UiKit.TEXT : UiKit.MUTED);
-    }
-
-    /** A sector with a one pixel border in the panel's border colour. */
-    private static void bordered(VertexConsumer buffer, Matrix4f matrix, float cx, float cy,
-                                 float inner, float outer, float from, float to, int fill) {
-        sector(buffer, matrix, cx, cy, inner, outer, from, to, UiKit.BORDER);
-        float inset = 1.0F / outer;
-        sector(buffer, matrix, cx, cy, inner == 0 ? 0 : inner + 1, outer - 1, from + inset, to - inset, fill);
-    }
-
-    /**
-     * Works out the option under a point in GUI units. Called when drawing and again when the
-     * choice is made, so a mouse move and a release within the same frame still pick the option
-     * actually under the cursor.
-     */
-    private void hoverAt(double mouseX, double mouseY) {
-        float dx = (float) ((mouseX - width / 2.0) / menuScale);
-        float dy = (float) ((mouseY - height / 2.0) / menuScale);
-        updateHover(Mth.sqrt(dx * dx + dy * dy), angleOf(dx, dy), dx);
-    }
-
-    /** The cursor position right now, in GUI units. */
-    private void hoverAtCursor() {
-        if (minecraft == null) {
             return;
         }
-        double x = minecraft.mouseHandler.xpos() * width / minecraft.getWindow().getScreenWidth();
-        double y = minecraft.mouseHandler.ypos() * height / minecraft.getWindow().getScreenHeight();
-        hoverAt(x, y);
-    }
-
-    private float outerRadius() {
-        float outer = CENTER_RADIUS;
-        for (Ring ring : rings) {
-            outer = Math.max(outer, ring.outer());
+        for (int i = 0; i < options.size(); i++) {
+            float angle = wedgeMiddle(i);
+            float radius = INNER + (ICON_RADIUS - INNER) * eased;
+            int x = Math.round(cx + Mth.cos(angle) * radius) - 8;
+            int y = Math.round(cy + Mth.sin(angle) * radius) - 8;
+            options.get(i).icon().draw(graphics, font, x, y, i == current ? ICON_CURRENT : ICON);
         }
-        return outer;
     }
 
-    /** Angle in screen space, 0 to the right, growing clockwise, in [-PI/2, 3PI/2). */
-    private static float angleOf(float dx, float dy) {
-        float angle = (float) Math.atan2(dy, dx);
-        return angle < -Mth.HALF_PI ? angle + Mth.TWO_PI : angle;
-    }
-
-    private void updateHover(float distance, float angle, float dx) {
-        hovered = null;
-        hoveredCenter = 0;
-        if (distance <= CENTER_RADIUS) {
-            hoveredCenter = dx < 0 ? -1 : 1;
+    /** The name of the pointed wedge, just outside the wheel, on the wedge's side. */
+    private void renderHoveredLabel(GuiGraphics graphics, float cx, float cy) {
+        if (hovered < 0) {
             return;
         }
-        // Each ring owns the space up to halfway to the next one; the last ring owns everything
-        // beyond it, so a quick flick of the mouse past the menu still picks something.
-        for (int r = 0; r < rings.size(); r++) {
-            Ring ring = rings.get(r);
-            float upper = r + 1 < rings.size() ? (ring.outer() + rings.get(r + 1).inner()) / 2 : Float.MAX_VALUE;
-            if (distance < upper) {
-                float step = Mth.TWO_PI / ring.slots().size();
-                int index = Mth.clamp((int) ((angle + Mth.HALF_PI) / step), 0, ring.slots().size() - 1);
-                hovered = ring.slots().get(index);
-                return;
+        Component label = options.get(hovered).label();
+        float angle = wedgeMiddle(hovered);
+        float cos = Mth.cos(angle);
+        float sin = Mth.sin(angle);
+        float ax = cx + cos * (OUTER + 6);
+        float ay = cy + sin * (OUTER + 6);
+        int labelWidth = font.width(label);
+        int x = Math.abs(cos) < 0.3F ? Math.round(ax - labelWidth / 2.0F) : cos > 0 ? Math.round(ax) : Math.round(ax - labelWidth);
+        int y = Math.round(ay - 4 + sin * 4);
+        graphics.drawString(font, label, x, y, hovered == current ? ICON_CURRENT : 0xFFFFFFFF, true);
+    }
+
+    private void renderButtons(GuiGraphics graphics, float eased) {
+        // While the cursor is on the wheel, the side buttons step back.
+        float alpha = eased * (hovered >= 0 ? 0.45F : 1.0F);
+        for (int side = 0; side < 2; side++) {
+            List<SideButton> column = side == 0 ? left : right;
+            for (int i = 0; i < column.size(); i++) {
+                SideButton button = column.get(i);
+                int[] box = buttonAt(side == 0, i, column.size());
+                // Slides out from the centre while opening.
+                int x = Math.round(cx() + (box[0] - cx()) * eased);
+                int y = box[1];
+                int size = box[2];
+                boolean hover = button == hoveredButton;
+                int background = hover ? 0xA0FFFFFF : button.toggled() ? 0x9040A040 : 0x90000000;
+                graphics.fill(x, y, x + size, y + size, withAlpha(background, alpha));
+                graphics.fill(x, y, x + size, y + 1, withAlpha(0x60FFFFFF, alpha));
+                graphics.fill(x, y + size - 1, x + size, y + size, withAlpha(0x60000000, alpha));
+                graphics.pose().pushPose();
+                graphics.pose().translate(x + size / 2.0F, y + size / 2.0F, 0);
+                graphics.pose().scale(menuScale, menuScale, 1);
+                button.icon().draw(graphics, font, -8, -8, withAlpha(hover ? 0xFF202020 : 0xFFFFFFFF, alpha));
+                graphics.pose().popPose();
             }
         }
+    }
+
+    private static int withAlpha(int argb, float alpha) {
+        int a = Math.round((argb >>> 24) * Mth.clamp(alpha, 0, 1));
+        return (a << 24) | (argb & 0xFFFFFF);
     }
 
     /**
@@ -330,26 +422,72 @@ public final class RadialMenuScreen extends Screen {
         }
     }
 
-    /** Runs the hovered choice. Returns whether there was one. */
-    private boolean activate() {
-        if (hoveredCenter != 0) {
-            PacketDistributor.sendToServer(new UndoPayload(hoveredCenter > 0));
-            return true;
+    // Pointing
+
+    /**
+     * Works out what is under a point in GUI units. Called when drawing and again when the
+     * choice is made, so a mouse move and a release within the same frame still pick the option
+     * actually under the cursor.
+     */
+    private void hoverAt(double mouseX, double mouseY) {
+        hovered = -1;
+        hoveredButton = null;
+        for (int side = 0; side < 2; side++) {
+            List<SideButton> column = side == 0 ? left : right;
+            for (int i = 0; i < column.size(); i++) {
+                int[] box = buttonAt(side == 0, i, column.size());
+                if (mouseX >= box[0] && mouseX < box[0] + box[2] && mouseY >= box[1] && mouseY < box[1] + box[2]) {
+                    hoveredButton = column.get(i);
+                    return;
+                }
+            }
         }
-        if (hovered != null) {
-            hovered.action().run();
-            return true;
+        if (slider != null && slider.isMouseOver(mouseX, mouseY)) {
+            return;
         }
-        return false;
+        float dx = (float) ((mouseX - cx()) / menuScale);
+        float dy = (float) ((mouseY - cy()) / menuScale);
+        // Anything past the inner edge counts, so a quick flick past the wheel still picks.
+        if (options.isEmpty() || Mth.sqrt(dx * dx + dy * dy) < INNER) {
+            return;
+        }
+        float angle = (float) Math.atan2(dy, dx) + Mth.HALF_PI;
+        if (angle < 0) {
+            angle += Mth.TWO_PI;
+        }
+        hovered = Mth.clamp((int) (angle / wedgeStep()), 0, options.size() - 1);
+    }
+
+    /** The cursor position right now, in GUI units. */
+    private void hoverAtCursor() {
+        if (minecraft == null) {
+            return;
+        }
+        double x = minecraft.mouseHandler.xpos() * width / minecraft.getWindow().getScreenWidth();
+        double y = minecraft.mouseHandler.ypos() * height / minecraft.getWindow().getScreenHeight();
+        hoverAt(x, y);
+    }
+
+    private void pick(int index) {
+        options.get(index).action().run();
+        current = index;
+    }
+
+    private static void clickSound() {
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         hoverAt(mouseX, mouseY);
-        if (button == 0 && activate()) {
-            if (hoveredCenter == 0) {
-                onClose();
-            }
+        if (button == 0 && hoveredButton != null) {
+            clickSound();
+            hoveredButton.action().run();
+            return true;
+        }
+        if (button == 0 && hovered >= 0) {
+            clickSound();
+            pick(hovered);
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -359,12 +497,40 @@ public final class RadialMenuScreen extends Screen {
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if (BitsmithKeys.RADIAL.matches(keyCode, scanCode)) {
             hoverAtCursor();
-            if (hoveredCenter == 0) {
-                activate();
+            if (hovered >= 0 && hovered != current) {
+                pick(hovered);
             }
             onClose();
             return true;
         }
         return super.keyReleased(keyCode, scanCode, modifiers);
+    }
+
+    /** The chisel size, one notch per size. Each change is sent as it happens. */
+    private final class SizeSlider extends AbstractSliderButton {
+        SizeSlider(int x, int y, int width, int height) {
+            super(x, y, width, height, Component.empty(), sliderValues.length > 1 ? sliderIndex / (sliderValues.length - 1.0) : 0);
+            updateMessage();
+        }
+
+        private int index() {
+            return (int) Math.round(value * (sliderValues.length - 1));
+        }
+
+        @Override
+        protected void updateMessage() {
+            setMessage(Component.translatable("bitsmith.radial.slider", sliderLabel, sliderValues[index()]));
+        }
+
+        @Override
+        protected void applyValue() {
+            int index = index();
+            // Snap to the notch.
+            value = sliderValues.length > 1 ? index / (sliderValues.length - 1.0) : 0;
+            if (index != sliderIndex && sliderAction != null) {
+                sliderIndex = index;
+                sliderAction.accept(sliderValues[index]);
+            }
+        }
     }
 }

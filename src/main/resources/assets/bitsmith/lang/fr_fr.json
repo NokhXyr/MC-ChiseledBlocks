@@ -38,6 +38,8 @@
   "bitsmith.radial.title": "Menu de l'outil",
   "bitsmith.radial.undo": "Annuler",
   "bitsmith.radial.redo": "Rétablir",
+  "bitsmith.radial.size": "Taille",
+  "bitsmith.radial.slider": "%s : %s",
   "bitsmith.undo.nothing": "Rien à annuler",
   "bitsmith.redo.nothing": "Rien à rétablir",
   "bitsmith.undo.done": "Annulé (%s restant)",

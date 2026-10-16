@@ -302,7 +302,7 @@ public final class ClientPlaytest {
 
         step("holding Left Alt opens the tool menu", () -> key(BitsmithKeys.RADIAL.getKey().getValue(), true), 4,
                 () -> mc.screen instanceof RadialMenuScreen);
-        shot("pointing at Sphere highlights it", () -> cursorOnRing(4, ChiselMode.values().length, 87), 4,
+        shot("pointing at Sphere highlights it", () -> cursorOnRing(4, ChiselMode.values().length, 43), 4,
                 () -> mc.screen instanceof RadialMenuScreen, "02_radial_chisel");
         step("releasing Left Alt picks Sphere", () -> key(BitsmithKeys.RADIAL.getKey().getValue(), false), 6,
                 () -> that("screen " + mc.screen + ", mode " + ChiselItem.settings(held()).mode(), mc.screen == null && ChiselItem.settings(held()).mode() == ChiselMode.SPHERE));
@@ -310,7 +310,7 @@ public final class ClientPlaytest {
             key(BitsmithKeys.RADIAL.getKey().getValue(), true);
         }, 4, () -> mc.screen instanceof RadialMenuScreen);
         step("release on Cube", () -> {
-            cursorOnRing(1, ChiselMode.values().length, 87);
+            cursorOnRing(1, ChiselMode.values().length, 43);
             key(BitsmithKeys.RADIAL.getKey().getValue(), false);
         }, 6, () -> that("mode " + ChiselItem.settings(held()).mode(), ChiselItem.settings(held()).mode() == ChiselMode.CUBE));
 
@@ -350,12 +350,13 @@ public final class ClientPlaytest {
         step("the bit is placed in front of the block", this::use, 8,
                 () -> eq("bits placed", filled(C.north()), 1) && eq("loose stone bits", looseBits(Blocks.STONE.defaultBlockState()), 63));
 
-        step("undo from the tool menu centre", () -> {
+        step("undo from the tool menu", () -> {
             hotbar(0);
             key(BitsmithKeys.RADIAL.getKey().getValue(), true);
         }, 4, () -> mc.screen instanceof RadialMenuScreen);
-        step("click the undo half", () -> {
-            cursorFromCentre(-12, 0);
+        step("click the undo button", () -> {
+            int[] undo = ((RadialMenuScreen) mc.screen).locate("undo");
+            cursorAt(undo[0], undo[1]);
             mouseClick();
         }, 8, () -> that("block after undo " + mc.level.getBlockState(C.north()), mc.level.getBlockState(C.north()).isAir()) && eq("loose stone bits", looseBits(Blocks.STONE.defaultBlockState()), 64));
         step("close the tool menu", () -> key(BitsmithKeys.RADIAL.getKey().getValue(), false), 4, () -> mc.screen == null);

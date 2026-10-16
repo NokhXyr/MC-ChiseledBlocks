@@ -38,6 +38,8 @@
   "bitsmith.radial.title": "Tool menu",
   "bitsmith.radial.undo": "Undo",
   "bitsmith.radial.redo": "Redo",
+  "bitsmith.radial.size": "Size",
+  "bitsmith.radial.slider": "%s: %s",
   "bitsmith.undo.nothing": "Nothing to undo",
   "bitsmith.redo.nothing": "Nothing to redo",
   "bitsmith.undo.done": "Undone (%s left)",
