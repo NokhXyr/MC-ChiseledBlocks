@@ -39,6 +39,16 @@ public class BitBagItem extends Item {
         stack.set(BitsmithComponents.BAG_CONTENTS.get(), contents);
     }
 
+    /** The action bar message when a material is selected. */
+    public Component describeSelection(BagContents.Entry entry) {
+        return Component.translatable("bitsmith.bag.selected", entry.material().getBlock().getName(), entry.count());
+    }
+
+    /** How the radial menu labels one material of the bag. */
+    public Component describeEntry(BagContents.Entry entry) {
+        return Component.translatable("bitsmith.bag.entry", entry.material().getBlock().getName(), entry.count());
+    }
+
     @Override
     public InteractionResult useOn(UseOnContext context) {
         ItemStack bag = context.getItemInHand();

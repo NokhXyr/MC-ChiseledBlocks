@@ -37,6 +37,7 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 | Fill the bit bag | Keep the bag anywhere in the inventory while carving: bits go into it first |
 | Place from the bag | Hold the bag and right click a face; the tool menu or `V` picks the material |
 | Take bits out of the bag | Hold the bag, sneak and right click in the air: one stack of the selected material |
+| Creative bit bag | Creative tab or `/give` only, no recipe. Sneak and right click a block or a bit: adds its material and selects it. Places without limit, pays for patterns, and swallows chiseled bits while in the inventory |
 | Copy a carving | Right click a carved block with a blank pattern |
 | Print a pattern | Right click a face: prints next to it (sneak: into the clicked block, empty space only) |
 | Carve with a pattern | Switch the pattern to carve mode (`V` or tool menu), right click the block |
@@ -175,6 +176,7 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 | Remplir le sac à bits | Garder le sac n'importe où dans l'inventaire en ciselant : les bits y vont en premier |
 | Poser depuis le sac | Sac en main, clic droit sur une face ; le menu de l'outil ou `V` choisit le matériau |
 | Sortir des bits du sac | Sac en main, accroupi + clic droit dans le vide : une pile du matériau sélectionné |
+| Sac à bits créatif | Créatif ou `/give` seulement, sans recette. Accroupi + clic droit sur un bloc ou un bit : ajoute son matériau et le choisit. Pose sans limite, paie les patterns, et avale les bits ciselés tant qu'il est dans l'inventaire |
 | Copier une sculpture | Clic droit sur un bloc ciselé avec un pattern vierge |
 | Imprimer un pattern | Clic droit sur une face : imprime à côté (accroupi : dans le bloc visé, espace vide seulement) |
 | Creuser avec un pattern | Passer le pattern en mode creuser (`V` ou menu de l'outil), clic droit sur le bloc |

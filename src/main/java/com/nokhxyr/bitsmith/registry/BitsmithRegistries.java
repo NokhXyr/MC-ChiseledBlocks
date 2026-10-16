@@ -12,6 +12,7 @@ import com.nokhxyr.bitsmith.item.BitItem;
 import com.nokhxyr.bitsmith.item.BlankPatternItem;
 import com.nokhxyr.bitsmith.item.CarvedBlockItem;
 import com.nokhxyr.bitsmith.item.ChiselItem;
+import com.nokhxyr.bitsmith.item.CreativeBitBagItem;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.SawItem;
 import com.nokhxyr.bitsmith.item.TapeMeasureItem;
@@ -63,6 +64,10 @@ public final class BitsmithRegistries {
     public static final DeferredItem<BitBagItem> BIT_BAG = ITEMS.register("bit_bag",
             () -> new BitBagItem(new Item.Properties()));
 
+    /** Creative and commands only: no recipe. */
+    public static final DeferredItem<CreativeBitBagItem> CREATIVE_BIT_BAG = ITEMS.register("creative_bit_bag",
+            () -> new CreativeBitBagItem(new Item.Properties()));
+
     public static final DeferredItem<BlankPatternItem> BLANK_PATTERN = ITEMS.register("blank_pattern",
             () -> new BlankPatternItem(new Item.Properties()));
 
@@ -85,6 +90,7 @@ public final class BitsmithRegistries {
                     .displayItems((params, output) -> {
                         output.accept(IRON_CHISEL.get());
                         output.accept(BIT_BAG.get());
+                        output.accept(CREATIVE_BIT_BAG.get());
                         output.accept(BLANK_PATTERN.get());
                         output.accept(WRENCH.get());
                         output.accept(SAW.get());

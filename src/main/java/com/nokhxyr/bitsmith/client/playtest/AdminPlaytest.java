@@ -6,10 +6,12 @@ package com.nokhxyr.bitsmith.client.playtest;
 
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.client.admin.AdminClient;
+import com.nokhxyr.bitsmith.client.RadialMenuScreen;
 import com.nokhxyr.bitsmith.client.admin.AdminScreen;
 import com.nokhxyr.bitsmith.block.Materials;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
+import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.network.AdminPayloads;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
@@ -91,6 +93,49 @@ final class AdminPlaytest {
         adminPerfScript(p);
         itemScript(p);
         materialItemScript(p);
+        creativeBagScript(p);
+    }
+
+    /** The creative bit bag in survival: pick a material, place without running out, its menu. */
+    private static void creativeBagScript(ClientPlaytest p) {
+        BlockPos gold = new BlockPos(-1, -60, 2);
+        BlockPos ground = new BlockPos(1, -61, 1);
+        p.step("a creative bit bag, in survival", () -> {
+            p.command("clear @s");
+            p.command("setblock " + gold.getX() + " " + gold.getY() + " " + gold.getZ() + " minecraft:gold_block");
+            p.command("give @s bitsmith:creative_bit_bag");
+            p.command("gamemode survival");
+        }, 20, () -> {
+            p.hotbar(0);
+            return p.that("holding " + heldId(p), heldId(p).equals("bitsmith:creative_bit_bag"));
+        });
+        p.step("sneak", () -> p.key(GLFW.GLFW_KEY_LEFT_SHIFT, true), 4, () -> true);
+        p.step("sneak and right click the gold block", () -> {
+            p.lookAtFace(gold, Direction.UP);
+            p.use();
+        }, 10, () -> {
+            var selected = BitBagItem.contents(p.held()).selectedEntry();
+            return p.that("selected " + (selected == null ? "nothing" : selected.material()),
+                    selected != null && selected.material().is(Blocks.GOLD_BLOCK));
+        });
+        p.step("stand up", () -> p.key(GLFW.GLFW_KEY_LEFT_SHIFT, false), 4, () -> true);
+        for (int i = 0; i < 3; i++) {
+            p.step("place a gold bit " + (i + 1), () -> {
+                p.lookAtFace(ground, Direction.UP);
+                p.use();
+            }, 6, () -> true);
+        }
+        p.step("bits placed, the bag never empties", () -> { }, 10, () -> {
+            var selected = BitBagItem.contents(p.held()).selectedEntry();
+            return p.that("bits " + p.filled(ground.above()), p.filled(ground.above()) >= 1)
+                    && p.that("still gold", selected != null && selected.material().is(Blocks.GOLD_BLOCK));
+        });
+        p.shot("hold the menu key: the radial menu in the panel style", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, true), 10,
+                () -> p.that("radial menu open", Minecraft.getInstance().screen instanceof RadialMenuScreen),
+                "radial_creative_bag");
+        p.step("release the menu key", () -> p.key(GLFW.GLFW_KEY_LEFT_ALT, false), 5,
+                () -> p.that("closed", Minecraft.getInstance().screen == null));
+        p.step("back to creative", () -> p.command("gamemode creative"), 5, () -> true);
     }
 
     private static String heldId(ClientPlaytest p) {

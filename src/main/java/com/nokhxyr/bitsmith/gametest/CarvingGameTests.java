@@ -23,6 +23,7 @@ import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.BitBagItem;
 import com.nokhxyr.bitsmith.item.BitItem;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
+import com.nokhxyr.bitsmith.item.CreativeBitBagItem;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.PatternMode;
 import com.nokhxyr.bitsmith.network.GridDeltaPayload;
@@ -227,6 +228,58 @@ public final class CarvingGameTests {
 
         helper.assertTrue(BitBagItem.contents(bag).count(Blocks.STONE.defaultBlockState()) == 64, "64 bits in the bag");
         helper.assertTrue(bitsInInventory(player, Blocks.STONE.defaultBlockState()) == 0, "nothing loose in the inventory");
+        helper.succeed();
+    }
+
+    // Creative bit bag
+
+    @GameTest(template = TEMPLATE)
+    public static void creativeBagSwallowsChiseledBitsAndRemembersTheMaterial(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = survival(helper);
+        ItemStack bag = new ItemStack(BitsmithRegistries.CREATIVE_BIT_BAG.get());
+        player.getInventory().setItem(5, bag);
+        setMode(player, ChiselMode.CUBE, 4);
+        ChiselLogic.chisel(player, helper.absolutePos(TARGET), BitGrid.index(0, 15, 0), Face.UP);
+
+        helper.assertTrue(bitsInInventory(player, Blocks.STONE.defaultBlockState()) == 0, "the chiseled bits are swallowed");
+        helper.assertTrue(BitBagItem.contents(bag).count(Blocks.STONE.defaultBlockState()) > 0, "stone is now in its list");
+        helper.assertTrue(BitInventory.count(player, Blocks.DIAMOND_BLOCK.defaultBlockState()) >= 1 << 30,
+                "it pays for any material");
+        helper.assertTrue(BitInventory.take(player, Blocks.DIAMOND_BLOCK.defaultBlockState(), 4096) == 4096,
+                "a whole block of diamond can be taken");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void creativeBagPlacesWithoutRunningOut(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = survival(helper);
+        ItemStack bag = new ItemStack(BitsmithRegistries.CREATIVE_BIT_BAG.get());
+        CreativeBitBagItem.pick(bag, Blocks.GOLD_BLOCK.defaultBlockState());
+        player.setItemInHand(InteractionHand.MAIN_HAND, bag);
+        BagContents before = BitBagItem.contents(bag);
+        BlockPos target = helper.absolutePos(TARGET);
+        for (int i = 0; i < 3; i++) {
+            Vec3 click = new Vec3(target.getX() + 0.1 + i * 0.3, target.getY() + 1.0, target.getZ() + 0.5);
+            player.getMainHandItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND,
+                    new BlockHitResult(click, Direction.UP, target, false)));
+        }
+        // Edits after the first one are applied with the tick's batch.
+        helper.runAfterDelay(1, () -> {
+            CarvedBlockEntity carved = helper.getBlockEntity(TARGET.above());
+            helper.assertTrue(carved.getGrid().filledCount() == 3, "three gold bits placed in survival: " + carved.getGrid().filledCount());
+            helper.assertTrue(BitBagItem.contents(bag).equals(before), "the bag is unchanged");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void creativeBagHasNoRecipe(GameTestHelper helper) {
+        boolean craftable = helper.getLevel().getRecipeManager().getRecipes().stream()
+                .anyMatch(recipe -> recipe.value().getResultItem(helper.getLevel().registryAccess())
+                        .is(BitsmithRegistries.CREATIVE_BIT_BAG.get()));
+        helper.assertFalse(craftable, "no recipe makes the creative bit bag");
         helper.succeed();
     }
 

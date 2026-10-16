@@ -95,13 +95,12 @@ public final class BitsmithNetwork {
             PatternMode mode = PatternItem.mode(held).next();
             held.set(BitsmithComponents.PATTERN_MODE.get(), mode);
             player.displayClientMessage(Component.translatable("bitsmith.pattern.mode", mode.displayName()), true);
-        } else if (held.getItem() instanceof BitBagItem && !payload.size()) {
+        } else if (held.getItem() instanceof BitBagItem bag && !payload.size()) {
             BagContents next = BitBagItem.contents(held).selectNext();
             BitBagItem.setContents(held, next);
             BagContents.Entry entry = next.selectedEntry();
             if (entry != null) {
-                player.displayClientMessage(Component.translatable("bitsmith.bag.selected",
-                        entry.material().getBlock().getName(), entry.count()), true);
+                player.displayClientMessage(bag.describeSelection(entry), true);
             }
         }
     }
@@ -147,14 +146,13 @@ public final class BitsmithNetwork {
                 }
             }
             case BAG_MATERIAL -> {
-                if (held.getItem() instanceof BitBagItem) {
+                if (held.getItem() instanceof BitBagItem bag) {
                     BagContents contents = BitBagItem.contents(held);
                     BagContents next = new BagContents(contents.entries(), payload.value());
                     BitBagItem.setContents(held, next);
                     BagContents.Entry entry = next.selectedEntry();
                     if (entry != null) {
-                        player.displayClientMessage(Component.translatable("bitsmith.bag.selected",
-                                entry.material().getBlock().getName(), entry.count()), true);
+                        player.displayClientMessage(bag.describeSelection(entry), true);
                     }
                 }
             }

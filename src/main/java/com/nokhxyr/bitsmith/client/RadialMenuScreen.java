@@ -5,6 +5,7 @@
 package com.nokhxyr.bitsmith.client;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.nokhxyr.bitsmith.client.admin.UiKit;
 import com.nokhxyr.bitsmith.core.edit.ChiselMode;
 import com.nokhxyr.bitsmith.core.edit.ChiselShape;
 import com.nokhxyr.bitsmith.core.edit.Symmetry;
@@ -41,11 +42,11 @@ import java.util.Locale;
 public final class RadialMenuScreen extends Screen {
     private static final float CENTER_RADIUS = 24;
     private static final float GAP = 0.03F;
-    private static final int COLOR_IDLE = 0x90202020;
-    private static final int COLOR_HOVER = 0xD0FFFFFF;
-    private static final int COLOR_SELECTED = 0xC0D08A28;
-    private static final int TEXT = 0xFFFFFFFF;
-    private static final int TEXT_ON_HOVER = 0xFF202020;
+    /** Same palette as the admin panel. */
+    private static final int SCRIM = 0x50080A0D;
+    private static final int BACKDROP = 0xC0101318;
+    private static final int IDLE = 0xF0222832;
+    private static final int SELECTED = UiKit.mix(UiKit.ACCENT, UiKit.PANEL, 0.62F);
 
     /** One choice in a ring. */
     private record Slot(Component label, @Nullable ItemStack icon, boolean selected, Runnable action) {
@@ -55,6 +56,8 @@ public final class RadialMenuScreen extends Screen {
     }
 
     private final List<Ring> rings = new ArrayList<>();
+    /** The tool the menu belongs to, shown above it when nothing is pointed at. */
+    private Component toolName = Component.empty();
     /** Shrinks the whole menu when it would not fit the screen (large GUI scales). */
     private float menuScale = 1.0F;
     private @Nullable Slot hovered;
@@ -67,6 +70,7 @@ public final class RadialMenuScreen extends Screen {
     /** Builds the menu for the tool in hand, or returns null when it has no options. */
     public static @Nullable RadialMenuScreen forItem(ItemStack held) {
         RadialMenuScreen screen = new RadialMenuScreen();
+        screen.toolName = held.getHoverName();
         if (held.getItem() instanceof ChiselItem) {
             ChiselSettings settings = ChiselItem.settings(held);
             List<Slot> sizes = new ArrayList<>();
@@ -94,13 +98,13 @@ public final class RadialMenuScreen extends Screen {
             screen.rings.add(new Ring(36, 96, modes));
             return screen;
         }
-        if (held.getItem() instanceof BitBagItem) {
+        if (held.getItem() instanceof BitBagItem bag) {
             BagContents contents = BitBagItem.contents(held);
             List<Slot> materials = new ArrayList<>();
             for (int i = 0; i < contents.entries().size(); i++) {
                 BagContents.Entry entry = contents.entries().get(i);
                 int index = i;
-                materials.add(new Slot(Component.translatable("bitsmith.bag.entry", entry.material().getBlock().getName(), entry.count()),
+                materials.add(new Slot(bag.describeEntry(entry),
                         BitItem.of(entry.material(), 1), i == contents.selected(),
                         () -> send(ToolOptionPayload.Option.BAG_MATERIAL, index)));
             }
@@ -156,7 +160,8 @@ public final class RadialMenuScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // No blur: the world stays visible behind the menu.
+        // No blur, only a light shade: the world stays visible behind the menu.
+        graphics.fill(0, 0, width, height, SCRIM);
     }
 
     @Override
@@ -164,6 +169,7 @@ public final class RadialMenuScreen extends Screen {
         float cx = width / 2.0F;
         float cy = height / 2.0F;
         hoverAt(mouseX, mouseY);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.pose().pushPose();
         graphics.pose().translate(cx, cy, 0);
         graphics.pose().scale(menuScale, menuScale, 1);
@@ -172,24 +178,37 @@ public final class RadialMenuScreen extends Screen {
         Matrix4f matrix = graphics.pose().last().pose();
         VertexConsumer buffer = graphics.bufferSource().getBuffer(RenderType.gui());
 
-        sector(buffer, matrix, cx, cy, 0, CENTER_RADIUS, Mth.HALF_PI + GAP, Mth.PI * 1.5F - GAP,
-                hoveredCenter < 0 ? COLOR_HOVER : COLOR_IDLE);
-        sector(buffer, matrix, cx, cy, 0, CENTER_RADIUS, -Mth.HALF_PI + GAP, Mth.HALF_PI - GAP,
-                hoveredCenter > 0 ? COLOR_HOVER : COLOR_IDLE);
+        // A dark disc behind the rings, so they read on any background.
+        sector(buffer, matrix, cx, cy, 0, outerRadius() + 4, -Mth.HALF_PI, Mth.PI * 1.5F, BACKDROP);
+        // Centre: undo on the left half, redo on the right.
+        bordered(buffer, matrix, cx, cy, 0, CENTER_RADIUS, Mth.HALF_PI + GAP, Mth.PI * 1.5F - GAP,
+                hoveredCenter < 0 ? UiKit.ACCENT : IDLE);
+        bordered(buffer, matrix, cx, cy, 0, CENTER_RADIUS, -Mth.HALF_PI + GAP, Mth.HALF_PI - GAP,
+                hoveredCenter > 0 ? UiKit.ACCENT : IDLE);
 
         for (Ring ring : rings) {
             float step = Mth.TWO_PI / ring.slots().size();
             for (int i = 0; i < ring.slots().size(); i++) {
                 Slot slot = ring.slots().get(i);
-                float start = -Mth.HALF_PI + i * step;
-                int color = slot == hovered ? COLOR_HOVER : slot.selected() ? COLOR_SELECTED : COLOR_IDLE;
-                sector(buffer, matrix, cx, cy, ring.inner(), ring.outer(), start + GAP, start + step - GAP, color);
+                boolean hover = slot == hovered;
+                float from = -Mth.HALF_PI + i * step + GAP;
+                float to = from + step - 2 * GAP;
+                int fill = hover ? UiKit.SURFACE_HOVER : slot.selected() ? SELECTED : IDLE;
+                bordered(buffer, matrix, cx, cy, ring.inner(), ring.outer(), from, to, fill);
+                if (hover || slot.selected()) {
+                    // An accent edge on the outside, like the panel's active tab.
+                    float inset = 1.0F / ring.outer();
+                    sector(buffer, matrix, cx, cy, ring.outer() - 3, ring.outer() - 1, from + inset, to - inset,
+                            hover ? UiKit.ACCENT_HOVER : UiKit.ACCENT);
+                }
             }
         }
         graphics.flush();
 
-        graphics.drawCenteredString(font, "<", (int) (cx - CENTER_RADIUS / 2), (int) cy - 4, hoveredCenter < 0 ? TEXT_ON_HOVER : TEXT);
-        graphics.drawCenteredString(font, ">", (int) (cx + CENTER_RADIUS / 2), (int) cy - 4, hoveredCenter > 0 ? TEXT_ON_HOVER : TEXT);
+        UiKit.centred(graphics, font, Component.literal("<"), (int) (cx - CENTER_RADIUS / 2), (int) cy - 4,
+                hoveredCenter < 0 ? UiKit.ON_ACCENT : UiKit.MUTED);
+        UiKit.centred(graphics, font, Component.literal(">"), (int) (cx + CENTER_RADIUS / 2), (int) cy - 4,
+                hoveredCenter > 0 ? UiKit.ON_ACCENT : UiKit.MUTED);
         for (Ring ring : rings) {
             float step = Mth.TWO_PI / ring.slots().size();
             float middle = (ring.inner() + ring.outer()) / 2;
@@ -201,7 +220,8 @@ public final class RadialMenuScreen extends Screen {
                 if (slot.icon() != null) {
                     graphics.renderItem(slot.icon(), x - 8, y - 8);
                 } else {
-                    graphics.drawCenteredString(font, slot.label(), x, y - 4, slot == hovered ? TEXT_ON_HOVER : TEXT);
+                    UiKit.centred(graphics, font, slot.label(), x, y - 4,
+                            slot == hovered || slot.selected() ? UiKit.TEXT : UiKit.MUTED);
                 }
             }
         }
@@ -209,11 +229,27 @@ public final class RadialMenuScreen extends Screen {
         Component caption = hoveredCenter < 0 ? Component.translatable("bitsmith.radial.undo")
                 : hoveredCenter > 0 ? Component.translatable("bitsmith.radial.redo")
                 : hovered != null ? hovered.label() : null;
-        if (caption != null) {
-            // Above the menu: below it the caption would collide with the action bar message.
-            graphics.drawCenteredString(font, caption, (int) cx, (int) (cy - outerRadius() - 14), TEXT);
-        }
+        // Above the menu: below it the caption would collide with the action bar message.
+        caption(graphics, caption != null ? caption : toolName, caption != null, (int) cx, (int) (cy - outerRadius() - 22));
         graphics.pose().popPose();
+    }
+
+    /** A label in a small panel, with the accent bar on its left like the panel's tooltips. */
+    private void caption(GuiGraphics graphics, Component text, boolean active, int centreX, int y) {
+        int w = font.width(text) + 18;
+        int x = centreX - w / 2;
+        UiKit.box(graphics, x - 1, y - 1, w + 2, 18, UiKit.BORDER);
+        UiKit.box(graphics, x, y, w, 16, UiKit.HEADER);
+        graphics.fill(x, y + 1, x + 2, y + 15, active ? UiKit.ACCENT : UiKit.FAINT);
+        UiKit.centred(graphics, font, text, centreX + 1, y + 4, active ? UiKit.TEXT : UiKit.MUTED);
+    }
+
+    /** A sector with a one pixel border in the panel's border colour. */
+    private static void bordered(VertexConsumer buffer, Matrix4f matrix, float cx, float cy,
+                                 float inner, float outer, float from, float to, int fill) {
+        sector(buffer, matrix, cx, cy, inner, outer, from, to, UiKit.BORDER);
+        float inset = 1.0F / outer;
+        sector(buffer, matrix, cx, cy, inner == 0 ? 0 : inner + 1, outer - 1, from + inset, to - inset, fill);
     }
 
     /**
