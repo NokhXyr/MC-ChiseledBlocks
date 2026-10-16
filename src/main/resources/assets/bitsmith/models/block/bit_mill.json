@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "side": "bitsmith:block/bit_mill_side",
-    "top": "bitsmith:block/bit_mill_top",
-    "bottom": "bitsmith:block/bit_mill_bottom"
-  }
-}

@@ -21,12 +21,12 @@ with its dynamic model loading turned on, and Iris with a shader pack enabled.
 | ImmediatelyFast | 1.6.14 | Works | Loaded with the full playtest (radial menu, outlines, item rendering) |
 | Entity Culling | 1.11.2 | Works | Loaded with the full playtest |
 | WorldEdit | 7.3.8 | Works, one limit | `//copy`, `//paste` and `//rotate` keep and turn carvings; `//set bitsmith:carved_block` leaves no empty ghost block. `//flip` does not mirror carvings (see below) |
-| Create | 6.0.10 | Works | A mechanical piston moves a carved block: it renders with its carving on the contraption and is placed back unchanged. A chute feeds stone into a bit mill and a hopper takes the bits out into a chest |
+| Create | 6.0.10 | Works | A mechanical piston moves a carved block: it renders with its carving on the contraption and is placed back unchanged. Bulk bit production with Create is a separate addon (Bitsmith: Create): its Mechanical Bit Mill, turned by a creative motor and fed by a chute, sends bits through a hopper into a chest |
 | KubeJS | 2101.7.2 | Works | Recipes can use Bitsmith items, including bits with their material component |
 | AE2 | 19.2.18 | Works | A carved block, a stack of bits and a filled bit bag go into a 1k storage cell, the cell is saved and reopened, and they come back identical |
 | Refined Storage | 2.0.9 | Works | The same three items go through its storage and its save codec and come back identical |
-| JEI | 19.57.0.451 | Works, integrated | Every carved block item is listed; a Bit Mill page shows each block giving 4096 bits, with the mill as its machine; bits and the mill have information pages |
-| Jade | 15.10.6 | Works, integrated | Looking at a carved block shows its materials and how full it is; at a bit mill, the blocks waiting and the bits ready |
+| JEI | 19.57.0.451 | Works, integrated | Every carved block item is listed; bits have an information page. With the Create addon, a Mechanical Bit Mill page per material |
+| Jade | 15.10.6 | Works, integrated | Looking at a carved block shows its materials and how full it is; with the Create addon, a mill shows the blocks waiting and the bits ready |
 | Pehkui | 3.8.3 | Works | Loaded in every development client |
 
 ### How it works
@@ -75,12 +75,12 @@ Iris avec un shader actif.
 | ImmediatelyFast | 1.6.14 | Fonctionne | Chargé avec toute la partie de test (menu radial, contours, rendu des items) |
 | Entity Culling | 1.11.2 | Fonctionne | Chargé avec toute la partie de test |
 | WorldEdit | 7.3.8 | Fonctionne, une limite | `//copy`, `//paste` et `//rotate` gardent et tournent les sculptures ; `//set bitsmith:carved_block` ne laisse pas de bloc fantôme vide. `//flip` ne retourne pas les sculptures en miroir (voir plus bas) |
-| Create | 6.0.10 | Fonctionne | Un piston mécanique déplace un bloc ciselé : il s'affiche avec sa sculpture sur la contraption et est reposé intact. Une goulotte alimente un moulin à bits en pierre et une trémie emporte les bits dans un coffre |
+| Create | 6.0.10 | Fonctionne | Un piston mécanique déplace un bloc ciselé : il s'affiche avec sa sculpture sur la contraption et est reposé intact. La production de bits en masse avec Create est un addon séparé (Bitsmith: Create) : son moulin à bits mécanique, entraîné par un moteur créatif et alimenté par une goulotte, envoie les bits par une trémie dans un coffre |
 | KubeJS | 2101.7.2 | Fonctionne | Les recettes peuvent utiliser les items Bitsmith, y compris les bits avec leur matériau |
 | AE2 | 19.2.18 | Fonctionne | Un bloc ciselé, une pile de bits et un sac rempli entrent dans une cellule de stockage 1k, la cellule est sauvegardée puis rouverte, et ils ressortent identiques |
 | Refined Storage | 2.0.9 | Fonctionne | Les trois mêmes objets passent par son stockage et son format de sauvegarde et ressortent identiques |
-| JEI | 19.57.0.451 | Fonctionne, intégré | Tous les objets de blocs ciselés sont listés ; une page Moulin à bits montre chaque bloc donnant 4096 bits, avec le moulin comme machine ; les bits et le moulin ont une page d'information |
-| Jade | 15.10.6 | Fonctionne, intégré | Regarder un bloc ciselé affiche ses matériaux et son remplissage ; un moulin à bits, ses blocs en attente et ses bits prêts |
+| JEI | 19.57.0.451 | Fonctionne, intégré | Tous les objets de blocs ciselés sont listés ; les bits ont une page d'information. Avec l'addon Create, une page Moulin à bits mécanique par matériau |
+| Jade | 15.10.6 | Fonctionne, intégré | Regarder un bloc ciselé affiche ses matériaux et son remplissage ; avec l'addon Create, un moulin affiche ses blocs en attente et ses bits prêts |
 | Pehkui | 3.8.3 | Fonctionne | Chargé dans tous les clients de développement |
 
 ### Fonctionnement

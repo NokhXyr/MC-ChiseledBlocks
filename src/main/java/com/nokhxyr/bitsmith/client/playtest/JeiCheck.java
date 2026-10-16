@@ -18,7 +18,7 @@ final class JeiCheck {
     private JeiCheck() {
     }
 
-    /** Null when JEI lists the carved items and the mill page, else what is missing. */
+    /** Null when JEI lists every carved block item, else what is missing. */
     static String listsBitsmith() {
         IJeiRuntime runtime = BitsmithJeiPlugin.runtime();
         if (runtime == null) {
@@ -27,14 +27,13 @@ final class JeiCheck {
         long carved = runtime.getIngredientManager().getAllIngredients(VanillaTypes.ITEM_STACK).stream()
                 .filter(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath().startsWith("carved/"))
                 .count();
-        long mill = runtime.getRecipeManager().createRecipeLookup(BitsmithJeiPlugin.MILL).get().count();
         if (carved < CarvedItems.all().size()) {
             return "JEI lists " + carved + " carved items of " + CarvedItems.all().size();
         }
-        return mill >= CarvedItems.all().size() - 20 ? null : "only " + mill + " mill recipes";
+        return null;
     }
 
-    /** Opens JEI's recipe screen on what makes stone bits, as a look up on the bits would. */
+    /** Opens JEI on stone bits, as a look up on the bits would: their information page. */
     static void showStoneBits() {
         IJeiRuntime runtime = BitsmithJeiPlugin.runtime();
         if (runtime != null) {

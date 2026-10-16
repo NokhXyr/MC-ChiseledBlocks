@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "axis=y": { "model": "bitsmith_create:block/mechanical_bit_mill" },
+    "axis=z": { "model": "bitsmith_create:block/mechanical_bit_mill", "x": 90 },
+    "axis=x": { "model": "bitsmith_create:block/mechanical_bit_mill", "x": 90, "y": 90 }
+  }
+}

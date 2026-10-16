@@ -125,6 +125,7 @@ public final class ClientPlaytest {
             case "soak" -> SoakPlaytest.script(this);
             case "admin" -> AdminPlaytest.script(this);
             case "perms" -> PermsPlaytest.script(this);
+            case "create" -> CreateAddonPlaytest.script(this);
             default -> script();
         }
     }
@@ -464,9 +465,7 @@ public final class ClientPlaytest {
         shot("overview of the row", () -> look(new Vec3(0.5, -59.5, 3.5)), 8, () -> true, "08_overview");
     }
 
-    // Compatibility: storage mods, Create logistics into the bit mill, JEI and Jade
-
-    private static final BlockPos MILL = new BlockPos(20, -60, -14);
+    // Compatibility: storage mods, JEI and Jade
 
     /** Items whose components must survive storage: a carving, bits, a filled bag. */
     private List<ItemStack> storedSamples() {
@@ -505,34 +504,6 @@ public final class ClientPlaytest {
             });
         }
 
-        // A Create chute feeds the mill from above, a hopper empties it into a chest below.
-        step("build a chute, a bit mill, a hopper and a chest", () -> {
-            command("setblock 20 -58 -14 create:chute");
-            command("setblock 20 -59 -14 create:chute");
-            command("setblock 20 -60 -14 bitsmith:bit_mill");
-            command("setblock 20 -61 -14 minecraft:hopper[facing=down]");
-            command("setblock 20 -62 -14 minecraft:chest");
-            command("tp @s 20.5 -59 -18.5 0 20");
-        }, 20, () -> that("mill placed", mc.level.getBlockState(MILL).is(BitsmithRegistries.BIT_MILL.get())));
-        step("throw two stone blocks into the chute", () -> {
-            command("summon item 20.5 -57.2 -13.5 {Item:{id:\"minecraft:stone\",count:2}}");
-        }, 80, () -> {
-            int bits = mc.getSingleplayerServer().submit(() -> {
-                var level = mc.getSingleplayerServer().overworld();
-                int total = 0;
-                if (level.getBlockEntity(MILL.below(2)) instanceof net.minecraft.world.Container chest) {
-                    for (int i = 0; i < chest.getContainerSize(); i++) {
-                        if (chest.getItem(i).getItem() instanceof BitItem) {
-                            total += chest.getItem(i).getCount();
-                        }
-                    }
-                }
-                return total;
-            }).join();
-            return that("stone bits in the chest " + bits, bits > 0);
-        });
-        shot("the automated line", () -> look(new Vec3(20.5, -60, -13.5)), 10, () -> true, "18_create_bit_mill");
-
         if (ModList.get().isLoaded("jade")) {
             step("Jade on a carved block", () -> look(new Vec3(A.getX() + 0.5, A.getY() + 0.3, A.getZ())), 1, () -> true);
             step("look at it", () -> command("tp @s 0.5 -60 0.5 0 30"), 30,
@@ -540,18 +511,14 @@ public final class ClientPlaytest {
                             BitsmithJadePlugin.carvedTooltips > 0));
             shot("Jade shows the materials", () -> look(new Vec3(A.getX() + 0.5, A.getY() + 0.3, A.getZ())), 15,
                     () -> true, "19_jade_carved");
-            step("Jade on the mill", () -> command("tp @s 20.5 -59 -16.5 0 30"), 15, () -> true);
-            shot("Jade shows the mill's contents", () -> look(new Vec3(20.5, -59.5, -14)), 30,
-                    () -> that("Jade asked Bitsmith " + BitsmithJadePlugin.millTooltips + " times",
-                            BitsmithJadePlugin.millTooltips > 0), "20_jade_mill");
         }
         if (ModList.get().isLoaded("jei")) {
-            step("JEI lists the carved items and the mill page", () -> { }, 20, () -> {
+            step("JEI lists the carved items", () -> { }, 20, () -> {
                 String problem = JeiCheck.listsBitsmith();
                 return that(problem == null ? "listed" : problem, problem == null);
             });
-            shot("JEI: how stone bits are made", JeiCheck::showStoneBits, 15,
-                    () -> that("recipe screen " + mc.screen, mc.screen != null), "21_jei_bit_mill");
+            shot("JEI: what stone bits are", JeiCheck::showStoneBits, 15,
+                    () -> that("recipe screen " + mc.screen, mc.screen != null), "21_jei_bits");
             step("close JEI", () -> tap(GLFW.GLFW_KEY_ESCAPE), 5, () -> mc.screen == null);
         }
     }

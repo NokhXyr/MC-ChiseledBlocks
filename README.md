@@ -39,7 +39,6 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 | Placement modes | Bits or a bag in hand, tool menu: **single bit**; **draw** (hold right click and paint on the layer of the first bit); **line**, **plane** or **box** (first right click sets the start, the second the end, an outline previews the shape; right click in the air to cancel). A shape may cross blocks (8 blocks per side, 16,384 bits at most) and is undone with one Ctrl+Z; in survival it is refused when bits are missing |
 | Bag pages | A bag holds up to 64 materials; the tool menu shows 12 per page, use the arrows on the right or the mouse wheel to turn pages |
 | Put bits back in the bag | In an inventory, right click bits onto the bag, or the bag onto bits. Bits picked up from the ground go into the bag first |
-| Bit mill | Cuts whole blocks into 4096 bits each. Load it by right click or from any side with hoppers, Create chutes, funnels or belts, or storage buses; take the bits from below or any side the same way, or right click it with a bit bag. A comparator reads how full it is; broken, it keeps its contents |
 | Take bits out of the bag | Hold the bag, sneak and right click in the air: one stack of the selected material |
 | Creative bit bag | Creative tab or `/give` only, no recipe. Sneak and right click a block or a bit: adds its material and selects it. Places without limit, pays for patterns, and swallows chiseled bits while in the inventory |
 | Copy a carving | Right click a carved block with a blank pattern |
@@ -101,6 +100,22 @@ For example, to give the panel and teleporting to a `staff` group without profil
 `lp group staff permission set bitsmith.panel.teleport true`. The panel only shows the tools a
 player may use, and the server checks every request again.
 
+### Create addon: bulk bits
+
+Bitsmith alone makes bits by hand, with the chisel. Producing bits in bulk is only possible with
+the optional addon **Bitsmith: Create** (`bitsmith_create`, built from `bitsmith-create/`), which
+needs Bitsmith and Create. It adds the **Mechanical Bit Mill**:
+
+- a shaft runs through it; it cuts whole blocks into 4096 bits each, as fast as the shaft turns
+  (about 3 seconds per block at 16 rpm, a fifth of a second at 256 rpm), and does nothing while
+  it stands still; stress impact 4 per rpm, like the mechanical saw;
+- blocks go in and bits come out through a standard inventory on every side: Create's chutes,
+  funnels and belts, hoppers and storage buses work with it; right click with blocks to load it,
+  with a bit bag to fill the bag, empty handed to take bits;
+- comparators read how full it is, and a broken mill keeps its contents;
+- recipe: iron chisel, two shafts, an andesite casing and a stonecutter;
+- JEI shows a page for every material, Jade shows what it holds.
+
 ## Requirements
 
 - Minecraft 1.21.1
@@ -109,12 +124,13 @@ player may use, and the server checks every request again.
 ## Building
 
 ```
-./gradlew build        # mod jar in build/libs
+./gradlew build        # mod jar in build/libs, addon jar in bitsmith-create/build/libs
 ./gradlew test         # unit tests
 ./gradlew benchmark    # voxel core micro-benchmarks
 ./gradlew runGameTestServer  # in game tests, headless
 ./gradlew runClientTest      # plays the mod like a player, screenshots and report
 ./gradlew runClientCompat    # the same with Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
+./gradlew :bitsmith-create:runClientCreate  # plays the Create addon: motor, mill, chute, hopper
 ./gradlew runClient    # development client
 ```
 
@@ -182,7 +198,6 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 | Méthodes de pose | Bits ou sac en main, menu de l'outil : **bit seul** ; **dessin** (clic droit maintenu, on peint sur la couche du premier bit) ; **ligne**, **plan** ou **boîte** (premier clic droit : départ, second : arrivée, un contour montre la forme ; clic droit dans le vide pour annuler). Une forme peut traverser plusieurs blocs (8 blocs par côté, 16 384 bits au plus) et s'annule d'un seul Ctrl+Z ; en survie elle est refusée s'il manque des bits |
 | Pages du sac | Un sac contient jusqu'à 64 matériaux ; le menu en montre 12 par page, flèches à droite ou molette pour changer de page |
 | Remettre des bits dans le sac | Dans un inventaire, clic droit avec des bits sur le sac, ou avec le sac sur des bits. Les bits ramassés au sol vont d'abord dans le sac |
-| Moulin à bits | Découpe chaque bloc entier en 4096 bits. On le charge par clic droit ou par n'importe quelle face avec des trémies, goulottes, entonnoirs ou tapis de Create, ou des bus de stockage ; les bits se récupèrent de la même façon par le dessous ou une autre face, ou par clic droit avec un sac à bits. Un comparateur lit son remplissage ; cassé, il garde son contenu |
 | Sortir des bits du sac | Sac en main, accroupi + clic droit dans le vide : une pile du matériau sélectionné |
 | Sac à bits créatif | Créatif ou `/give` seulement, sans recette. Accroupi + clic droit sur un bloc ou un bit : ajoute son matériau et le choisit. Pose sans limite, paie les patterns, et avale les bits ciselés tant qu'il est dans l'inventaire |
 | Copier une sculpture | Clic droit sur un bloc ciselé avec un pattern vierge |
@@ -246,6 +261,23 @@ Par exemple, pour donner le panneau et la téléportation à un groupe `staff`, 
 `lp group staff permission set bitsmith.panel.teleport true`. Le panneau n'affiche que les outils
 permis au joueur, et le serveur revérifie chaque demande.
 
+### Addon Create : les bits en masse
+
+Bitsmith seul fait les bits à la main, avec le ciseau. Produire des bits en masse n'est possible
+qu'avec l'addon optionnel **Bitsmith: Create** (`bitsmith_create`, construit depuis
+`bitsmith-create/`), qui demande Bitsmith et Create. Il ajoute le **moulin à bits mécanique** :
+
+- un arbre le traverse ; il découpe chaque bloc entier en 4096 bits, aussi vite que l'arbre tourne
+  (environ 3 secondes par bloc à 16 tr/min, un cinquième de seconde à 256 tr/min), et ne fait
+  rien à l'arrêt ; impact de contrainte 4 par tr/min, comme la scie mécanique ;
+- les blocs entrent et les bits sortent par un inventaire standard sur toutes les faces :
+  goulottes, entonnoirs et tapis de Create, trémies et bus de stockage fonctionnent avec ; clic
+  droit avec des blocs pour le charger, avec un sac à bits pour le remplir, main vide pour
+  prendre des bits ;
+- les comparateurs lisent son remplissage, et un moulin cassé garde son contenu ;
+- recette : ciseau en fer, deux arbres, un boîtier en andésite et un tailleur de pierre ;
+- JEI montre une page pour chaque matériau, Jade montre ce qu'il contient.
+
 ## Prérequis
 
 - Minecraft 1.21.1
@@ -254,12 +286,13 @@ permis au joueur, et le serveur revérifie chaque demande.
 ## Compilation
 
 ```
-./gradlew build        # jar du mod dans build/libs
+./gradlew build        # jar du mod dans build/libs, jar de l'addon dans bitsmith-create/build/libs
 ./gradlew test         # tests unitaires
 ./gradlew benchmark    # micro-benchmarks du noyau voxel
 ./gradlew runGameTestServer  # tests en jeu, sans fenêtre
 ./gradlew runClientTest      # joue le mod comme un joueur, captures et rapport
 ./gradlew runClientCompat    # pareil avec Sodium, Iris, ModernFix, Create, WorldEdit, KubeJS...
+./gradlew :bitsmith-create:runClientCreate  # joue l'addon Create : moteur, moulin, goulotte, trémie
 ./gradlew runClient    # client de développement
 ```
 

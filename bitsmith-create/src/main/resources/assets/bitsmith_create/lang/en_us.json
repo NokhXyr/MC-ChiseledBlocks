@@ -1,0 +1,11 @@
+{
+  "block.bitsmith_create.mechanical_bit_mill": "Mechanical Bit Mill",
+  "bitsmith_create.mill.status": "Blocks waiting: %s, bits ready: %s (%s), shaft at %s rpm",
+  "bitsmith_create.mill.bag_full": "The bag has no room for these bits",
+  "bitsmith_create.jei.mill": "1 block = %s bits, faster as the shaft turns faster",
+  "bitsmith_create.jei.mill.info": "Cuts whole blocks into 4096 bits each, driven by rotation: at 16 rpm a block takes about 3 seconds, at 256 rpm a fifth of a second. Stress impact 4 per rpm. Blocks go in from any side (Create's chutes, funnels and belts, hoppers, storage buses), bits come out the same way. Right click with a bit bag to fill it. Comparators read how full it is.",
+  "bitsmith_create.jade.blocks": "Blocks waiting: %s",
+  "bitsmith_create.jade.bits": "Bits ready: %s (%s)",
+  "bitsmith_create.jade.empty": "No bits ready",
+  "config.jade.plugin_bitsmith_create.mechanical_bit_mill": "Mechanical bit mill contents"
+}

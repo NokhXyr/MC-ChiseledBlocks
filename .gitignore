@@ -25,6 +25,8 @@ run-soak/
 run-admin/
 run-perms/
 run-perms-server/
+run-create/
+run-create-gametest/
 
 # IDE
 .idea/

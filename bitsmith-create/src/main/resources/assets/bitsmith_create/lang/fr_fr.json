@@ -1,0 +1,11 @@
+{
+  "block.bitsmith_create.mechanical_bit_mill": "Moulin à bits mécanique",
+  "bitsmith_create.mill.status": "Blocs en attente : %s, bits prêts : %s (%s), arbre à %s tr/min",
+  "bitsmith_create.mill.bag_full": "Le sac n'a plus de place pour ces bits",
+  "bitsmith_create.jei.mill": "1 bloc = %s bits, plus vite si l'arbre tourne plus vite",
+  "bitsmith_create.jei.mill.info": "Découpe chaque bloc entier en 4096 bits, entraîné par la rotation : à 16 tr/min un bloc prend environ 3 secondes, à 256 tr/min un cinquième de seconde. Impact de contrainte 4 par tr/min. Les blocs entrent par n'importe quelle face (goulottes, entonnoirs et tapis de Create, trémies, bus de stockage), les bits sortent de la même façon. Clic droit avec un sac à bits pour le remplir. Les comparateurs lisent son remplissage.",
+  "bitsmith_create.jade.blocks": "Blocs en attente : %s",
+  "bitsmith_create.jade.bits": "Bits prêts : %s (%s)",
+  "bitsmith_create.jade.empty": "Aucun bit prêt",
+  "config.jade.plugin_bitsmith_create.mechanical_bit_mill": "Contenu du moulin à bits mécanique"
+}

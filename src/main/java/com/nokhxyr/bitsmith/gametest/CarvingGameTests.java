@@ -28,8 +28,6 @@ import com.nokhxyr.bitsmith.item.ChiselSettings;
 import com.nokhxyr.bitsmith.item.CreativeBitBagItem;
 import com.nokhxyr.bitsmith.item.PatternItem;
 import com.nokhxyr.bitsmith.item.PatternMode;
-import com.nokhxyr.bitsmith.machine.BitMillBlockEntity;
-import com.nokhxyr.bitsmith.machine.MillContents;
 import com.nokhxyr.bitsmith.network.GridDeltaPayload;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
@@ -62,9 +60,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -294,47 +290,22 @@ public final class CarvingGameTests {
         helper.succeed();
     }
 
-    // Bit mill and putting bits back
-
-    @GameTest(template = TEMPLATE, timeoutTicks = 100)
-    public static void millCutsBlocksThroughItsInventory(GameTestHelper helper) {
-        helper.setBlock(TARGET, BitsmithRegistries.BIT_MILL.get());
-        BlockPos pos = helper.absolutePos(TARGET);
-        IItemHandler items = helper.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, pos, Direction.UP);
-        helper.assertTrue(items != null, "the mill exposes an item handler, like a chest");
-        ItemStack torches = new ItemStack(Blocks.TORCH, 5);
-        helper.assertTrue(items.insertItem(0, torches, false).getCount() == 5, "torches cannot be cut");
-        ItemStack left = items.insertItem(0, new ItemStack(Blocks.STONE, 3), false);
-        helper.assertTrue(left.isEmpty(), "three stone blocks go in");
-        helper.assertTrue(items.extractItem(0, 64, false).isEmpty(), "blocks cannot be pulled back by machines");
-
-        helper.runAfterDelay(25, () -> {
-            BitMillBlockEntity mill = helper.getBlockEntity(TARGET);
-            helper.assertTrue(mill.bits() == 2 * 4096, "two blocks cut, the store is full: " + mill.bits());
-            helper.assertTrue(mill.input().getCount() == 1, "one block still waiting");
-            helper.assertTrue(helper.getLevel().getBlockState(pos).getAnalogOutputSignal(helper.getLevel(), pos) == 15,
-                    "a comparator reads it full");
-            ItemStack out = items.extractItem(1, 64, false);
-            helper.assertTrue(out.getItem() instanceof BitItem && out.getCount() == 64
-                    && BitItem.material(out) == Blocks.STONE.defaultBlockState(), "64 stone bits come out");
-            helper.assertTrue(mill.bits() == 2 * 4096 - 64, "taken from the store");
-            helper.succeed();
-        });
-    }
+    // Bulk bit production belongs to the Create addon only
 
     @GameTest(template = TEMPLATE)
-    public static void millKeepsItsContentsWhenBroken(GameTestHelper helper) {
-        helper.setBlock(TARGET, BitsmithRegistries.BIT_MILL.get());
-        BitMillBlockEntity mill = helper.getBlockEntity(TARGET);
-        mill.insert(new ItemStack(Blocks.OAK_PLANKS, 10));
-        BlockPos pos = helper.absolutePos(TARGET);
-        List<ItemStack> drops = Block.getDrops(helper.getLevel().getBlockState(pos), helper.getLevel(), pos, mill);
-        helper.assertTrue(drops.size() == 1 && drops.get(0).is(BitsmithRegistries.BIT_MILL_ITEM.get()), "the mill drops itself only");
-        MillContents kept = drops.get(0).get(BitsmithComponents.MILL_CONTENTS.get());
-        helper.assertTrue(kept != null && kept.input().is(Blocks.OAK_PLANKS.asItem()) && kept.input().getCount() == 10,
-                "with its ten planks inside");
+    public static void bitsmithAloneCannotMassProduceBits(GameTestHelper helper) {
+        List<String> machines = BuiltInRegistries.BLOCK.keySet().stream()
+                .filter(id -> id.getNamespace().equals(Bitsmith.MOD_ID) && id.getPath().contains("mill"))
+                .map(Object::toString).toList();
+        helper.assertTrue(machines.isEmpty(), "no bit machine in Bitsmith itself: " + machines);
+        boolean bitRecipe = helper.getLevel().getRecipeManager().getRecipes().stream()
+                .filter(recipe -> recipe.id().getNamespace().equals(Bitsmith.MOD_ID))
+                .anyMatch(recipe -> recipe.value().getResultItem(helper.getLevel().registryAccess()).getItem() instanceof BitItem);
+        helper.assertFalse(bitRecipe, "no Bitsmith recipe makes bits: they come from the chisel");
         helper.succeed();
     }
+
+    // Putting bits back
 
     @GameTest(template = TEMPLATE)
     public static void bitsGoBackIntoTheBag(GameTestHelper helper) {

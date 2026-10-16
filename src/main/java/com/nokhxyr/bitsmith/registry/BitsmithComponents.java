@@ -11,7 +11,6 @@ import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.item.BagContents;
 import com.nokhxyr.bitsmith.item.ChiselSettings;
 import com.nokhxyr.bitsmith.item.PatternMode;
-import com.nokhxyr.bitsmith.machine.MillContents;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -57,12 +56,6 @@ public final class BitsmithComponents {
             COMPONENTS.registerComponentType("bag_contents", builder -> builder
                     .persistent(BagContents.CODEC)
                     .networkSynchronized(BagContents.STREAM_CODEC));
-
-    /** Blocks and bits held by a bit mill, kept on the item when it is broken. */
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<MillContents>> MILL_CONTENTS =
-            COMPONENTS.registerComponentType("mill_contents", builder -> builder
-                    .persistent(MillContents.CODEC)
-                    .networkSynchronized(MillContents.STREAM_CODEC));
 
     private BitsmithComponents() {
     }

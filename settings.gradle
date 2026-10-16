@@ -9,3 +9,6 @@ plugins {
 }
 
 rootProject.name = 'bitsmith'
+
+// Optional addon: bulk bit production with Create machines. Its own jar, never part of Bitsmith.
+include 'bitsmith-create'
