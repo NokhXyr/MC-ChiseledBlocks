@@ -77,4 +77,14 @@ public class PatternItem extends Item {
         }
         tooltip.add(Component.translatable("chiseledblocks.pattern.keys").withStyle(ChatFormatting.DARK_GRAY));
     }
+
+    /**
+     * Keeps the item in hand when only its data changes (wear, settings, contents): the stack synced
+     * back from the server after each stroke is a new object, which would otherwise lower and raise
+     * the hand every time.
+     */
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        return slotChanged || !oldStack.is(newStack.getItem());
+    }
 }

@@ -118,6 +118,8 @@ public final class ClientPlaytest {
     private PixelGrid beforeWrench;
     private int sawBefore;
     private PixelGrid movedGrid;
+    private float handLowest;
+    private int handTicks;
 
     public ClientPlaytest() {
         switch (MODE) {
@@ -388,6 +390,25 @@ public final class ClientPlaytest {
         }, 8, () -> mc.player.getInventory().getItem(2).getItem() instanceof PixelBagItem);
         step("64 bits go into the bag", this::attack, 10,
                 () -> eq("stone bits in the bag", PixelBagItem.contents(mc.player.getInventory().getItem(2)).count(Blocks.STONE.defaultBlockState()), 64));
+
+        // Each stroke wears the chisel and the server sends the stack back: the hand must stay up
+        // (no lowering and raising of the item between strokes).
+        step("aim at B for a run of strokes", () -> {
+            hotbar(0);
+            lookAtFace(B, Direction.NORTH);
+            handLowest = 1.0F;
+            handTicks = 0;
+        }, 4, () -> true);
+        until("the hand stays up while chiseling", () -> { }, 40, () -> {
+            if (handTicks % 3 == 0 && handTicks < 24) {
+                attack();
+            }
+            handTicks++;
+            handLowest = Math.min(handLowest, mc.gameRenderer.itemInHandRenderer.mainHandHeight);
+            return handTicks >= 30;
+        });
+        step("the hand never dipped", () -> { }, 1, () -> that("lowest hand height " + handLowest + ", chisel damage "
+                + held().getDamageValue(), handLowest > 0.9F && held().getDamageValue() > 0));
 
         step("blank pattern copies the carved block", () -> {
             command("gamemode creative");

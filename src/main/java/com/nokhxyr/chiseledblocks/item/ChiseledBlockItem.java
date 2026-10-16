@@ -176,4 +176,14 @@ public class ChiseledBlockItem extends BlockItem {
         double value = bits * 100.0 / PixelGrid.VOLUME;
         return String.format(Locale.ROOT, value < 1 ? "%.1f" : "%.0f", value);
     }
+
+    /**
+     * Keeps the item in hand when only its data changes (wear, settings, contents): the stack synced
+     * back from the server after each stroke is a new object, which would otherwise lower and raise
+     * the hand every time.
+     */
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        return slotChanged || !oldStack.is(newStack.getItem());
+    }
 }

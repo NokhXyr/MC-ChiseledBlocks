@@ -223,3 +223,11 @@
 **Root cause:** `installCompatAssets` copies `compat-test/kubejs` into `run-compat` but never removed anything, so the old script stayed next to the renamed one; the compatibility test only checked that the new script's recipes existed, not that KubeJS loaded cleanly.
 **Fix:** the task now removes from the run any script no longer in `compat-test` (KubeJS's own `main.js` kept), and the compatibility test fails when a KubeJS log has an `[ERROR]` line (checked both ways: a deliberately broken script fails it, a clean set passes).
 **Prevention:** a copy task into a run folder must also remove what the source no longer has; check a mod's own error count, not only the feature it should produce.
+
+## [2026-10-16 21:32] — Hand lowered and raised after every chisel stroke
+
+**Context:** chiseling in survival, reported by the user as a glitch of the hand animation.
+**Error:** the held chisel dropped out of view and came back after each stroke; a playtest measuring `ItemInHandRenderer.mainHandHeight` over ten strokes saw it fall to 0.0.
+**Root cause:** each stroke damages the chisel on the server, which syncs the stack back as a new object; NeoForge's default `shouldCauseReequipAnimation` compares stacks by identity, so every sync replayed the equip animation. Bags, pixels, patterns and tool settings had the same problem.
+**Fix:** every item of the mod overrides `shouldCauseReequipAnimation` to play it only when the slot or the item changes; the client playtest checks the hand height during a run of strokes (failed before the fix, passes after).
+**Prevention:** any item whose components change while held (durability, settings, contents) needs that override; check held item animations in the playtest, not only the world.

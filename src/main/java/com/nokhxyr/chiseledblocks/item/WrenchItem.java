@@ -97,4 +97,14 @@ public class WrenchItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("chiseledblocks.wrench.help").withStyle(ChatFormatting.GRAY));
     }
+
+    /**
+     * Keeps the item in hand when only its data changes (wear, settings, contents): the stack synced
+     * back from the server after each stroke is a new object, which would otherwise lower and raise
+     * the hand every time.
+     */
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        return slotChanged || !oldStack.is(newStack.getItem());
+    }
 }

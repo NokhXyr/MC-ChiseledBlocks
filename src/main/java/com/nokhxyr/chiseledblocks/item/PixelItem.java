@@ -50,4 +50,14 @@ public class PixelItem extends Item {
         }
         return Component.translatable("item.chiseledblocks.pixel.named", material.getBlock().getName());
     }
+
+    /**
+     * Keeps the item in hand when only its data changes (wear, settings, contents): the stack synced
+     * back from the server after each stroke is a new object, which would otherwise lower and raise
+     * the hand every time.
+     */
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        return slotChanged || !oldStack.is(newStack.getItem());
+    }
 }
