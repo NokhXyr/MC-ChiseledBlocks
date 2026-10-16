@@ -65,34 +65,36 @@ filters, item lists (JEI, EMI) and commands can tell carved blocks apart:
 The tag `#bitsmith:carved_blocks` holds all of them. Carvings held as the older generic item
 `bitsmith:carved_block` become their material's item once in a player's inventory.
 
-### Commands
+### Admin panel
 
-For operators (permission level 2). `/bitsmith` opens the admin panel (a key can be bound to it in
-Controls, unbound by default), with three tabs:
+`/bitsmith` opens the admin panel (a key can be bound to it in Controls, unbound by default). It
+is the mod's only command. It has three tabs:
 
 - **Search**: carved blocks within a radius of blocks or chunks, or in every loaded chunk,
   optionally only those containing a material (type part of its name, suggestions appear). A
-  table lists the nearest first with their materials, distance and bits.
+  table lists the nearest first with their materials, distance and bits. Searches never load a
+  chunk.
 - **Chunk map**: the chunks around you, coloured by how many carved blocks they hold, with your
   position and facing. Click a chunk to list its carved blocks. Refreshes every two seconds.
 - **Performance**: measures for a chosen time the server time Bitsmith spends on each carved
   block, in µs per tick, split into chisel, apply, shape, save and load. Close the panel and play
   while it measures; the report is there when you reopen it.
 
-Every row has a **TP** button that teleports you on top of the block. The same tools exist as
-text commands for the server console; their results in the chat carry a `[TP]` link:
+Every row has a **TP** button that teleports you on top of the block.
 
-| Command | What it does |
+Access goes through NeoForge's permission API, so a permission mod such as **LuckPerms** decides
+when one is installed. A node that is not set anywhere falls back to operators (level 2):
+
+| Node | Allows |
 |---|---|
-| `/bitsmith find radius <blocks> [material]` | Carved blocks within that many blocks, nearest first |
-| `/bitsmith find chunks <chunks> [material]` | Carved blocks within that many chunks around yours |
-| `/bitsmith find loaded [material]` | Carved blocks in every loaded chunk of the dimension, and the chunks holding the most |
-| `/bitsmith map [radius]` | Map of the chunks around you: not loaded, loaded, and how many carved blocks each holds; click a chunk to go there |
-| `/bitsmith perf [seconds]` | Measures Bitsmith's server time per carved block (10 s by default) and lists the costliest in µs per tick |
-| `/bitsmith perf stop` | Ends the measurement now and shows the report |
+| `bitsmith.panel` | `/bitsmith` and the panel key, the Search and Chunk map tabs |
+| `bitsmith.panel.teleport` | the TP buttons |
+| `bitsmith.panel.perf` | the Performance tab |
 
-The material filter keeps blocks containing at least one bit of it, for example
-`/bitsmith find loaded minecraft:oak_planks`. Searches never load a chunk.
+For example, to give the panel and teleporting to a `staff` group without profiling:
+`lp group staff permission set bitsmith.panel true` and
+`lp group staff permission set bitsmith.panel.teleport true`. The panel only shows the tools a
+player may use, and the server checks every request again.
 
 ## Requirements
 
@@ -202,15 +204,15 @@ Le tag `#bitsmith:carved_blocks` les regroupe tous. Les sculptures portées par 
 générique `bitsmith:carved_block` deviennent l'objet de leur matériau dès qu'elles sont dans
 l'inventaire d'un joueur.
 
-### Commandes
+### Panneau d'administration
 
-Pour les opérateurs (niveau de permission 2). `/bitsmith` ouvre le panneau d'administration (une
-touche peut lui être attribuée dans Commandes, aucune par défaut), avec trois onglets :
+`/bitsmith` ouvre le panneau d'administration (une touche peut lui être attribuée dans Commandes,
+aucune par défaut). C'est la seule commande du mod. Il a trois onglets :
 
 - **Recherche** : les blocs ciselés dans un rayon en blocs ou en chunks, ou dans tous les chunks
   chargés, éventuellement seulement ceux qui contiennent un matériau (tape une partie de son nom,
   des suggestions apparaissent). Un tableau les liste du plus proche au plus loin, avec leurs
-  matériaux, leur distance et leurs bits.
+  matériaux, leur distance et leurs bits. Les recherches ne chargent jamais de chunk.
 - **Carte des chunks** : les chunks autour de toi, colorés selon le nombre de blocs ciselés, avec
   ta position et ta direction. Un clic sur un chunk liste ses blocs ciselés. Mise à jour toutes les
   deux secondes.
@@ -218,20 +220,21 @@ touche peut lui être attribuée dans Commandes, aucune par défaut), avec trois
   chaque bloc ciselé, en µs par tick, détaillé en ciseau, application, forme, sauvegarde et
   chargement. Ferme le panneau et joue pendant la mesure ; le rapport t'attend à la réouverture.
 
-Chaque ligne a un bouton **TP** qui te téléporte sur le bloc. Les mêmes outils existent en
-commandes texte pour la console du serveur ; leurs résultats dans le chat portent un lien `[TP]` :
+Chaque ligne a un bouton **TP** qui te téléporte sur le bloc.
 
-| Commande | Effet |
+L'accès passe par l'API de permissions de NeoForge : un mod de permissions comme **LuckPerms**
+décide quand il est installé. Un nœud défini nulle part revient aux opérateurs (niveau 2) :
+
+| Nœud | Autorise |
 |---|---|
-| `/bitsmith find radius <blocs> [matériau]` | Blocs ciselés à moins de ce nombre de blocs, du plus proche au plus loin |
-| `/bitsmith find chunks <chunks> [matériau]` | Blocs ciselés à moins de ce nombre de chunks autour du tien |
-| `/bitsmith find loaded [matériau]` | Blocs ciselés dans tous les chunks chargés de la dimension, et les chunks qui en ont le plus |
-| `/bitsmith map [rayon]` | Carte des chunks autour de toi : non chargés, chargés, et combien de blocs ciselés chacun contient ; clic sur un chunk pour y aller |
-| `/bitsmith perf [secondes]` | Mesure le temps serveur de Bitsmith par bloc ciselé (10 s par défaut) et liste les plus coûteux en µs par tick |
-| `/bitsmith perf stop` | Termine la mesure tout de suite et affiche le rapport |
+| `bitsmith.panel` | `/bitsmith` et la touche du panneau, les onglets Recherche et Carte des chunks |
+| `bitsmith.panel.teleport` | les boutons TP |
+| `bitsmith.panel.perf` | l'onglet Performance |
 
-Le filtre de matériau garde les blocs qui en contiennent au moins un bit, par exemple
-`/bitsmith find loaded minecraft:oak_planks`. Les recherches ne chargent jamais de chunk.
+Par exemple, pour donner le panneau et la téléportation à un groupe `staff`, sans la mesure :
+`lp group staff permission set bitsmith.panel true` et
+`lp group staff permission set bitsmith.panel.teleport true`. Le panneau n'affiche que les outils
+permis au joueur, et le serveur revérifie chaque demande.
 
 ## Prérequis
 

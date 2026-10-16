@@ -60,7 +60,7 @@ public final class BitsmithNetwork {
         AdminService.register(registrar);
         // Client handlers live in a client only class, only reached when a message arrives.
         registrar.playToClient(AdminPayloads.Open.TYPE, AdminPayloads.Open.CODEC,
-                (payload, context) -> AdminClient.open());
+                (payload, context) -> AdminClient.open(payload));
         registrar.playToClient(AdminPayloads.FindResult.TYPE, AdminPayloads.FindResult.CODEC,
                 (payload, context) -> AdminClient.onFindResult(payload));
         registrar.playToClient(AdminPayloads.MapResult.TYPE, AdminPayloads.MapResult.CODEC,

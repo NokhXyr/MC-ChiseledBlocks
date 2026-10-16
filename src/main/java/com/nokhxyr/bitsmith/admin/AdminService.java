@@ -7,7 +7,7 @@ package com.nokhxyr.bitsmith.admin;
 import com.nokhxyr.bitsmith.block.CarvedBlockEntity;
 import com.nokhxyr.bitsmith.network.AdminPayloads;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import net.minecraft.commands.Commands;
+import net.neoforged.neoforge.server.permission.nodes.PermissionNode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -25,27 +25,38 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
-/** Server side of the admin screen. Every request needs operator rights (level 2). */
+/** Server side of the admin screen. Every request is checked against its permission node ({@link BitsmithPermissions}). */
 public final class AdminService {
     private AdminService() {
     }
 
     public static void register(PayloadRegistrar registrar) {
         registrar.playToServer(AdminPayloads.RequestOpen.TYPE, AdminPayloads.RequestOpen.CODEC,
-                (payload, context) -> withOperator(context, player -> PacketDistributor.sendToPlayer(player, new AdminPayloads.Open())));
+                (payload, context) -> allowed(context, BitsmithPermissions.PANEL, AdminService::open));
         registrar.playToServer(AdminPayloads.FindRequest.TYPE, AdminPayloads.FindRequest.CODEC,
-                (payload, context) -> withOperator(context, player -> find(player, payload)));
+                (payload, context) -> allowed(context, BitsmithPermissions.PANEL, player -> find(player, payload)));
         registrar.playToServer(AdminPayloads.MapRequest.TYPE, AdminPayloads.MapRequest.CODEC,
-                (payload, context) -> withOperator(context, player -> map(player, payload)));
+                (payload, context) -> allowed(context, BitsmithPermissions.PANEL, player -> map(player, payload)));
         registrar.playToServer(AdminPayloads.PerfRequest.TYPE, AdminPayloads.PerfRequest.CODEC,
-                (payload, context) -> withOperator(context, player -> perf(player, payload)));
+                (payload, context) -> allowed(context, BitsmithPermissions.PERF, player -> perf(player, payload)));
         registrar.playToServer(AdminPayloads.Teleport.TYPE, AdminPayloads.Teleport.CODEC,
-                (payload, context) -> withOperator(context, player -> teleport(player, payload)));
+                (payload, context) -> allowed(context, BitsmithPermissions.TELEPORT, player -> teleport(player, payload)));
     }
 
-    private static void withOperator(IPayloadContext context, java.util.function.Consumer<ServerPlayer> action) {
-        if (context.player() instanceof ServerPlayer player && player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
+    /** Longest profiling window a player may ask for. */
+    private static final int MAX_PERF_SECONDS = 300;
+
+    /** Opens the panel, telling it which of its tools this player may use. */
+    public static void open(ServerPlayer player) {
+        PacketDistributor.sendToPlayer(player, new AdminPayloads.Open(
+                BitsmithPermissions.has(player, BitsmithPermissions.TELEPORT),
+                BitsmithPermissions.has(player, BitsmithPermissions.PERF)));
+    }
+
+    private static void allowed(IPayloadContext context, PermissionNode<Boolean> node, Consumer<ServerPlayer> action) {
+        if (context.player() instanceof ServerPlayer player && BitsmithPermissions.has(player, node)) {
             action.accept(player);
         }
     }
@@ -117,7 +128,7 @@ public final class AdminService {
             PacketDistributor.sendToPlayer(player, new AdminPayloads.PerfState(true, 0, BlockProfiler.ticksLeft(), true));
             return;
         }
-        int ticks = Math.min(request.seconds(), BitsmithCommand.MAX_PERF_SECONDS) * 20;
+        int ticks = Math.min(request.seconds(), MAX_PERF_SECONDS) * 20;
         BlockProfiler.start(ticks, report -> {
             if (!player.hasDisconnected()) {
                 sendReport(player, report);

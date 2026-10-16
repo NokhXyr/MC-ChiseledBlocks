@@ -110,6 +110,9 @@ public final class AdminScreen extends Screen {
 
     @Override
     protected void init() {
+        if (tab == Tab.PERF && !AdminClient.canProfile) {
+            tab = Tab.SEARCH;
+        }
         panelW = Math.min(width - 16, 580);
         panelH = Math.min(height - 16, 350);
         panelX = (width - panelW) / 2;
@@ -259,6 +262,9 @@ public final class AdminScreen extends Screen {
 
         int tabX = panelX + 22 + font.width(title) + 18;
         for (Tab each : Tab.values()) {
+            if (each == Tab.PERF && !AdminClient.canProfile) {
+                continue;
+            }
             Component label = Component.translatable(each.key);
             int tw = font.width(label) + 16;
             boolean active = each == tab;
@@ -402,7 +408,7 @@ public final class AdminScreen extends Screen {
             UiKit.text(g, font, String.format(Locale.ROOT, "%.0f m", hit.distance()), cols[2] + 4, textY, UiKit.MUTED);
             UiKit.text(g, font, String.valueOf(hit.bits()), cols[3] + 4, textY, UiKit.MUTED);
             nextId = "tp.search." + index;
-            button(g, cols[4] + 2, rowY2 + 3, 34, ROW_H - 6, Component.translatable("bitsmith.admin.tp"), Look.GHOST, true,
+            button(g, cols[4] + 2, rowY2 + 3, 34, ROW_H - 6, Component.translatable("bitsmith.admin.tp"), Look.GHOST, AdminClient.canTeleport,
                     () -> teleport(dimension, pos));
         }, Component.translatable(result == null ? "bitsmith.admin.searching" : "bitsmith.admin.none"));
 
@@ -633,7 +639,7 @@ public final class AdminScreen extends Screen {
             UiKit.textFit(g, font, pos.getX() + ", " + pos.getY() + ", " + pos.getZ(), cols[1] + 4, rowY + 6, cols[2] - cols[1] - 6,
                     UiKit.TEXT);
             nextId = "tp.chunk." + index;
-            button(g, cols[2] + 2, rowY + 3, 34, ROW_H - 6, Component.translatable("bitsmith.admin.tp"), Look.GHOST, true,
+            button(g, cols[2] + 2, rowY + 3, 34, ROW_H - 6, Component.translatable("bitsmith.admin.tp"), Look.GHOST, AdminClient.canTeleport,
                     () -> teleport(dimension, pos));
         }, Component.translatable(result == null ? "bitsmith.admin.loading" : "bitsmith.admin.map.none"));
     }
@@ -739,7 +745,7 @@ public final class AdminScreen extends Screen {
                 }
             }
             nextId = "tp.perf." + index;
-            button(g, cols[7] + 2, rowY + 3, 34, ROW_H - 6, Component.translatable("bitsmith.admin.tp"), Look.GHOST, true,
+            button(g, cols[7] + 2, rowY + 3, 34, ROW_H - 6, Component.translatable("bitsmith.admin.tp"), Look.GHOST, AdminClient.canTeleport,
                     () -> teleport(row.dimension(), pos));
         }, Component.translatable(report == null ? "bitsmith.admin.perf.empty" : "bitsmith.admin.perf.nothing"));
     }

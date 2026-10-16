@@ -126,12 +126,29 @@ neoForge {
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
-        // The /bitsmith command played from the chat: searches, map, teleport links, profiling.
+        // The admin panel used with the mouse and keyboard: search, chunk map, profiling, TP.
         clientAdmin {
             client()
             gameDirectory = project.file("run-admin")
             systemProperty "bitsmith.clientTest", "true"
             systemProperty "bitsmith.playtest", "admin"
+            programArguments.addAll "--width", "1280", "--height", "720"
+        }
+
+        // The panel's permission nodes driven through a real LuckPerms, which only runs on a
+        // dedicated server: start serverPerms, then clientPerms joins it and drives LuckPerms
+        // from the server console over RCON.
+        serverPerms {
+            server()
+            gameDirectory = project.file("run-perms-server")
+            programArgument '--nogui'
+        }
+
+        clientPerms {
+            client()
+            gameDirectory = project.file("run-perms")
+            systemProperty "bitsmith.clientTest", "true"
+            systemProperty "bitsmith.playtest", "perms"
             programArguments.addAll "--width", "1280", "--height", "720"
         }
 
@@ -179,6 +196,12 @@ configurations {
         canBeResolved = true
         transitive = false
     }
+    // LuckPerms for the permission test client only.
+    permsClientMods {
+        canBeConsumed = false
+        canBeResolved = true
+        transitive = false
+    }
     compatShaderpacks {
         canBeConsumed = false
         canBeResolved = true
@@ -202,6 +225,7 @@ dependencies {
     compatClientMods "maven.modrinth:rhino:${rhino_version}"
     compatClientMods "maven.modrinth:better-advanced-tooltips:${better_advanced_tooltips_version}"
     benchClientMods "maven.modrinth:spark:${spark_version}"
+    permsClientMods "maven.modrinth:luckperms:${luckperms_version}"
     compatShaderpacks "maven.modrinth:complementary-reimagined:${complementary_version}@zip"
 
     testImplementation platform("org.junit:junit-bom:${junit_version}")
@@ -278,7 +302,7 @@ idea {
 
 // Options for the playtest client: muted, never paused when unfocused, no first launch screens.
 def writePlaytestOptions = tasks.register('writePlaytestOptions') {
-    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate', 'run-bench', 'run-bench-cnb', 'run-soak', 'run-admin']
+    def files = ['run-clienttest', 'run-compat', 'run-cnb', 'run-cnb-migrate', 'run-bench', 'run-bench-cnb', 'run-soak', 'run-admin', 'run-perms']
             .collect { file("$it/options.txt") }
     outputs.files(files)
     doLast {
@@ -305,7 +329,7 @@ def writePlaytestOptions = tasks.register('writePlaytestOptions') {
     }
 }
 tasks.matching { it.name in ['runClientTest', 'runClientCompat', 'runClientCnbSource', 'runClientCnbMigrate',
-                             'runClientBench', 'runClientBenchCnb', 'runClientSoak', 'runClientAdmin'] }.configureEach {
+                             'runClientBench', 'runClientBenchCnb', 'runClientSoak', 'runClientAdmin', 'runClientPerms'] }.configureEach {
     dependsOn writePlaytestOptions
 }
 
@@ -415,6 +439,36 @@ def installBenchCnbMods = tasks.register('installBenchCnbMods', Copy) {
     from repackSaeculariaCore
     into 'run-bench-cnb/mods'
 }
+// Permission test server: LuckPerms, offline mode for the development player, RCON on for the
+// test client, and the development player ("Dev") as operator.
+def installPermsMods = tasks.register('installPermsMods', Copy) {
+    from configurations.permsClientMods
+    into 'run-perms-server/mods'
+}
+def writePermsServerFiles = tasks.register('writePermsServerFiles') {
+    def dir = file('run-perms-server')
+    outputs.files(file('run-perms-server/eula.txt'), file('run-perms-server/server.properties'), file('run-perms-server/ops.json'))
+    doLast {
+        dir.mkdirs()
+        new File(dir, 'eula.txt').text = 'eula=true\n'
+        new File(dir, 'server.properties').text = [
+                'online-mode=false',
+                'server-port=25599',
+                'enable-rcon=true',
+                'rcon.port=25598',
+                'rcon.password=bitsmith-playtest',
+                'level-name=bitsmith-perms',
+                'level-type=minecraft\\:flat',
+                'gamemode=creative',
+                'spawn-protection=0',
+                'spawn-monsters=false',
+                'view-distance=6',
+        ].join('\n') + '\n'
+        String devId = UUID.nameUUIDFromBytes('OfflinePlayer:Dev'.getBytes('UTF-8')).toString()
+        new File(dir, 'ops.json').text = "[{\"uuid\":\"${devId}\",\"name\":\"Dev\",\"level\":4,\"bypassesPlayerLimit\":false}]\n"
+    }
+}
+tasks.matching { it.name == 'runServerPerms' }.configureEach { dependsOn installPermsMods, writePermsServerFiles }
 tasks.matching { it.name == 'runClientBench' }.configureEach { dependsOn installBenchMods }
 tasks.matching { it.name == 'runClientBenchCnb' }.configureEach { dependsOn installBenchCnbMods }
 

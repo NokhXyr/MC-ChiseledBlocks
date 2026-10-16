@@ -23,6 +23,8 @@ run-bench/
 run-bench-cnb/
 run-soak/
 run-admin/
+run-perms/
+run-perms-server/
 
 # IDE
 .idea/

@@ -6,6 +6,7 @@ package com.nokhxyr.bitsmith;
 
 import com.mojang.logging.LogUtils;
 import com.nokhxyr.bitsmith.admin.BitsmithCommand;
+import com.nokhxyr.bitsmith.admin.BitsmithPermissions;
 import com.nokhxyr.bitsmith.admin.BlockProfiler;
 import com.nokhxyr.bitsmith.admin.CarvedIndex;
 import com.nokhxyr.bitsmith.block.Materials;
@@ -44,6 +45,7 @@ public final class Bitsmith {
         NeoForge.EVENT_BUS.addListener(EditBatcher::onServerStopped);
         NeoForge.EVENT_BUS.addListener(EditHistory::onServerStopped);
         NeoForge.EVENT_BUS.addListener(BitsmithCommand::onRegisterCommands);
+        NeoForge.EVENT_BUS.addListener(BitsmithPermissions::onGatherNodes);
         NeoForge.EVENT_BUS.addListener(CarvedIndex::onServerStopped);
         NeoForge.EVENT_BUS.addListener(BlockProfiler::onServerTickPost);
         NeoForge.EVENT_BUS.addListener(BlockProfiler::onServerStopped);

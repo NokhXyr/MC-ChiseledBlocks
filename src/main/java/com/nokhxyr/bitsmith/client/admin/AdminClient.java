@@ -29,11 +29,16 @@ public final class AdminClient {
     static long perfStartMillis;
     /** Seconds left in a window someone else started, when asking for a new one was refused. */
     static int perfBusySeconds = -1;
+    /** What the server allows this player, sent when the panel opens. */
+    static boolean canTeleport;
+    static boolean canProfile;
 
     private AdminClient() {
     }
 
-    public static void open() {
+    public static void open(AdminPayloads.Open permissions) {
+        canTeleport = permissions.canTeleport();
+        canProfile = permissions.canProfile();
         search = null;
         chunk = null;
         map = null;
@@ -84,6 +89,14 @@ public final class AdminClient {
 
     public static @Nullable AdminPayloads.PerfReport lastPerfReport() {
         return perfReport;
+    }
+
+    public static boolean canTeleport() {
+        return canTeleport;
+    }
+
+    public static boolean canProfile() {
+        return canProfile;
     }
 
     public static boolean perfRunning() {

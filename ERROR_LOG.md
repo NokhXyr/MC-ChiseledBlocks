@@ -119,3 +119,27 @@
 **Root cause:** the configuration cache was turned on in M6, after the last compatibility run; the task read `configurations` inside `doLast`. The check only grepped the report, not the build result or the report's date.
 **Fix:** the task captures the shader pack configuration as a `FileCollection` at configuration time. The old report was moved away before running again: 87 steps passed, report dated 2026-10-16 02:45.
 **Prevention:** before each playtest run, move the previous report away, and always check the Gradle exit code as well as the report.
+
+## [2026-10-16 03:00] — Players kicked on join with LuckPerms: "Invalid player data"
+
+**Context:** permission test on a dedicated server with LuckPerms, after moving `/bitsmith` to NeoForge's permission API.
+**Error:** `Couldn't place player in world` / `IllegalStateException: Capability has not been initialised`, from `BitsmithPermissions.has` inside the `/bitsmith` command requirement, called by `Commands.sendCommands` during `PlayerList.placeNewPlayer`. The client showed "Connection Lost: Invalid player data".
+**Root cause:** the command list is sent to a joining player before LuckPerms has loaded that player, and LuckPerms throws when asked a permission then. Any exception in a command requirement aborts the login.
+**Fix:** `BitsmithPermissions.has` never throws: it answers with the operator rule when the permission mod is not ready.
+**Prevention:** code reached from command requirements or login must never throw; test permission integrations on a dedicated server with the real permission mod, not only in single player.
+
+## [2026-10-16 03:09] — LuckPerms 5.4.140 itself kicks every player on NeoForge 21.1.259
+
+**Context:** same test, after the fix above.
+**Error:** the same `Capability has not been initialised`, now from `NeoForgeConnectionListener.onPlayerLoggedIn` with no Bitsmith frame in the trace.
+**Root cause:** a LuckPerms bug on NeoForge 1.21.1 (LuckPerms issues 3963 and 4235). 5.4.140 is the only build published for 1.21.1; LuckPerms also refuses to start in single player ("not supported on the client").
+**Fix:** the test server uses LuckPerms 5.4.150 (built for 1.21.4), with which players join and the permission checks work. Bitsmith's own code needs nothing more.
+**Prevention:** when a third party mod fails, read the whole trace to tell whether our code is in it before changing anything.
+
+## [2026-10-16 03:05] — Two Gradle builds at once broke the compiled classes
+
+**Context:** starting `runServerPerms` in the background, then `runClientPerms` right after.
+**Error:** `error: cannot access Scope`, `cannot find symbol ... Kind` in classes whose sources were intact; the client never started a test.
+**Root cause:** both builds compiled the same sources into the same output directory at the same time.
+**Fix:** compile once first (`compileJava`, `prepareClientPermsRun`), then start the server and wait for it, then the client: neither build recompiles.
+**Prevention:** never start two Gradle builds of this project at once unless everything is already compiled.

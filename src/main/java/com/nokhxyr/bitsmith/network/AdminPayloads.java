@@ -14,8 +14,8 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 /**
- * Messages of the admin screen. Every request is checked on the server for operator rights
- * (level 2); answers carry plain data that the screen lays out.
+ * Messages of the admin screen. Every request is checked on the server against its permission
+ * node; answers carry plain data that the screen lays out.
  */
 public final class AdminPayloads {
     /** Most rows sent back for a search or a profiling report. */
@@ -31,10 +31,15 @@ public final class AdminPayloads {
 
     // Opening
 
-    /** Server to client: open the admin screen. */
-    public record Open() implements CustomPacketPayload {
+    /** Server to client: open the admin screen, with the tools this player may use. */
+    public record Open(boolean canTeleport, boolean canProfile) implements CustomPacketPayload {
         public static final Type<Open> TYPE = newType("open");
-        public static final StreamCodec<RegistryFriendlyByteBuf, Open> CODEC = StreamCodec.unit(new Open());
+        public static final StreamCodec<RegistryFriendlyByteBuf, Open> CODEC = StreamCodec.of(
+                (buf, p) -> {
+                    buf.writeBoolean(p.canTeleport);
+                    buf.writeBoolean(p.canProfile);
+                },
+                buf -> new Open(buf.readBoolean(), buf.readBoolean()));
 
         @Override
         public Type<Open> type() {
