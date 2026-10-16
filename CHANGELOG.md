@@ -57,7 +57,7 @@ All notable changes to Chiseled Blocks are documented here.
 - **Radial menu choice** — An option picked by moving and releasing within the same frame is now taken into account.
 - **Chiseling at the edge of a hole** — Repeated clicks on the edge of a hole kept targeting the pixel already removed. The targeted pixel is now found by tracing the view ray through the chiseling.
 - **Freeze when chiseled chunks load back in** — Every chiseled block of a chunk arriving on the client decoded its grid on the render thread. Saved grids are now decoded once and shared: coming back to 16,000 chiseled blocks went from a 656 ms frame to 80 ms, smoother than plain stone.
-- **Hand dipping while chiseling**: the held chisel was lowered and raised again after every stroke in survival, because each stroke wears it and the stack sent back by the server replayed the equip animation. Chisels, pixels, bags, patterns and the other tools now stay in hand when only their data changes.
+- **Hand dipping while chiseling** — The held chisel was lowered and raised again after every stroke in survival, because each stroke wears it and the stack sent back by the server replayed the equip animation. Chisels, pixels, bags, patterns and the other tools now stay in hand when only their data changes.
 - **Dark inner faces** — Faces inside a chiseled block no longer render almost black with smooth lighting: they now use the light of the block itself instead of ambient occlusion sampled from the solid blocks around.
 
 ### Changed
@@ -117,7 +117,7 @@ All notable changes to Chiseled Blocks are documented here.
 - **Choix dans le menu radial** — Une option choisie en bougeant puis en relâchant dans la même image est maintenant prise en compte.
 - **Ciseler au bord d'un trou** — Des clics répétés au bord d'un trou visaient toujours le pixel déjà retiré. Le pixel visé est désormais trouvé en suivant le rayon du regard à travers la sculpture.
 - **Blocage au rechargement des chunks ciselés** — Chaque bloc ciselé d'un chunk reçu par le client décodait sa grille sur le thread de rendu. Les grilles enregistrées sont maintenant décodées une fois et partagées : revenir vers 16 000 blocs ciselés est passé d'une image de 656 ms à 80 ms, plus fluide que de la simple pierre.
-- **La main qui plonge en ciselant** : en survie, le ciseau tenu descendait et remontait après chaque coup, car chaque coup l'use et l'objet renvoyé par le serveur rejouait l'animation d'équipement. Ciseaux, pixels, sacs, modèles et autres outils restent maintenant en main quand seules leurs données changent.
+- **La main qui plonge en ciselant** — En survie, le ciseau tenu descendait et remontait après chaque coup, car chaque coup l'use et l'objet renvoyé par le serveur rejouait l'animation d'équipement. Ciseaux, pixels, sacs, modèles et autres outils restent maintenant en main quand seules leurs données changent.
 - **Faces intérieures sombres** — Les faces à l'intérieur d'un bloc ciselé ne sont plus presque noires avec l'éclairage lissé : elles utilisent la lumière du bloc lui-même au lieu de l'occlusion ambiante calculée sur les blocs pleins autour.
 
 ### Modifications
