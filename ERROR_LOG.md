@@ -215,3 +215,11 @@
 **Root cause:** the script renamed ids written as whole strings (`"bit_slicer"`) but not ids inside longer strings: the machines' moving part paths (`block/bit_slicer/blade`), item ids in game tests (`id("carved/stone")`), the generated pack name (`MOD_ID + "_carved_items"`); a resource folder outside `assets`/`data` (`bitsmith_test`) kept its name; playtests compared against old display names.
 **Fix:** each path and id fixed by hand, after searching every string literal for `bit_`, `carved` and the old mod id; the folder moved; the full test battery and a look at the machines in game.
 **Prevention:** after a scripted rename, search string literals for the old words inside longer strings, not only whole ones, and run every playtest, not only the build.
+
+## [2026-10-16 20:25] — Two KubeJS errors in the compatibility client after the rename
+
+**Context:** `runClientCompat` after renaming the mod (the KubeJS test script became `chiseledblocks_compat.js`).
+**Error:** KubeJS reported 2 errors in game: `bitsmith_compat.js#5: Failed to create a 'kubejs:shapeless' recipe ... bitsmith:iron_chisel` and `#7: Item with ID bitsmith:bit does not exist`.
+**Root cause:** `installCompatAssets` copies `compat-test/kubejs` into `run-compat` but never removed anything, so the old script stayed next to the renamed one; the compatibility test only checked that the new script's recipes existed, not that KubeJS loaded cleanly.
+**Fix:** the task now removes from the run any script no longer in `compat-test` (KubeJS's own `main.js` kept), and the compatibility test fails when a KubeJS log has an `[ERROR]` line (checked both ways: a deliberately broken script fails it, a clean set passes).
+**Prevention:** a copy task into a run folder must also remove what the source no longer has; check a mod's own error count, not only the feature it should produce.

@@ -550,6 +550,22 @@ public final class ClientPlaytest {
                     && that("bit recipe result " + result, result.getCount() == 16
                     && PixelItem.material(result) == Blocks.STONE.defaultBlockState());
         });
+        // Every script must load cleanly: a stale or broken script shows up as KubeJS errors in game.
+        step("KubeJS loads its scripts without errors", () -> { }, 1, () -> {
+            StringBuilder errors = new StringBuilder();
+            for (String log : new String[]{"startup.log", "server.log", "client.log"}) {
+                Path file = mc.gameDirectory.toPath().resolve("logs/kubejs").resolve(log);
+                try {
+                    if (Files.exists(file)) {
+                        Files.readAllLines(file).stream().filter(line -> line.contains("[ERROR]")).limit(2)
+                                .forEach(line -> errors.append(log).append(": ").append(line.strip()).append(' '));
+                    }
+                } catch (IOException e) {
+                    errors.append(log).append(": unreadable ");
+                }
+            }
+            return that("KubeJS errors: " + (errors.isEmpty() ? "none" : errors.toString().trim()), errors.isEmpty());
+        });
 
         step("WorldEdit copies the carved row", () -> {
             command("gamemode creative");

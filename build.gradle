@@ -434,9 +434,22 @@ def writeCompatConfig = tasks.register('writeCompatConfig') {
     }
 }
 def installCompatAssets = tasks.register('installCompatAssets', Copy) {
+    def scripts = file('compat-test/kubejs')
+    def installed = file('run-compat/kubejs')
     into 'run-compat'
     from(configurations.compatShaderpacks) { into 'shaderpacks' }
-    from('compat-test/kubejs') { into 'kubejs' }
+    from(scripts) { into 'kubejs' }
+    // A script removed or renamed in compat-test must not stay in the run (KubeJS would still load
+    // it); KubeJS's own example scripts (main.js) are left alone.
+    doFirst {
+        ['startup_scripts', 'server_scripts', 'client_scripts'].each { folder ->
+            new File(installed, folder).listFiles()?.each { script ->
+                if (script.name != 'main.js' && !new File(new File(scripts, folder), script.name).exists()) {
+                    script.delete()
+                }
+            }
+        }
+    }
 }
 tasks.matching { it.name == 'runClientCompat' }.configureEach {
     dependsOn writeCompatConfig, installCompatAssets
