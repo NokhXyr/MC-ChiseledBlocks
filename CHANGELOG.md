@@ -59,6 +59,7 @@ All notable changes to Bitsmith are documented here.
 
 ### Changed
 
+- **Item textures redrawn** — The chisel, saw, wrench, tape measure, both bit bags and both patterns have new, more detailed pixel art: shading from the top left, a dark outline, Bitsmith's blue on every tool. The bags are round pouches with bits peeking out, the patterns blueprint sheets.
 - **Modpack permission** — The license now explicitly allows including the unmodified released mod file in any modpack, without asking.
 
 ### Ajouts
@@ -114,6 +115,7 @@ All notable changes to Bitsmith are documented here.
 
 ### Modifications
 
+- **Textures des objets redessinées** — Le ciseau, la scie, la clé, le mètre ruban, les deux sacs à bits et les deux patterns ont un nouveau pixel art plus détaillé : ombrage depuis le haut à gauche, un contour sombre, le bleu de Bitsmith sur chaque outil. Les sacs sont des bourses rondes d'où dépassent des bits, les patterns des feuilles de plan.
 - **Autorisation modpacks** — La licence autorise désormais explicitement l'inclusion du fichier du mod publié, non modifié, dans n'importe quel modpack, sans demander.
 
 ---
