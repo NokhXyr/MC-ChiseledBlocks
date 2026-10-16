@@ -12,6 +12,9 @@
               "function": "minecraft:copy_components",
               "source": "block_entity",
               "include": ["bitsmith:grid"]
+            },
+            {
+              "function": "bitsmith:carved_item"
             }
           ]
         }

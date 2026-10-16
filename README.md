@@ -50,6 +50,21 @@ Details and targets are in [the specification](docs/SPECIFICATION.md).
 Keys can be changed in Options, Controls, under Bitsmith. The bag's tooltip lists its contents,
 the selected material is highlighted.
 
+### Item ids
+
+Every carvable material has its own carved block item, registered at startup from the blocks of
+every installed mod: `bitsmith:carved/oak_planks` for Minecraft's blocks,
+`bitsmith:carved/<mod>/<block>` for the others (for example `bitsmith:carved/create/andesite_casing`).
+A carving is held as the item of its **main material**, so recipes, KubeJS scripts, sorting
+filters, item lists (JEI, EMI) and commands can tell carved blocks apart:
+
+- `/give @s bitsmith:carved/stone` gives an example shape in stone, ready to place or to carve;
+- `/clear @s #bitsmith:carved_blocks` removes every carved block, whatever its material;
+- placed in the world, every carved block stays the one block `bitsmith:carved_block`.
+
+The tag `#bitsmith:carved_blocks` holds all of them. Carvings held as the older generic item
+`bitsmith:carved_block` become their material's item once in a player's inventory.
+
 ### Commands
 
 For operators (permission level 2). `/bitsmith` opens the admin panel (a key can be bound to it in
@@ -170,6 +185,22 @@ les objectifs sont dans [le cahier des charges](docs/SPECIFICATION.md).
 
 Les touches se changent dans Options, Commandes, rubrique Bitsmith. L'infobulle du sac liste son
 contenu, le matériau sélectionné est en surbrillance.
+
+### Identifiants d'objets
+
+Chaque matériau ciselable a son propre objet de bloc ciselé, enregistré au démarrage à partir des
+blocs de tous les mods installés : `bitsmith:carved/oak_planks` pour les blocs de Minecraft,
+`bitsmith:carved/<mod>/<bloc>` pour les autres (par exemple `bitsmith:carved/create/andesite_casing`).
+Une sculpture prend l'objet de son **matériau principal** : recettes, scripts KubeJS, filtres de
+tri, listes d'objets (JEI, EMI) et commandes peuvent ainsi distinguer les blocs ciselés :
+
+- `/give @s bitsmith:carved/stone` donne une forme d'exemple en pierre, à poser ou à ciseler ;
+- `/clear @s #bitsmith:carved_blocks` retire tous les blocs ciselés, quel que soit leur matériau ;
+- posés dans le monde, tous les blocs ciselés restent le même bloc `bitsmith:carved_block`.
+
+Le tag `#bitsmith:carved_blocks` les regroupe tous. Les sculptures portées par l'ancien objet
+générique `bitsmith:carved_block` deviennent l'objet de leur matériau dès qu'elles sont dans
+l'inventaire d'un joueur.
 
 ### Commandes
 

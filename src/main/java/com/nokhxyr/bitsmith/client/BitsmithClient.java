@@ -15,13 +15,17 @@ import com.nokhxyr.bitsmith.client.render.MeshCache;
 import com.nokhxyr.bitsmith.core.voxel.BitGrid;
 import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.item.BitItem;
+import com.nokhxyr.bitsmith.item.CarvedBlockItem;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
+import com.nokhxyr.bitsmith.registry.CarvedItems;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -32,6 +36,8 @@ import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -59,6 +65,10 @@ public final class BitsmithClient {
         }
         models.computeIfPresent(ModelResourceLocation.inventory(BitsmithRegistries.CARVED_BLOCK_ITEM.getId()),
                 (location, json) -> GridItemOverrides.wrap(json, stack -> stack.get(BitsmithComponents.GRID.get())));
+        for (CarvedBlockItem item : CarvedItems.all()) {
+            models.computeIfPresent(ModelResourceLocation.inventory(BuiltInRegistries.ITEM.getKey(item)),
+                    (location, json) -> GridItemOverrides.wrap(json, item::displayGrid));
+        }
         models.computeIfPresent(ModelResourceLocation.inventory(BitsmithRegistries.BIT.getId()),
                 (location, json) -> GridItemOverrides.wrap(json, BitsmithClient::bitShape));
     }
@@ -84,10 +94,13 @@ public final class BitsmithClient {
 
     @SubscribeEvent
     public static void onItemColors(RegisterColorHandlersEvent.Item event) {
+        List<ItemLike> tinted = new ArrayList<>(CarvedItems.all());
+        tinted.add(BitsmithRegistries.CARVED_BLOCK_ITEM.get());
+        tinted.add(BitsmithRegistries.BIT.get());
         event.register((stack, tintIndex) -> {
             int color = CarvedColors.color(null, null, null, tintIndex);
             return color == -1 ? -1 : FastColor.ARGB32.opaque(color);
-        }, BitsmithRegistries.CARVED_BLOCK_ITEM.get(), BitsmithRegistries.BIT.get());
+        }, tinted.toArray(ItemLike[]::new));
     }
 
     @SubscribeEvent

@@ -6,6 +6,7 @@
   "bitsmith.carved.material": "%s, %s %% (%s bits)",
   "bitsmith.carved.more": "et %s autres matériaux",
   "bitsmith.carved.volume": "%s / %s bits remplis (%s %%)",
+  "bitsmith.carved.example": "Forme d'exemple : pose-le, ou cisèle un bloc de ce matériau",
   "item.bitsmith.iron_chisel": "Ciseau en fer",
   "item.bitsmith.bit": "Bit",
   "item.bitsmith.bit.named": "Bit de %s",

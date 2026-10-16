@@ -314,6 +314,9 @@ tasks.matching { it.name in ['runClientTest', 'runClientCompat', 'runClientCnbSo
 def writeCompatConfig = tasks.register('writeCompatConfig') {
     def modernfix = file('run-compat/config/modernfix-mixins.properties')
     def iris = file('run-compat/config/iris.properties')
+    // Captured as a file collection now: the configuration cache cannot reach `configurations` later.
+    FileCollection shaderpacks = configurations.compatShaderpacks
+    inputs.files(shaderpacks)
     outputs.files(modernfix, iris)
     doLast {
         modernfix.parentFile.mkdirs()
@@ -321,7 +324,7 @@ def writeCompatConfig = tasks.register('writeCompatConfig') {
             modernfix.append('\nmixin.perf.dynamic_resources=true\n')
         }
         // Shaders on, with the test pack, so carved blocks are also checked through Iris.
-        iris.text = "enableShaders=true\nshaderPack=${configurations.compatShaderpacks.singleFile.name}\n"
+        iris.text = "enableShaders=true\nshaderPack=${shaderpacks.singleFile.name}\n"
     }
 }
 def installCompatAssets = tasks.register('installCompatAssets', Copy) {

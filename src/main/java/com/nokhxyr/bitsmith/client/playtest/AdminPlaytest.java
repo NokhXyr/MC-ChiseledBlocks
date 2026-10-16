@@ -13,10 +13,13 @@ import com.nokhxyr.bitsmith.core.voxel.BitGridBuilder;
 import com.nokhxyr.bitsmith.network.AdminPayloads;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -158,7 +161,40 @@ final class AdminPlaytest {
 
         adminPerfScript(p);
         itemScript(p);
+        materialItemScript(p);
     }
+
+    private static String heldId(ClientPlaytest p) {
+        return BuiltInRegistries.ITEM.getKey(p.held().getItem()).toString();
+    }
+
+    /** One item id per material: give, place, pick block and clear, as a player would. */
+    private static void materialItemScript(ClientPlaytest p) {
+        BlockPos ground = new BlockPos(-2, -61, 1);
+        p.step("/give bitsmith:carved/oak_planks", () -> {
+            p.command("tp @s 0.5 -60 0.5 0 30");
+            p.command("clear @s");
+            p.command("give @s bitsmith:carved/oak_planks");
+        }, 10, () -> {
+            p.hotbar(0);
+            return p.that("held " + heldId(p) + " named " + p.held().getHoverName().getString(),
+                    heldId(p).equals("bitsmith:carved/oak_planks") && p.held().getHoverName().getString().equals("Carved Oak Planks"));
+        });
+        p.shot("place it on the grass", () -> {
+            p.lookAtFace(ground, Direction.UP);
+            p.use();
+        }, 10, () -> p.eq("bits of the placed example", p.filled(ground.above()), 3072), "material_item_placed");
+        p.step("pick block on the amethyst carving", () -> {
+            p.command("clear @s");
+            p.hotbar(0);
+            p.look(new Vec3(AMETHYST.getX() + 0.5, AMETHYST.getY() + 0.25, AMETHYST.getZ() + 0.02));
+            KeyMapping.click(Minecraft.getInstance().options.keyPickItem.getKey());
+        }, 10, () -> p.that("picked " + heldId(p), heldId(p).equals("bitsmith:carved/amethyst_block")
+                && p.gridAt(AMETHYST) != null && p.gridAt(AMETHYST).equals(p.held().get(BitsmithComponents.GRID.get()))));
+        p.step("/clear by the carved blocks tag", () -> p.command("clear @s #bitsmith:carved_blocks"), 10,
+                () -> p.that("no carved block left, holding " + heldId(p), p.held().isEmpty()));
+    }
+
 
     // The carved block item: its name and tooltip tell what it is made of
 

@@ -28,8 +28,12 @@ import com.nokhxyr.bitsmith.item.PatternMode;
 import com.nokhxyr.bitsmith.network.GridDeltaPayload;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
+import com.nokhxyr.bitsmith.registry.CarvedItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import io.netty.buffer.Unpooled;
@@ -38,6 +42,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Block;
@@ -67,6 +72,11 @@ public final class CarvingGameTests {
     private static final String TEMPLATE = "empty";
     private static final BlockPos TARGET = new BlockPos(2, 2, 2);
     private static final int STONE = Materials.id(Blocks.STONE.defaultBlockState());
+
+    /** The item of carvings made mostly of stone, looked up by its id as other mods would. */
+    private static Item carvedStone() {
+        return BuiltInRegistries.ITEM.get(Bitsmith.id("carved/stone"));
+    }
 
     private CarvingGameTests() {
     }
@@ -475,9 +485,80 @@ public final class CarvingGameTests {
         helper.assertTrue(carved.getGrid().filledCount() == BitGrid.VOLUME - 1024, "a 4 bit slice is cut from the top");
         helper.assertTrue(carved.getGrid().get(0, 11, 0) == STONE && carved.getGrid().get(0, 12, 0) == BitGrid.AIR, "the cut is at y 12");
         ItemStack piece = player.getInventory().items.stream()
-                .filter(stack -> stack.is(BitsmithRegistries.CARVED_BLOCK_ITEM.get())).findFirst().orElse(ItemStack.EMPTY);
+                .filter(stack -> stack.is(carvedStone())).findFirst().orElse(ItemStack.EMPTY);
         BitGrid sliceGrid = piece.get(BitsmithComponents.GRID.get());
         helper.assertTrue(sliceGrid != null && sliceGrid.filledCount() == 1024, "the slice is given as a carved block");
+        helper.succeed();
+    }
+
+    // One item id per material
+
+    private static Item carved(String path) {
+        return BuiltInRegistries.ITEM.get(Bitsmith.id("carved/" + path));
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void carvableMaterialsHaveTheirOwnItem(GameTestHelper helper) {
+        for (String path : List.of("stone", "oak_planks", "glass", "oak_log", "white_wool")) {
+            helper.assertTrue(BuiltInRegistries.ITEM.containsKey(Bitsmith.id("carved/" + path)), "bitsmith:carved/" + path + " exists");
+        }
+        // A block entity or a partial shape cannot be carved: no item.
+        helper.assertFalse(BuiltInRegistries.ITEM.containsKey(Bitsmith.id("carved/chest")), "no item for chests");
+        helper.assertFalse(BuiltInRegistries.ITEM.containsKey(Bitsmith.id("carved/oak_slab")), "no item for slabs");
+        helper.assertTrue(BitsmithRegistries.CARVED_BLOCK.get().asItem() == BitsmithRegistries.CARVED_BLOCK_ITEM.get(),
+                "the carved block's own item stays the generic one");
+        helper.assertTrue(CarvedItems.all().size() > 300, "hundreds of materials: " + CarvedItems.all().size());
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void mainMaterialPicksTheItem(GameTestHelper helper) {
+        int oak = Materials.id(Blocks.OAK_PLANKS.defaultBlockState());
+        BitGrid grid = new BitGridBuilder().fill(0, 0, 0, 16, 10, 16, oak).fill(0, 10, 0, 16, 16, 16, STONE).build();
+        placeCarved(helper, grid);
+        BlockPos pos = helper.absolutePos(TARGET);
+        ItemStack picked = helper.getLevel().getBlockState(pos).getCloneItemStack(
+                new BlockHitResult(pos.getCenter(), Direction.UP, pos, false), helper.getLevel(), pos, null);
+        helper.assertTrue(picked.is(carved("oak_planks")), "pick block gives bitsmith:carved/oak_planks, got " + picked);
+        helper.assertTrue(grid.equals(picked.get(BitsmithComponents.GRID.get())), "with the carving");
+        helper.assertTrue(CarvedItems.itemFor(BitGrid.filled(STONE).toBuilder().set(0, BitGrid.AIR).build()) == carved("stone"),
+                "a stone carving is bitsmith:carved/stone");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void carvedItemTagHoldsEveryCarvedItem(GameTestHelper helper) {
+        TagKey<Item> tag = TagKey.create(Registries.ITEM, Bitsmith.id("carved_blocks"));
+        helper.assertTrue(new ItemStack(carved("stone")).is(tag), "carved stone is in #bitsmith:carved_blocks");
+        helper.assertTrue(new ItemStack(carved("glass")).is(tag), "carved glass is in #bitsmith:carved_blocks");
+        helper.assertTrue(new ItemStack(BitsmithRegistries.CARVED_BLOCK_ITEM.get()).is(tag), "the generic item is in the tag");
+        helper.assertFalse(new ItemStack(Blocks.STONE).is(tag), "plain stone is not");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void materialItemWithoutCarvingPlacesItsExample(GameTestHelper helper) {
+        helper.setBlock(TARGET, Blocks.STONE);
+        ServerPlayer player = creative(helper, 1.5);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(carved("oak_planks")));
+        useOnTop(player, helper, TARGET);
+        CarvedBlockEntity placed = helper.getBlockEntity(TARGET.above());
+        helper.assertTrue(placed.getGrid().filledCount() == 3072, "the example step is placed: " + placed.getGrid().filledCount());
+        helper.assertTrue(placed.getGrid().contains(Materials.id(Blocks.OAK_PLANKS.defaultBlockState())), "in oak planks");
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE)
+    public static void genericCarvingInInventoryBecomesMaterialItem(GameTestHelper helper) {
+        ServerPlayer player = survival(helper);
+        ItemStack generic = new ItemStack(BitsmithRegistries.CARVED_BLOCK_ITEM.get(), 3);
+        BitGrid grid = BitGrid.filled(STONE).toBuilder().set(0, BitGrid.AIR).build();
+        generic.set(BitsmithComponents.GRID.get(), grid);
+        player.getInventory().items.set(5, generic);
+        player.getInventory().tick();
+        ItemStack after = player.getInventory().items.get(5);
+        helper.assertTrue(after.is(carvedStone()) && after.getCount() == 3 && grid.equals(after.get(BitsmithComponents.GRID.get())),
+                "converted to 3 bitsmith:carved/stone with the same carving, got " + after);
         helper.succeed();
     }
 
@@ -574,7 +655,7 @@ public final class CarvingGameTests {
 
         helper.assertTrue(drops.size() == 1, "one item dropped");
         ItemStack drop = drops.get(0);
-        helper.assertTrue(drop.is(BitsmithRegistries.CARVED_BLOCK_ITEM.get()), "the drop is a carved block item");
+        helper.assertTrue(drop.is(carvedStone()), "the drop is the carved stone item");
         helper.assertTrue(slab.equals(drop.get(BitsmithComponents.GRID.get())), "the drop keeps the carving");
 
         CarvedBlockEntity placed = new CarvedBlockEntity(pos, BitsmithRegistries.CARVED_BLOCK.get().defaultBlockState());

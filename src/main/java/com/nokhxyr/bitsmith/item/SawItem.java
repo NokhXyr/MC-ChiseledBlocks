@@ -13,6 +13,7 @@ import com.nokhxyr.bitsmith.edit.BlockSnapshot;
 import com.nokhxyr.bitsmith.edit.EditHistory;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
+import com.nokhxyr.bitsmith.registry.CarvedItems;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -97,8 +98,7 @@ public class SawItem extends Item {
         BlockSnapshot after = BlockSnapshot.of(rest.build());
         after.apply(level, pos);
 
-        ItemStack piece = new ItemStack(BitsmithRegistries.CARVED_BLOCK_ITEM.get());
-        piece.set(BitsmithComponents.GRID.get(), CarvedBlockEntity.INTERNER.intern(slice.build()));
+        ItemStack piece = CarvedItems.stackFor(CarvedBlockEntity.INTERNER.intern(slice.build()));
         if (!player.getInventory().add(piece)) {
             player.drop(piece, false);
         }

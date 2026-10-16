@@ -6,6 +6,7 @@
   "bitsmith.carved.material": "%s, %s %% (%s bits)",
   "bitsmith.carved.more": "and %s more materials",
   "bitsmith.carved.volume": "%s / %s bits filled (%s %%)",
+  "bitsmith.carved.example": "Example shape: place it, or carve a block of this material",
   "item.bitsmith.iron_chisel": "Iron Chisel",
   "item.bitsmith.bit": "Bit",
   "item.bitsmith.bit.named": "%s Bit",

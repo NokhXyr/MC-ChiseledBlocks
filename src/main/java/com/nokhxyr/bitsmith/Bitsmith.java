@@ -15,6 +15,8 @@ import com.nokhxyr.bitsmith.edit.EditHistory;
 import com.nokhxyr.bitsmith.network.BitsmithNetwork;
 import com.nokhxyr.bitsmith.registry.BitsmithComponents;
 import com.nokhxyr.bitsmith.registry.BitsmithRegistries;
+import com.nokhxyr.bitsmith.registry.CarvedItems;
+import com.nokhxyr.bitsmith.registry.CarvedItemsPack;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
@@ -31,6 +33,8 @@ public final class Bitsmith {
     public Bitsmith(IEventBus modEventBus) {
         BitsmithComponents.register(modEventBus);
         BitsmithRegistries.register(modEventBus);
+        CarvedItems.register(modEventBus);
+        modEventBus.addListener(CarvedItemsPack::onAddPackFinders);
         if (!ModList.get().isLoaded(ChiselsAndBitsImport.MOD_ID)) {
             BitsmithRegistries.aliasChiselsAndBits();
         }

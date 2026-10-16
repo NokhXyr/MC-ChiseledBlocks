@@ -89,6 +89,8 @@ public final class BitsmithRegistries {
                         output.accept(WRENCH.get());
                         output.accept(SAW.get());
                         output.accept(TAPE_MEASURE.get());
+                        // One carved block per material, each showing its example shape.
+                        CarvedItems.all().forEach(output::accept);
                     })
                     .build());
 

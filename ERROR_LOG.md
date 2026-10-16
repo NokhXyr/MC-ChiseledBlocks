@@ -111,3 +111,11 @@
 **Root cause:** the amend command was run a second time after a new commit had been made on top, so it rewrote the newest commit's message (the admin panel) with the older one. The remote kept the right history; the local branch had a twin commit with the same tree and the wrong message.
 **Fix:** checked the two commits had the same tree (`git diff --quiet`), then moved the only unpushed commit onto the remote branch with `git rebase --onto origin/main <twin> main`. No force push needed.
 **Prevention:** an amend command handed over for manual use is valid once, for the commit it names; say so when giving it. Never put attribution lines in commit messages in the first place.
+
+## [2026-10-16 02:42] — Compatibility run did not start, an old report was read as a pass
+
+**Context:** `./gradlew runClientCompat` after adding one item per material.
+**Error:** `Execution failed for task ':writeCompatConfig'. Invocation of 'configurations' references a Gradle script object from a Groovy closure at execution time, which is unsupported with the configuration cache.` The report in `run-compat/` still said "all steps passed": it was the one from 2026-10-14.
+**Root cause:** the configuration cache was turned on in M6, after the last compatibility run; the task read `configurations` inside `doLast`. The check only grepped the report, not the build result or the report's date.
+**Fix:** the task captures the shader pack configuration as a `FileCollection` at configuration time. The old report was moved away before running again: 87 steps passed, report dated 2026-10-16 02:45.
+**Prevention:** before each playtest run, move the previous report away, and always check the Gradle exit code as well as the report.
