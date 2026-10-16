@@ -1,0 +1,176 @@
+# The CurseForge page of Chiseled Blocks.
+#
+#   python images/tools/export_icons.py images/tools/page.toml     the small icons (images/icons)
+#   python images/tools/titles.py images/tools/page.toml           the title ribbons, language labels, divider, badges
+#   python images/tools/build_page.py images/tools/page.toml       the page itself (curseforge_page.md)
+#
+# Author: NokhXyr
+
+[page]
+languages = ["en", "fr"]
+images_base = "https://cdn.jsdelivr.net/gh/NokhXyr/MC-Images@main/MC-ChiseledBlocks/"
+images_dir = ".."
+out = "../../curseforge_page.md"
+root = "../.."
+theme = "theme.json"
+author = "NokhXyr"
+license = "All Rights Reserved"
+
+[mod]
+name = "Chiseled Blocks"
+
+[hero]
+file = "hero.gif"
+alt.en = "Chiseled Blocks: a colonnade carved pixel by pixel, a player chiseling a block in front of it"
+alt.fr = "Chiseled Blocks : une colonnade taillée pixel par pixel, un joueur cisèle un bloc devant elle"
+
+[links]
+support = "https://github.com/NokhXyr/MC-Issues/issues"
+
+[badges]
+minecraft = ["1.21.1"]
+loaders = ["NeoForge"]
+side = "Client and server"
+
+[intro]
+pitch.en = "<strong>Chiseled Blocks</strong> lets you chisel any block into pixels, 16 to a side, and mix materials inside a single block."
+pitch.fr = "<strong>Chiseled Blocks</strong> permet de ciseler n'importe quel bloc en pixels, 16 par côté, et de mêler plusieurs matériaux dans un seul bloc."
+tagline.en = "Chisel any block, pixel by pixel."
+tagline.fr = "Ciselez n'importe quel bloc, pixel par pixel."
+credit.en = 'Inspired by <a href="https://github.com/ChiselsAndBits/Chisels-and-Bits">Chisels &amp; Bits</a>, written from scratch.'
+credit.fr = 'Inspiré de <a href="https://github.com/ChiselsAndBits/Chisels-and-Bits">Chisels &amp; Bits</a>, écrit de zéro.'
+
+[icons]
+chisel = "src/main/resources/assets/chiseledblocks/textures/item/iron_chisel.png"
+bag = "src/main/resources/assets/chiseledblocks/textures/item/pixel_bag.png"
+pattern = "src/main/resources/assets/chiseledblocks/textures/item/pattern.png"
+wrench = "src/main/resources/assets/chiseledblocks/textures/item/wrench.png"
+slicer = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/slicer_side.png"
+cutter = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/cutter_side.png"
+crusher = "chiseledblocks-create/src/main/resources/assets/chiseledblocks_create/textures/block/line/crusher_side.png"
+
+[[section]]
+id = "features"
+title.en = "What It Does"
+title.fr = "Ce Qu'il Fait"
+icon = "star"
+
+  [[section.banner]]
+  file = "carve.gif"
+  alt.en = "A calcite block chiseled into a stair, stroke by stroke, then a blue pixel placed above it"
+  alt.fr = "Un bloc de calcite ciselé en escalier, coup après coup, puis un pixel bleu posé au-dessus"
+
+  [[section.item]]
+  icon = "chisel"
+  name.en = "Chisel"
+  name.fr = "Ciseau"
+  text.en = "single pixel, line, plane, cube or sphere, from 1 to 8 pixels."
+  text.fr = "pixel seul, ligne, plan, cube ou sphère, de 1 à 8 pixels."
+
+  [[section.item]]
+  icon = "bag"
+  name.en = "Pixels and bag"
+  name.fr = "Pixels et sac"
+  text.en = "every pixel is kept; place them back by hand, in lines, planes or boxes."
+  text.fr = "chaque pixel est gardé ; reposez-les à la main, en lignes, plans ou boîtes."
+
+  [[section.item]]
+  icon = "pattern"
+  name.en = "Patterns"
+  name.fr = "Modèles"
+  text.en = "copy a chiseling, print it again or carve with it."
+  text.fr = "copiez une sculpture, imprimez-la ailleurs ou taillez avec."
+
+  [[section.item]]
+  icon = "wrench"
+  name.en = "Tools"
+  name.fr = "Outils"
+  text.en = "mirror, wrench, saw, tape measure, and undo for the last 64 actions."
+  text.fr = "miroir, clé, scie, mètre ruban, et annulation des 64 dernières actions."
+
+[[section]]
+id = "speed"
+title.en = "Built For Speed"
+title.fr = "Pensé Pour la Vitesse"
+icon = "bolt"
+
+  [[section.banner]]
+  file = "speed.gif"
+  alt.en = "16,000 chiseled blocks: playable after 1 second, 617 fps flying over, saved in 67 ms"
+  alt.fr = "16 000 blocs ciselés : jouable après 1 seconde, 617 fps en vol, sauvegarde en 67 ms"
+
+  [[section.item]]
+  icon = "stack-2"
+  name.en = "Shared meshes"
+  name.fr = "Maillages partagés"
+  text.en = "identical chiselings share one mesh and one collision shape."
+  text.fr = "les sculptures identiques partagent un maillage et une forme de collision."
+
+  [[section.item]]
+  icon = "wifi"
+  name.en = "Light updates"
+  name.fr = "Mises à jour légères"
+  text.en = "an edit rebuilds its section once and sends only what changed."
+  text.fr = "une modification reconstruit sa section une fois et n'envoie que ce qui change."
+
+  [[section.item]]
+  icon = "puzzle"
+  name.en = "Compatible"
+  name.fr = "Compatible"
+  text.en = "checked with Sodium, Iris, ModernFix, WorldEdit and KubeJS."
+  text.fr = "testé avec Sodium, Iris, ModernFix, WorldEdit et KubeJS."
+
+[[section]]
+id = "create"
+title.en = "Create Addon"
+title.fr = "Extension Create"
+icon = "cube"
+lead.en = "Chiseled Blocks: Create, a separate download, turns whole blocks into pixels on a belt."
+lead.fr = "Chiseled Blocks: Create, un téléchargement à part, change des blocs entiers en pixels sur un tapis."
+
+  [[section.banner]]
+  file = "create.gif"
+  alt.en = "A stone block cut into slices, rods and pixels by three machines over a Create belt"
+  alt.fr = "Un bloc de pierre coupé en tranches, baguettes et pixels par trois machines au-dessus d'un tapis Create"
+
+  [[section.item]]
+  icon = "slicer"
+  name.en = "Block Slicer"
+  name.fr = "Block Slicer"
+  text.en = "cuts a block into 16 slices."
+  text.fr = "coupe un bloc en 16 tranches."
+
+  [[section.item]]
+  icon = "cutter"
+  name.en = "Slice Cutter"
+  name.fr = "Slice Cutter"
+  text.en = "cuts a slice into 16 rods."
+  text.fr = "coupe une tranche en 16 baguettes."
+
+  [[section.item]]
+  icon = "crusher"
+  name.en = "Pixel Crusher"
+  name.fr = "Pixel Crusher"
+  text.en = "crushes a rod into 16 pixels."
+  text.fr = "broie une baguette en 16 pixels."
+
+[[section]]
+id = "start"
+title.en = "Getting Started"
+title.fr = "Premiers Pas"
+icon = "rocket"
+layout = "steps"
+
+  [[section.item]]
+  text.en = "Craft an iron chisel and left click a block to carve it."
+  text.fr = "Fabriquez un ciseau en fer et faites un clic gauche sur un bloc pour le tailler."
+
+  [[section.item]]
+  text.en = "Hold <code>Left Alt</code> for the tool menu: mode, size, mirror, undo."
+  text.fr = "Maintenez <code>Alt gauche</code> pour le menu de l'outil : mode, taille, miroir, annulation."
+
+  [[section.item]]
+  text.en = "Keep a pixel bag in your inventory and right click with it to place pixels."
+  text.fr = "Gardez un sac à pixels dans l'inventaire et faites un clic droit avec pour poser des pixels."
+
+[footer]

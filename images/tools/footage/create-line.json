@@ -1,0 +1,13 @@
+{
+  "start": 0,
+  "look": "cinematic",
+  "letterbox": null,
+  "transition": "CUT",
+  "transition_ticks": 0,
+  "fade_in": 0,
+  "fade_out": 0,
+  "shots": [
+    {"type": "static", "pos": [3.6, -57.3, 10.4], "look_at": [3.6, -60.1, 5.5], "ticks": 280, "fov": 50}
+  ],
+  "actors": []
+}

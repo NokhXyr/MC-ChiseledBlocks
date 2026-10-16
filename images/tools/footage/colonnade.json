@@ -1,0 +1,152 @@
+{
+  "start": 30,
+  "look": "cinematic",
+  "letterbox": null,
+  "transition": "CUT",
+  "transition_ticks": 0,
+  "fade_in": 0,
+  "fade_out": 0,
+  "shots": [
+    {
+      "type": "static",
+      "pos": [
+        214.25,
+        -57.55,
+        212.9
+      ],
+      "look_at": [
+        213.5,
+        -59.35,
+        209.5
+      ],
+      "ticks": 180,
+      "fov": 40
+    },
+    {
+      "type": "dolly",
+      "from_pos": [
+        208.0,
+        -55.3,
+        217.8
+      ],
+      "to_pos": [
+        215.0,
+        -55.0,
+        218.6
+      ],
+      "look_at": [
+        212.5,
+        -57.2,
+        207.0
+      ],
+      "ticks": 120,
+      "fov": 62
+    },
+    {
+      "type": "static",
+      "pos": [
+        213.5,
+        -56.6,
+        223.5
+      ],
+      "look_at": [
+        213.5,
+        -55.6,
+        206.0
+      ],
+      "ticks": 70,
+      "fov": 62
+    }
+  ],
+  "actors": [
+    {
+      "name": "NokhXyr",
+      "path": [
+        [
+          30,
+          212.05,
+          -59.0,
+          209.2,
+          -70
+        ],
+        [
+          400,
+          212.05,
+          -59.0,
+          209.2,
+          -70
+        ]
+      ],
+      "main_hand": "chiseledblocks:iron_chisel",
+      "show_name": false,
+      "actions": [
+        [
+          "SWING_MAIN",
+          50,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          60,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          70,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          80,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          90,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          100,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          110,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          120,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          130,
+          6,
+          ""
+        ],
+        [
+          "SWING_MAIN",
+          140,
+          6,
+          ""
+        ],
+        [
+          "USE_ITEM",
+          150,
+          8,
+          ""
+        ]
+      ]
+    }
+  ]
+}

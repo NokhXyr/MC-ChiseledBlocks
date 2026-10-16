@@ -49,3 +49,12 @@ src/generated/**/.cache
 # OS
 Thumbs.db
 .DS_Store
+
+# Page images: recording folder, script caches, generated pictures (hosted in NokhXyr/MC-Images)
+run-*/
+__pycache__/
+images/*
+!images/tools/
+
+# Footage: recordings and heavy videos stay local
+media/
