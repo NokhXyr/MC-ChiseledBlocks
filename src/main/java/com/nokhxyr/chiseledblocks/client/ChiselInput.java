@@ -93,6 +93,11 @@ public final class ChiselInput {
         if (player == null || !(player.getMainHandItem().getItem() instanceof ChiselItem chisel)) {
             return;
         }
+        if (!player.mayBuild()) {
+            // Adventure and spectator: the server refuses every stroke, so none is predicted (the
+            // carving would flicker, cut here and put back by the server's correction).
+            return;
+        }
         if (!(minecraft.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) {
             return;
         }

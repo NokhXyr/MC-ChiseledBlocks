@@ -26,6 +26,7 @@ import net.neoforged.fml.ModList;
 import com.nokhxyr.chiseledblocks.item.PixelItem;
 import com.nokhxyr.chiseledblocks.item.ChiseledBlockItem;
 import com.nokhxyr.chiseledblocks.item.ChiselItem;
+import com.nokhxyr.chiseledblocks.network.PredictionTracker;
 import com.nokhxyr.chiseledblocks.item.PatternItem;
 import com.nokhxyr.chiseledblocks.item.SawItem;
 import com.nokhxyr.chiseledblocks.item.WrenchItem;
@@ -119,6 +120,10 @@ public final class ClientPlaytest {
     private int sawBefore;
     private PixelGrid movedGrid;
     private float handLowest;
+    private int adventureBefore;
+    private int adventureLowest;
+    private boolean adventurePredicted;
+    private boolean adventureStale;
     private int handTicks;
 
     public ClientPlaytest() {
@@ -314,6 +319,28 @@ public final class ClientPlaytest {
             }, 5, () -> true);
         }
         step("repeated clicks keep carving", () -> { }, 6, () -> between("bits in A", filled(A), PixelGrid.VOLUME - 5, PixelGrid.VOLUME - 2));
+
+        // Adventure mode: the server refuses strokes, so the client must not show one for a moment.
+        step("adventure mode", () -> command("gamemode adventure"), 6, () -> !mc.player.mayBuild());
+        step("click in adventure mode", () -> {
+            adventureBefore = filled(A);
+            adventureLowest = adventureBefore;
+            adventurePredicted = false;
+            adventureStale = PredictionTracker.isRecent(A, mc.level.getGameTime());
+            handTicks = 0;
+            attack();
+        }, 0, () -> that("no stroke predicted on A before the click", !adventureStale));
+        // The click is handled on the next tick and the server's correction may come before the next
+        // read, so the client's own record of predicted strokes is checked too.
+        until("watch the carving for a moment", () -> { }, 30, () -> {
+            adventureLowest = Math.min(adventureLowest, filled(A));
+            adventurePredicted |= PredictionTracker.isRecent(A, mc.level.getGameTime());
+            return ++handTicks >= 20;
+        });
+        step("a click in adventure never showed a cut", () -> { }, 1, () -> that("bits in A: " + adventureBefore
+                + " before the click, at least " + adventureLowest + " after; predicted " + adventurePredicted,
+                adventureLowest == adventureBefore && !adventurePredicted));
+        step("back to creative", () -> command("gamemode creative"), 6, () -> mc.player.getAbilities().instabuild);
 
         step("V switches the mode to cube", () -> tap(ChiseledBlocksKeys.MODE.getKey().getValue()), 6,
                 () -> that("mode " + ChiselItem.settings(held()).mode(), ChiselItem.settings(held()).mode() == ChiselMode.CUBE));

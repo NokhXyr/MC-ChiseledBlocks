@@ -247,3 +247,11 @@
 **Root cause:** converting a plain block called `setBlock` with neighbour updates while the new block entity still held the empty grid, whose shape is empty; the grid was set right after.
 **Fix:** `ChiseledBlockEntity.place` sets the block without neighbour updates, sets the grid, then notifies the neighbours; the edit batcher now notifies them after every change of shape too.
 **Prevention:** a block whose shape lives in its block entity must have that data before any neighbour update; test blocks resting on edited blocks.
+
+## [2026-10-17 15:30] — A playtest that could not fail
+
+**Context:** a client playtest step meant to catch a chisel stroke predicted in adventure mode.
+**Error:** the step passed with and without the fix, three runs in a row.
+**Root cause:** `attack()` only queues the click, which the game handles on the next tick; the step then read the carving before the click, and later after the server's correction. A precondition checked after the click saw the fresh prediction, failed, and was retried by the step's grace period until the prediction had expired.
+**Fix:** the precondition is read in the step's action, before the click; the step watches `PredictionTracker`, which keeps the trace of a prediction for 10 ticks, rather than the grid alone. It fails without the fix and passes with it.
+**Prevention:** run every new regression test once without its fix and see it fail; remember that a step's check is retried during its grace ticks, so a check must not depend on how long it waited.
