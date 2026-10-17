@@ -255,3 +255,11 @@
 **Root cause:** `attack()` only queues the click, which the game handles on the next tick; the step then read the carving before the click, and later after the server's correction. A precondition checked after the click saw the fresh prediction, failed, and was retried by the step's grace period until the prediction had expired.
 **Fix:** the precondition is read in the step's action, before the click; the step watches `PredictionTracker`, which keeps the trace of a prediction for 10 ticks, rather than the grid alone. It fails without the fix and passes with it.
 **Prevention:** run every new regression test once without its fix and see it fail; remember that a step's check is retried during its grace ticks, so a check must not depend on how long it waited.
+
+## [2026-10-17 21:53] — Gallery capture in the Footage world: no hotbar, no outline, no interaction
+
+**Context:** first capture session of the gallery (`images/tools/capture/gallery-1.txt`) in the Footage world, recorded earlier with Just Replay.
+**Error:** the frames showed no hotbar, no held item and no chisel outline; `key key.use` did not record the pattern and `key key.pickItem` picked nothing. Only the frames taken after `cmd gamemode survival` had a hotbar.
+**Root cause:** the Footage world saves the recording player as Just Replay leaves it: spectator and invisible. A spectator has no HUD hotbar, no hand, no block outline and cannot use or pick blocks.
+**Fix:** every gallery capture script starts with `cmd gamemode creative` and `cmd effect clear @s`.
+**Prevention:** a capture script that opens a world recorded with Just Replay sets the game mode and clears effects first; check one frame of the first session for the hotbar before trusting the rest.
