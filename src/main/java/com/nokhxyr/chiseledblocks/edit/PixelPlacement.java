@@ -60,7 +60,8 @@ public final class PixelPlacement {
         Vec3 target = context.getClickLocation().add(Vec3.atLowerCornerOf(face.getNormal()).scale(INSET));
         BlockPos pos = BlockPos.containing(target);
         if (!level.isInWorldBounds(pos)
-                || (player != null && (!player.mayBuild() || !level.mayInteract(player, pos)))) {
+                || (player != null && (!player.mayBuild() || !level.mayInteract(player, pos)))
+                || (player instanceof ServerPlayer serverPlayer && !EditPermission.mayAdd(serverPlayer, pos))) {
             return InteractionResult.FAIL;
         }
 

@@ -48,6 +48,8 @@
   "chiseledblocks.redo.too_far": "Too far from the block to redo",
   "chiseledblocks.undo.changed": "The block changed since, this step was dropped",
   "chiseledblocks.redo.changed": "The block changed since, this step was dropped",
+  "chiseledblocks.undo.protected": "This block is protected, nothing was undone",
+  "chiseledblocks.redo.protected": "This block is protected, nothing was redone",
   "chiseledblocks.undo.missing_pixels": "Undo needs %s %s pixels back",
   "chiseledblocks.redo.missing_pixels": "Redo needs %s %s pixels",
   "item.chiseledblocks.blank_pattern": "Blank Pattern",

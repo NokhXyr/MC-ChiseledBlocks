@@ -11,6 +11,7 @@ import com.nokhxyr.chiseledblocks.core.voxel.PixelGrid;
 import com.nokhxyr.chiseledblocks.core.voxel.PixelGridBuilder;
 import com.nokhxyr.chiseledblocks.edit.BlockSnapshot;
 import com.nokhxyr.chiseledblocks.edit.EditHistory;
+import com.nokhxyr.chiseledblocks.edit.EditPermission;
 import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksComponents;
 import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksRegistries;
 import com.nokhxyr.chiseledblocks.registry.ChiseledItems;
@@ -65,7 +66,7 @@ public class SawItem extends Item {
             return InteractionResult.FAIL;
         }
         BlockPos pos = context.getClickedPos();
-        if (!player.mayBuild() || !level.mayInteract(player, pos)) {
+        if (!player.mayBuild() || !level.mayInteract(player, pos) || !EditPermission.mayRemove(player, pos)) {
             return InteractionResult.FAIL;
         }
         PixelGrid base = baseAt(level, pos);

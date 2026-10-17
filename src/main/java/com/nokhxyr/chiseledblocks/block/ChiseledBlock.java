@@ -15,7 +15,11 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -116,6 +120,36 @@ public final class ChiseledBlock extends Block implements EntityBlock {
     @Override
     protected VoxelShape getVisualShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return getShape(state, level, pos, context);
+    }
+
+    /** The material most of the carving at {@code pos} is made of, or null when there is none. */
+    private static @Nullable BlockState mainMaterialAt(BlockGetter level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof ChiseledBlockEntity carved) {
+            BlockState main = carved.mainMaterial();
+            return main.isAir() ? null : main;
+        }
+        return null;
+    }
+
+    /** Breaks like its main material: chiseled stone wants a pickaxe, chiseled wool goes fast by hand. */
+    @Override
+    protected float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
+        BlockState main = mainMaterialAt(level, pos);
+        return main == null ? super.getDestroyProgress(state, player, level, pos) : main.getDestroyProgress(player, level, pos);
+    }
+
+    /** Stands explosions like its main material. */
+    @Override
+    public float getExplosionResistance(BlockState state, BlockGetter level, BlockPos pos, Explosion explosion) {
+        BlockState main = mainMaterialAt(level, pos);
+        return main == null ? super.getExplosionResistance(state, level, pos, explosion) : main.getExplosionResistance(level, pos, explosion);
+    }
+
+    /** Sounds like its main material, when walked on, hit or broken. */
+    @Override
+    public SoundType getSoundType(BlockState state, LevelReader level, BlockPos pos, @Nullable Entity entity) {
+        BlockState main = mainMaterialAt(level, pos);
+        return main == null ? super.getSoundType(state, level, pos, entity) : main.getSoundType(level, pos, entity);
     }
 
     @Override

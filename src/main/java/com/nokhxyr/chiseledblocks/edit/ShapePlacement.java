@@ -81,7 +81,8 @@ public final class ShapePlacement {
             BlockPos pos = new BlockPos(x >> 4, y >> 4, z >> 4);
             long key = pos.asLong();
             if (!bases.containsKey(key)) {
-                boolean usable = level.isInWorldBounds(pos) && level.isLoaded(pos) && level.mayInteract(player, pos);
+                boolean usable = level.isInWorldBounds(pos) && level.isLoaded(pos) && level.mayInteract(player, pos)
+                        && EditPermission.mayAdd(player, pos);
                 bases.put(key, usable ? PixelPlacement.baseAt(level, pos) : null);
             }
             PixelGrid base = bases.get(key);

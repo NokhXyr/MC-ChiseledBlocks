@@ -52,7 +52,8 @@ public final class PatternLogic {
             return InteractionResult.FAIL;
         }
         BlockPos pos = target(context.getClickedPos(), context.getClickedFace(), mode, player.isShiftKeyDown());
-        if (!level.isInWorldBounds(pos) || !player.mayBuild() || !level.mayInteract(player, pos)) {
+        if (!level.isInWorldBounds(pos) || !player.mayBuild() || !level.mayInteract(player, pos)
+                || !(mode == PatternMode.POSITIVE ? EditPermission.mayAdd(player, pos) : EditPermission.mayRemove(player, pos))) {
             return InteractionResult.FAIL;
         }
         boolean done = mode == PatternMode.POSITIVE ? print(player, level, pos, pattern) : carve(player, level, pos, pattern);

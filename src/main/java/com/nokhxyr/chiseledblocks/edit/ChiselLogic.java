@@ -15,7 +15,6 @@ import com.nokhxyr.chiseledblocks.item.ChiselItem;
 import com.nokhxyr.chiseledblocks.item.ChiselSettings;
 import com.nokhxyr.chiseledblocks.metrics.Metrics;
 import com.nokhxyr.chiseledblocks.network.GridFullPayload;
-import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksRegistries;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -23,7 +22,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -65,7 +63,8 @@ public final class ChiselLogic {
                 || !player.canInteractWithBlock(pos, 1.0)
                 || !player.mayBuild()
                 || !level.mayInteract(player, pos)
-                || !takeBudget(player, level.getGameTime())) {
+                || !takeBudget(player, level.getGameTime())
+                || !EditPermission.mayRemove(player, pos)) {
             resync(player, level, pos);
             return;
         }
@@ -104,10 +103,7 @@ public final class ChiselLogic {
                 removed.addTo(m, 1);
             });
             PixelGrid carvedGrid = builder.build();
-            level.setBlock(pos, ChiseledBlocksRegistries.CHISELED_BLOCK.get().defaultBlockState(), Block.UPDATE_ALL);
-            if (level.getBlockEntity(pos) instanceof ChiseledBlockEntity carved) {
-                carved.setGrid(carvedGrid);
-            }
+            ChiseledBlockEntity.place(level, pos, carvedGrid);
             soundMaterial = material;
             before = BlockSnapshot.of(state);
             after = BlockSnapshot.of(carvedGrid);

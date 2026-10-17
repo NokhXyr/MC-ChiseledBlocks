@@ -7,7 +7,6 @@ package com.nokhxyr.chiseledblocks.edit;
 import com.nokhxyr.chiseledblocks.block.ChiseledBlockEntity;
 import com.nokhxyr.chiseledblocks.block.Materials;
 import com.nokhxyr.chiseledblocks.core.voxel.PixelGrid;
-import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -54,10 +53,7 @@ public record BlockSnapshot(@Nullable BlockState plain, @Nullable PixelGrid grid
                     }
                 });
             } else {
-                level.setBlock(pos, ChiseledBlocksRegistries.CHISELED_BLOCK.get().defaultBlockState(), Block.UPDATE_ALL);
-                if (level.getBlockEntity(pos) instanceof ChiseledBlockEntity carved) {
-                    carved.setGrid(grid);
-                }
+                ChiseledBlockEntity.place(level, pos, grid);
             }
             return;
         }

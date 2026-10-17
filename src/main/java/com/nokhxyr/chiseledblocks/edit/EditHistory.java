@@ -120,6 +120,14 @@ public final class EditHistory {
             return;
         }
 
+        // A protection mod may have claimed the place since: the step waits, it is not dropped.
+        for (Change change : entry.changes()) {
+            if (level.isLoaded(change.pos()) && !EditPermission.mayRemove(player, change.pos())) {
+                player.displayClientMessage(Component.translatable("chiseledblocks." + key + ".protected"), true);
+                return;
+            }
+        }
+
         // Every block must still hold what the action left there, or nothing is touched.
         for (Change change : entry.changes()) {
             BlockSnapshot expected = undoing ? change.after() : change.before();

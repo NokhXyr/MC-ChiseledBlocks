@@ -12,6 +12,7 @@ import com.nokhxyr.chiseledblocks.core.voxel.PixelGridBuilder;
 import com.nokhxyr.chiseledblocks.core.voxel.PixelGridInterner;
 import com.nokhxyr.chiseledblocks.core.voxel.GridTransforms;
 import com.nokhxyr.chiseledblocks.edit.EditBatcher;
+import com.nokhxyr.chiseledblocks.item.GridSummary;
 import com.nokhxyr.chiseledblocks.metrics.Metrics;
 import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksComponents;
 import com.nokhxyr.chiseledblocks.registry.ChiseledBlocksRegistries;
@@ -23,6 +24,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
@@ -45,6 +49,8 @@ public final class ChiseledBlockEntity extends BlockEntity {
     private static final PixelGrid EMPTY = INTERNER.intern(PixelGrid.filled(PixelGrid.AIR));
 
     private PixelGrid grid = EMPTY;
+    /** The material with the most pixels, worked out when first asked, forgotten with the grid. */
+    private @Nullable BlockState mainMaterial;
     /** Orientation of the block state when the grid was last aligned. */
     private Direction gridFacing = Direction.NORTH;
     /** Set when the data came from Chisels & Bits: the block is saved again in Chiseled Blocks's format. */
@@ -68,6 +74,7 @@ public final class ChiseledBlockEntity extends BlockEntity {
             return;
         }
         grid = interned;
+        mainMaterial = null;
         if (level != null) {
             if (level.isClientSide) {
                 onClientGridChanged();
@@ -75,6 +82,44 @@ public final class ChiseledBlockEntity extends BlockEntity {
                 setChanged();
             }
         }
+    }
+
+    /**
+     * The material most of the carving is made of (air when empty): it decides how the block sounds,
+     * how fast tools break it and how it stands explosions, and names its item.
+     */
+    public BlockState mainMaterial() {
+        BlockState main = mainMaterial;
+        if (main == null) {
+            GridSummary summary = GridSummary.of(grid);
+            main = summary.isEmpty() ? Blocks.AIR.defaultBlockState() : summary.materials().get(0).material();
+            mainMaterial = main;
+        }
+        return main;
+    }
+
+    /**
+     * Server side: puts a carving at {@code pos} in place of whatever is there. The grid is set
+     * before the neighbours hear of the new block, so a torch or a button resting on it sees its
+     * real shape and not the empty one of a block entity just created.
+     */
+    public static void place(ServerLevel level, BlockPos pos, PixelGrid grid) {
+        BlockState state = ChiseledBlocksRegistries.CHISELED_BLOCK.get().defaultBlockState();
+        level.setBlock(pos, state, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        if (level.getBlockEntity(pos) instanceof ChiseledBlockEntity carved) {
+            carved.setGrid(grid);
+        }
+        notifyNeighbours(level, pos, level.getBlockState(pos));
+    }
+
+    /**
+     * Tells the blocks around that this one changed shape: what rests on it (torches, buttons,
+     * redstone) checks it still holds, observers and redstone react, as for any block change.
+     */
+    public static void notifyNeighbours(ServerLevel level, BlockPos pos, BlockState state) {
+        level.updateNeighborsAt(pos, state.getBlock());
+        state.updateNeighbourShapes(level, pos, Block.UPDATE_ALL);
+        state.updateIndirectNeighbourShapes(level, pos, Block.UPDATE_ALL);
     }
 
     /** Server side: queues an edit, applied at the end of the tick together with the others. */

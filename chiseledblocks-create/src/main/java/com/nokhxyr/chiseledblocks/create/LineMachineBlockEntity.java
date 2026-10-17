@@ -115,7 +115,7 @@ public final class LineMachineBlockEntity extends KineticBlockEntity {
         return outputs;
     }
 
-    /** Ponder: whether this machine's input lies under it, at the centre of a belt or a depot. */
+    /** Whether this machine's input lies under it, at the centre of a belt or a depot. */
     private boolean inputBelow() {
         TransportedItemStackHandlerBehaviour handler = BlockEntityBehaviour.get(level, worldPosition.below(2), TransportedItemStackHandlerBehaviour.TYPE);
         if (handler == null) {
@@ -167,6 +167,12 @@ public final class LineMachineBlockEntity extends KineticBlockEntity {
             progress += Math.abs(getSpeed()) / 16f;
             if (progress >= WORK && inSchematic()) {
                 finishCutInSchematic();
+            } else if (level != null && !level.isClientSide && !inSchematic() && level.getGameTime() % 5 == 0 && !inputBelow()) {
+                // The item was taken away mid cut (picked up, belt reversed, depot emptied): stop
+                // rather than run on empty until the next item arrives.
+                running = false;
+                progress = 0;
+                sendData();
             }
         } else if (inSchematic() && getSpeed() != 0 && inputBelow()) {
             start();

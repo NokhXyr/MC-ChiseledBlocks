@@ -6,6 +6,7 @@ package com.nokhxyr.chiseledblocks.create.gametest;
 
 import com.nokhxyr.chiseledblocks.create.PieceItem;
 import com.nokhxyr.chiseledblocks.create.ChiseledBlocksCreate;
+import com.nokhxyr.chiseledblocks.create.LineMachineBlockEntity;
 import com.nokhxyr.chiseledblocks.create.LineStage;
 import com.nokhxyr.chiseledblocks.item.PixelItem;
 import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
@@ -112,6 +113,21 @@ public final class LineGameTests {
                 PieceItem.of(ChiseledBlocksCreate.SLICE.get(), Blocks.STONE.defaultBlockState(), 1), true);
         helper.runAfterDelay(80, () -> {
             helper.assertTrue(count(depot, stack -> stack.is(ChiseledBlocksCreate.SLICE.get())) == 1, "the slice is left as it is");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = TEMPLATE, timeoutTicks = 120)
+    public static void machineStopsWhenItsItemIsTakenAway(GameTestHelper helper) {
+        IItemHandler depot = build(helper, LineStage.SLICER, new ItemStack(Blocks.STONE), true);
+        helper.runAfterDelay(10, () -> {
+            LineMachineBlockEntity machine = helper.getBlockEntity(MACHINE);
+            helper.assertTrue(machine.running(), "the slicer has started on the stone");
+            depot.extractItem(0, 64, false);
+        });
+        helper.runAfterDelay(30, () -> {
+            LineMachineBlockEntity machine = helper.getBlockEntity(MACHINE);
+            helper.assertFalse(machine.running(), "with nothing left to cut, the slicer stops instead of running on empty");
             helper.succeed();
         });
     }

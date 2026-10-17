@@ -48,6 +48,8 @@
   "chiseledblocks.redo.too_far": "Trop loin du bloc pour rétablir",
   "chiseledblocks.undo.changed": "Le bloc a changé depuis, cette étape est abandonnée",
   "chiseledblocks.redo.changed": "Le bloc a changé depuis, cette étape est abandonnée",
+  "chiseledblocks.undo.protected": "Ce bloc est protégé, rien n'a été annulé",
+  "chiseledblocks.redo.protected": "Ce bloc est protégé, rien n'a été rétabli",
   "chiseledblocks.undo.missing_pixels": "Annuler demande de rendre %s pixels de %s",
   "chiseledblocks.redo.missing_pixels": "Rétablir demande %s pixels de %s",
   "item.chiseledblocks.blank_pattern": "Pattern vierge",

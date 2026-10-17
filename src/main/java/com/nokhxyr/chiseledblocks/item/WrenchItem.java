@@ -10,6 +10,7 @@ import com.nokhxyr.chiseledblocks.core.voxel.PixelGrid;
 import com.nokhxyr.chiseledblocks.core.voxel.GridTransforms;
 import com.nokhxyr.chiseledblocks.edit.BlockSnapshot;
 import com.nokhxyr.chiseledblocks.edit.EditHistory;
+import com.nokhxyr.chiseledblocks.edit.EditPermission;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -54,7 +55,7 @@ public class WrenchItem extends Item {
             return InteractionResult.SUCCESS;
         }
         if (!(context.getPlayer() instanceof ServerPlayer player) || !(context.getLevel() instanceof ServerLevel level)
-                || !player.mayBuild() || !level.mayInteract(player, pos)) {
+                || !player.mayBuild() || !level.mayInteract(player, pos) || !EditPermission.mayRemove(player, pos)) {
             return InteractionResult.FAIL;
         }
 

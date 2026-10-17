@@ -112,6 +112,7 @@ public final class EditBatcher {
 
         blockEntity.setGrid(after);
         PacketDistributor.sendToPlayersTrackingChunk(level, new ChunkPos(pos), update(pos, builder, after));
+        ChiseledBlockEntity.notifyNeighbours(level, pos, blockEntity.getBlockState());
     }
 
     /** A delta when it is smaller than the whole grid, the whole grid otherwise. */

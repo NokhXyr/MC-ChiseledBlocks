@@ -231,3 +231,19 @@
 **Root cause:** each stroke damages the chisel on the server, which syncs the stack back as a new object; NeoForge's default `shouldCauseReequipAnimation` compares stacks by identity, so every sync replayed the equip animation. Bags, pixels, patterns and tool settings had the same problem.
 **Fix:** every item of the mod overrides `shouldCauseReequipAnimation` to play it only when the slot or the item changes; the client playtest checks the hand height during a run of strokes (failed before the fix, passes after).
 **Prevention:** any item whose components change while held (durability, settings, contents) needs that override; check held item animations in the playtest, not only the world.
+
+## [2026-10-17 14:50] — Every chisel stroke refused once protection mods were asked
+
+**Context:** making chisel strokes post a block break event so protection mods (claims) can refuse them.
+**Error:** 12 game tests failed at once: no stroke changed any block, in creative or survival.
+**Root cause:** `CommonHooks.fireBlockBreak` cancels the event before posting it when the held item's `canAttackBlock` is false, and the chisel returns false on purpose so it never breaks a whole block.
+**Fix:** `EditPermission.mayRemove` builds and posts the `BlockEvent.BreakEvent` itself, keeping only the adventure mode and game master block checks.
+**Prevention:** read what a NeoForge hook checks besides posting its event before using it for a tool that overrides vanilla item behaviour; check a permission change against the existing tests, not only the new one.
+
+## [2026-10-17 14:55] — Torch dropped by the first stroke on a plain block
+
+**Context:** bug hunt, a game test with a torch on a stone block chiseled in a bottom corner.
+**Error:** the torch dropped at once, although its support was untouched.
+**Root cause:** converting a plain block called `setBlock` with neighbour updates while the new block entity still held the empty grid, whose shape is empty; the grid was set right after.
+**Fix:** `ChiseledBlockEntity.place` sets the block without neighbour updates, sets the grid, then notifies the neighbours; the edit batcher now notifies them after every change of shape too.
+**Prevention:** a block whose shape lives in its block entity must have that data before any neighbour update; test blocks resting on edited blocks.
