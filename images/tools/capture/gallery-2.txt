@@ -1,0 +1,94 @@
+# Gallery, session 2: retakes of the first person carving, the pattern preview and the tooltip.
+# Run from the project folder:  ./gradlew runCapture -PcaptureScript=images/tools/capture/gallery-2.txt
+
+world Footage 0
+wait 120
+size 1920 1080
+freeze
+notoast on
+time 10000
+rd 12
+cmd weather clear
+cmd gamerule announceAdvancements false
+cmd gamerule showDeathMessages false
+cmd kill @e[type=item]
+guiscale 3
+hud on
+# the Footage world keeps the recording player of Just Replay: spectator and invisible
+cmd gamemode creative
+cmd effect clear @s
+
+cmd clear @s
+cmd item replace entity @s hotbar.0 with chiseledblocks:iron_chisel[chiseledblocks:chisel_settings={mode:"cube",size:4}]
+cmd item replace entity @s hotbar.1 with chiseledblocks:pixel_bag
+cmd item replace entity @s hotbar.2 with chiseledblocks:blank_pattern
+cmd item replace entity @s hotbar.3 with chiseledblocks:saw
+cmd item replace entity @s hotbar.4 with chiseledblocks:wrench
+cmd item replace entity @s hotbar.5 with chiseledblocks:tape_measure
+key key.hotbar.1
+
+# --- first person carving: a quartz block on the podium, a few strokes, the outline of the next one
+cmd setblock 217 -59 209 minecraft:quartz_block
+tp 218.6 -59 211.6
+fly off
+wait 160
+look 217.15 -58.15 210.0
+wait 20
+key key.attack 2
+wait 8
+look 217.4 -58.15 210.0
+wait 4
+key key.attack 2
+wait 8
+look 217.15 -58.15 209.6
+wait 4
+key key.attack 2
+wait 8
+look 217.65 -58.4 210.0
+wait 30
+shot carve_fp_a
+look 217.6 -58.15 209.85
+wait 30
+shot carve_fp_b
+
+# --- the pattern: record a capital, then aim at the podium in front of the columns
+key key.hotbar.3
+fly on
+tp 219.5 -58 209.8
+wait 60
+look 218.5 -54.7 207.6
+wait 20
+key key.use
+wait 20
+tp 215.5 -59 212.2
+fly off
+wait 60
+look 215.5 -59.0 209.5
+wait 30
+shot pattern_c
+look 215.2 -59.0 209.6
+wait 30
+shot pattern_d
+
+# --- the tooltip, larger
+fly on
+tp 219.5 -58 209.8
+wait 40
+look 218.5 -54.7 207.6
+wait 20
+key key.pickItem
+wait 10
+cmd gamemode survival
+guiscale 4
+key key.inventory
+wait 14
+mouse 816 808
+wait 8
+shot tooltip_c
+screen close
+mouse free
+cmd gamemode creative
+guiscale 3
+
+cmd setblock 217 -59 209 minecraft:air
+quit

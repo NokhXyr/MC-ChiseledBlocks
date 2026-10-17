@@ -1,0 +1,98 @@
+# Gallery, session 1: what a player sees in first person, in the colonnade of the Footage world.
+# Run from the project folder:  ./gradlew runCapture -PcaptureScript=images/tools/capture/gallery-1.txt
+# Frames go to run-capture/screenshots/. The set is built by images/tools/footage/build_scene.py.
+
+world Footage 0
+wait 120
+size 1920 1080
+freeze
+notoast on
+time 10000
+rd 12
+cmd weather clear
+cmd gamerule announceAdvancements false
+cmd gamerule showDeathMessages false
+cmd kill @e[type=item]
+guiscale 3
+hud on
+# the Footage world keeps the recording player of Just Replay: spectator and invisible
+cmd gamemode creative
+cmd effect clear @s
+
+# --- the hotbar a player would carry
+cmd clear @s
+cmd item replace entity @s hotbar.0 with chiseledblocks:iron_chisel[chiseledblocks:chisel_settings={mode:"sphere",size:8}]
+cmd item replace entity @s hotbar.1 with chiseledblocks:pixel_bag
+cmd item replace entity @s hotbar.2 with chiseledblocks:blank_pattern
+cmd item replace entity @s hotbar.3 with chiseledblocks:saw
+cmd item replace entity @s hotbar.4 with chiseledblocks:wrench
+cmd item replace entity @s hotbar.5 with chiseledblocks:tape_measure
+key key.hotbar.1
+
+# --- the chisel outline: a sphere of 8 pixels on the shaft of a column
+tp 220.6 -59 210.8
+wait 160
+look 218.55 -57.4 207.45
+wait 60
+shot outline_a
+look 218.55 -58.2 207.5
+wait 40
+shot outline_b
+
+# --- the tool menu, held open
+key key.chiseledblocks.radial 400
+wait 20
+shot radial_a
+mouse 1110 400
+wait 8
+shot radial_b
+mouse 960 300
+wait 8
+shot radial_c
+screen close
+mouse free
+wait 10
+
+# --- a pattern: record a capital, then aim at the empty podium to see where it prints
+key key.hotbar.3
+tp 219.5 -58 209.8
+wait 60
+look 218.5 -54.7 207.6
+wait 20
+key key.use
+wait 20
+look 216.5 -59.0 210.5
+wait 30
+shot pattern_a
+look 216.5 -59.0 211.5
+wait 30
+shot pattern_b
+
+# --- the tooltip of a chiseled block picked from the capital
+look 218.5 -54.7 207.6
+wait 20
+key key.pickItem
+wait 10
+cmd gamemode survival
+key key.inventory
+wait 14
+mouse 852 741
+wait 8
+shot tooltip_a
+mouse 1083 741
+wait 8
+shot tooltip_b
+screen close
+mouse free
+cmd gamemode creative
+
+# --- the admin panel
+chat /chiseledblocks
+wait 20
+mouse 3 3
+shot admin_a
+click 702 60
+wait 20
+shot admin_b
+screen close
+quit

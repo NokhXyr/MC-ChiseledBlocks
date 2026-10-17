@@ -1,0 +1,81 @@
+# The gallery of Chiseled Blocks, for CurseForge and Modrinth.
+# Build:  python ~/.claude/skills/mc-galerie/scripts/gallery.py build images/tools/gallery.toml
+#
+# Sources: Just Replay exports of the colonnade replay (shot plan images/tools/footage/gallery.json)
+# and frames of the capture camera (images/tools/capture/gallery-*.txt).
+
+mod = "Chiseled Blocks"
+modrinth = ""
+root = "../.."
+out = "images/gallery"
+size = [1920, 1080]
+look = "game"
+limit_mb = 2.0
+photocraft = true
+
+[[shot]]
+name = "colonnade"
+kind = "hero"
+featured = true
+source = "run-capture/justreplay/exports/g2-hero/frame_00003.png"
+title = "A colonnade carved pixel by pixel"
+description = "Every column, arch and capital here is made of chiseled blocks: 16 pixels to a side, any full block, several materials in one block."
+description_fr = "Chaque colonne, arche et chapiteau est fait de blocs ciselés : 16 pixels de côté, n'importe quel bloc plein, plusieurs matériaux dans un même bloc."
+
+[[shot]]
+name = "carving"
+kind = "feature"
+source = "run-capture/justreplay/exports/g2-carve/frame_00006.png"
+title = "Carving a block with the Iron Chisel"
+description = "Left click removes pixels, at a steady rate while held. Single pixel, cube, line, plane or sphere, from 1 to 8 pixels."
+description_fr = "Le clic gauche retire des pixels, en continu si on le maintient. Pixel seul, cube, ligne, plan ou sphère, de 1 à 8 pixels."
+
+[[shot]]
+name = "outline"
+kind = "feature"
+source = "run-capture/screenshots/carve_fp_a.png"
+crop = [260, 160, 1540, 880]
+title = "The outline shows the next stroke"
+description = "Before you click, the outline shows exactly which pixels the next stroke removes. V changes the mode, B the size."
+description_fr = "Avant de cliquer, le contour montre exactement les pixels que le prochain coup retire. V change le mode, B la taille."
+
+[[shot]]
+name = "tool-menu"
+kind = "screen"
+source = "run-capture/screenshots/radial_a.png"
+crop = [170, 150, 1450, 870]
+title = "The tool menu"
+description = "Hold Left Alt: the modes around the wheel, the size slider below, undo, redo and the mirror on the sides."
+description_fr = "Alt gauche maintenu : les modes autour de la roue, la taille en dessous, annuler, rétablir et le miroir sur les côtés."
+
+[[shot]]
+name = "pattern"
+kind = "feature"
+source = "run-capture/screenshots/pattern_c.png"
+title = "Copy a carving with a pattern"
+description = "Right click a chiseled block to record it, then print it anywhere. The green outline shows where it goes."
+description_fr = "Clic droit sur un bloc ciselé pour l'enregistrer, puis imprimez-le ailleurs. Le contour vert montre où il va."
+
+[[shot]]
+name = "materials"
+kind = "detail"
+source = "run-capture/justreplay/exports/g-detail/frame_00003.png"
+title = "Several materials in one block"
+description = "The blue inlay is lapis set into quartz, inside the same blocks. Each pixel keeps its own material."
+description_fr = "L'incrustation bleue est du lapis serti dans le quartz, à l'intérieur des mêmes blocs. Chaque pixel garde son matériau."
+
+[[shot]]
+name = "tooltip"
+kind = "screen"
+source = "run-capture/screenshots/tooltip_d.png"
+title = "What a chiseled block is made of"
+description = "A chiseled block keeps its carving as an item. Its tooltip lists each material, its share and how full the block is."
+description_fr = "Un bloc ciselé garde sa sculpture en objet. Son infobulle liste chaque matériau, sa part et le remplissage du bloc."
+
+[[shot]]
+name = "admin-panel"
+kind = "screen"
+source = "run-capture/screenshots/admin_a.png"
+title = "An admin panel for servers"
+description = "/chiseledblocks finds chiseled blocks by area or material, maps them by chunk and measures their server time. Works with LuckPerms."
+description_fr = "/chiseledblocks trouve les blocs ciselés par zone ou matériau, les place sur une carte des chunks et mesure leur temps serveur. Compatible LuckPerms."

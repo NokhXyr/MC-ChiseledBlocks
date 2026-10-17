@@ -1,0 +1,39 @@
+# Gallery, session 3: the tooltip of a chiseled block at GUI scale 4.
+# Run from the project folder:  ./gradlew runCapture -PcaptureScript=images/tools/capture/gallery-3.txt
+# Pick block puts the capital in the first empty hotbar slot, the seventh here.
+
+world Footage 0
+wait 120
+size 1920 1080
+freeze
+notoast on
+time 10000
+cmd gamemode creative
+cmd effect clear @s
+cmd clear @s
+cmd item replace entity @s hotbar.0 with chiseledblocks:iron_chisel[chiseledblocks:chisel_settings={mode:"cube",size:4}]
+cmd item replace entity @s hotbar.1 with chiseledblocks:pixel_bag
+cmd item replace entity @s hotbar.2 with chiseledblocks:blank_pattern
+cmd item replace entity @s hotbar.3 with chiseledblocks:saw
+cmd item replace entity @s hotbar.4 with chiseledblocks:wrench
+cmd item replace entity @s hotbar.5 with chiseledblocks:tape_measure
+key key.hotbar.1
+hud on
+tp 219.5 -58 209.8
+wait 120
+look 218.5 -54.7 207.6
+wait 20
+key key.pickItem
+wait 10
+cmd gamemode survival
+guiscale 4
+key key.inventory
+wait 14
+mouse 1104 808
+wait 8
+shot tooltip_d
+screen close
+mouse free
+cmd gamemode creative
+guiscale 3
+quit
